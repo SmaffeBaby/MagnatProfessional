@@ -1,0 +1,22 @@
+{
+  "logo": "Magnat Professional",
+  "servicesLabel": "Услуги",
+  "services": {
+    "branding": "#Брендинг и айдентика",
+    "events": "#Мероприятия",
+    "digital": "#Digital",
+    "souvenirs": "#Сувениры и мерч",
+    "printing": "#Полиграфическая продукция",
+    "interiors": "#Оформление интерьеров",
+    "structures": "#Дизайн конструкций",
+    "exhibition": "#Застройка выставочных стендов"
+  },
+  "contacts": {
+    "officeText": "Мы располагаемся на Васильевском острове и будем рады видеть вас в нашем офисе",
+    "map": "На карте"
+  },
+  "actions": {
+    "enableLightTheme": "Включить дневную тему",
+    "enableDarkTheme": "Включить темную тему"
+  }
+}

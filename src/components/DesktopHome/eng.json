@@ -1,0 +1,12 @@
+{
+  "navigationLabel": "Main navigation",
+  "navigation": {
+    "portfolio": "Portfolio",
+    "about": "About us",
+    "contacts": "Contacts"
+  },
+  "actions": {
+    "search": "Open search",
+    "switchLanguage": "Switch language"
+  }
+}

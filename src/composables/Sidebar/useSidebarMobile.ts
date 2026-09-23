@@ -10,15 +10,15 @@ type SidebarMobileEmit = (event: 'update:theme', value: SidebarTheme) => void
 
 const menuLinks = [
   {
-    label: 'Портфолио',
+    labelKey: 'sidebarMobile.navigation.portfolio',
     href: '#portfolio',
   },
   {
-    label: 'О нас',
+    labelKey: 'sidebarMobile.navigation.about',
     href: '#about',
   },
   {
-    label: 'Контакты',
+    labelKey: 'sidebarMobile.navigation.contacts',
     href: '#contacts',
   },
 ]

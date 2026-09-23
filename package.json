@@ -12,6 +12,7 @@
     "flowbite": "^3.1.2",
     "pinia": "^4.0.3",
     "vue": "^3.5.12",
+    "vue-i18n": "^10.0.8",
     "vue-router": "^4.6.4"
   },
   "devDependencies": {

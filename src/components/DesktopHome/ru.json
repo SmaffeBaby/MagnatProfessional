@@ -1,0 +1,12 @@
+{
+  "navigationLabel": "Основная навигация",
+  "navigation": {
+    "portfolio": "Портфолио",
+    "about": "О нас",
+    "contacts": "Контакты"
+  },
+  "actions": {
+    "search": "Открыть поиск",
+    "switchLanguage": "Переключить язык"
+  }
+}

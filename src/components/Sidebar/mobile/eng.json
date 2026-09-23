@@ -1,0 +1,19 @@
+{
+  "menuLabel": "Main menu",
+  "navigation": {
+    "portfolio": "Portfolio",
+    "about": "About us",
+    "contacts": "Contacts"
+  },
+  "contacts": {
+    "officeText": "We are located on Vasilyevsky Island and will be happy to welcome you to our office",
+    "map": "On the map"
+  },
+  "actions": {
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "switchLanguage": "Switch language",
+    "enableLightTheme": "Enable light theme",
+    "enableDarkTheme": "Enable dark theme"
+  }
+}

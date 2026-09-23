@@ -1,4 +1,6 @@
 <script setup>
+import { useI18n } from 'vue-i18n'
+
 defineProps({
   links: {
     type: Array,
@@ -7,10 +9,11 @@ defineProps({
 })
 
 const emit = defineEmits(['navigate'])
+const { t } = useI18n()
 </script>
 
 <template>
-  <nav class="mx-auto mt-[124px] flex w-full max-w-[340px] flex-col items-center gap-[clamp(1.8rem,5.6svh,3.25rem)] text-center text-[clamp(2.18rem,8.8vw,2.75rem)] font-medium leading-none tracking-normal" aria-label="Главное меню">
+  <nav class="mx-auto mt-[124px] flex w-full max-w-[340px] flex-col items-center gap-[clamp(1.8rem,5.6svh,3.25rem)] text-center text-[clamp(2.18rem,8.8vw,2.75rem)] font-medium leading-none tracking-normal" :aria-label="t('sidebarMobile.menuLabel')">
     <a
       v-for="link in links"
       :key="link.href"
@@ -18,7 +21,7 @@ const emit = defineEmits(['navigate'])
       :href="link.href"
       @click="emit('navigate')"
     >
-      {{ link.label }}
+      {{ t(link.labelKey) }}
     </a>
   </nav>
 </template>

@@ -1,12 +1,18 @@
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
+
 <template>
   <div class="-mx-[30px] mt-[110px] space-y-0 text-black">
     <section class="mobile-menu-card mb-[1px] rounded-[32px] bg-white px-[30px] pb-9 pt-11">
       <h2 class="max-w-[430px] text-[clamp(1.45rem,6.4vw,1.9rem)] font-normal leading-[1.18] tracking-normal">
-        Мы располагаемся на Васильевском острове и будем рады видеть вас в нашем офисе
+        {{ t('sidebarMobile.contacts.officeText') }}
       </h2>
 
       <a class="mt-8 inline-flex rounded-full border-2 border-magnat-light px-6 py-3 text-[1.08rem] font-normal leading-none text-magnat-light transition duration-300 ease-out hover:bg-magnat-light hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-magnat-light focus-visible:ring-offset-2" href="#">
-        На карте
+        {{ t('sidebarMobile.contacts.map') }}
       </a>
     </section>
 

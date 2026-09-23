@@ -24,7 +24,6 @@ const {
   isThemeButtonHovered,
   menuLinks,
   openMenu,
-  themeLabel,
   toggleTheme,
 } = useSidebarMobile(props, emit)
 </script>
@@ -41,7 +40,7 @@ const {
         class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col px-9 pb-[84px] pt-5"
       >
         <MobileThemeImage :theme="theme" />
-        <MobileHeader @open-menu="openMenu" />
+        <MobileHeader :is-dark-theme="isDarkTheme" @open-menu="openMenu" />
       </section>
     </Transition>
 
@@ -58,7 +57,7 @@ const {
           :inactive-theme-icon="inactiveThemeIcon"
           :is-dark-theme="isDarkTheme"
           :is-theme-button-hovered="isThemeButtonHovered"
-          :theme-label="themeLabel"
+          :theme-label="isDarkTheme ? $t('sidebarMobile.actions.enableLightTheme') : $t('sidebarMobile.actions.enableDarkTheme')"
           @close-menu="closeMenu"
           @theme-hover-change="isThemeButtonHovered = $event"
           @toggle-theme="toggleTheme"

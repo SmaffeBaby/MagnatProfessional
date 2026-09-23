@@ -1,0 +1,19 @@
+{
+  "menuLabel": "Главное меню",
+  "navigation": {
+    "portfolio": "Портфолио",
+    "about": "О нас",
+    "contacts": "Контакты"
+  },
+  "contacts": {
+    "officeText": "Мы располагаемся на Васильевском острове и будем рады видеть вас в нашем офисе",
+    "map": "На карте"
+  },
+  "actions": {
+    "openMenu": "Открыть меню",
+    "closeMenu": "Закрыть меню",
+    "switchLanguage": "Переключить язык",
+    "enableLightTheme": "Включить дневную тему",
+    "enableDarkTheme": "Включить темную тему"
+  }
+}

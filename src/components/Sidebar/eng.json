@@ -1,0 +1,22 @@
+{
+  "logo": "Magnat Professional",
+  "servicesLabel": "Services",
+  "services": {
+    "branding": "#Branding and identity",
+    "events": "#Events",
+    "digital": "#Digital",
+    "souvenirs": "#Souvenirs and merch",
+    "printing": "#Printed products",
+    "interiors": "#Interior decoration",
+    "structures": "#Structural design",
+    "exhibition": "#Exhibition stand construction"
+  },
+  "contacts": {
+    "officeText": "We are located on Vasilyevsky Island and will be happy to welcome you to our office",
+    "map": "On the map"
+  },
+  "actions": {
+    "enableLightTheme": "Enable light theme",
+    "enableDarkTheme": "Enable dark theme"
+  }
+}

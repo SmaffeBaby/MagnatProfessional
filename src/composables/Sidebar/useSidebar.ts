@@ -20,21 +20,6 @@ export function useSidebar(props: SidebarProps, emit: SidebarEmit) {
     isDarkTheme.value ? '/ico/sun/Sun_active.svg' : '/ico/moon/Moon_active.svg'
   ))
 
-  const themeLabel = computed(() => (
-    isDarkTheme.value ? 'Включить дневную тему' : 'Включить темную тему'
-  ))
-
-  const serviceLinks = [
-    '#Брендинг и айдентика',
-    '#Мероприятия',
-    '#Digital',
-    '#Сувениры и мерч',
-    '#Полиграфическая продукция',
-    '#Оформление интерьеров',
-    '#Дизайн конструкций',
-    '#Застройка выставочных стендов',
-  ]
-
   function toggleTheme() {
     emit('update:theme', isDarkTheme.value ? 'light' : 'dark')
   }
@@ -44,8 +29,6 @@ export function useSidebar(props: SidebarProps, emit: SidebarEmit) {
     inactiveThemeIcon,
     isDarkTheme,
     isThemeButtonHovered,
-    serviceLinks,
-    themeLabel,
     toggleTheme,
   }
 }
