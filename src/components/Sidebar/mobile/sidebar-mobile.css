@@ -1,0 +1,90 @@
+.mobile-sidebar-home {
+  isolation: isolate;
+}
+
+.mobile-sidebar-home::before,
+.mobile-sidebar-home::after {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-position: 27% -142px;
+  background-repeat: no-repeat;
+  background-size: min(201vw, 1120px) auto;
+  content: '';
+  transition: opacity 500ms ease;
+}
+
+.mobile-sidebar-home::before {
+  background-image: url('/main_page/TringleLogo_mobile.png');
+  opacity: 0.62;
+}
+
+.mobile-sidebar-home::after {
+  background-image: url('/main_page/TringleLogoBlack_mobile.png');
+  opacity: 0;
+}
+
+.mobile-sidebar-home.is-dark-image::before {
+  opacity: 0;
+}
+
+.mobile-sidebar-home.is-dark-image::after {
+  opacity: 0.62;
+}
+
+.mobile-menu-link,
+.mobile-menu-card {
+  animation: mobile-menu-item-in 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.mobile-menu-link:nth-child(1) {
+  animation-delay: 90ms;
+}
+
+.mobile-menu-link:nth-child(2) {
+  animation-delay: 170ms;
+}
+
+.mobile-menu-link:nth-child(3) {
+  animation-delay: 250ms;
+}
+
+.mobile-menu-card:nth-child(1) {
+  animation-delay: 360ms;
+}
+
+.mobile-menu-card:nth-child(2) {
+  animation-delay: 460ms;
+}
+
+@keyframes mobile-menu-item-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobile-sidebar-panel-enter-active,
+.mobile-sidebar-panel-leave-active {
+  transition: opacity 320ms ease;
+}
+
+.mobile-sidebar-panel-enter-from,
+.mobile-sidebar-panel-leave-to {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-sidebar-panel-enter-active,
+  .mobile-sidebar-panel-leave-active,
+  .mobile-menu-link,
+  .mobile-menu-card {
+    animation: none;
+    transition: none;
+  }
+}

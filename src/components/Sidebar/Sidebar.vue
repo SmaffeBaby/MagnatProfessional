@@ -1,5 +1,5 @@
 <script setup>
-import { useSidebar } from '../composables/useSidebar'
+import { useSidebar } from '../../composables/Sidebar/useSidebar'
 
 const props = defineProps({
   theme: {
@@ -27,7 +27,7 @@ const {
     :class="isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red'"
   >
     <header class="flex items-start justify-between gap-5">
-      <a href="/" aria-label="Magnat Professional">
+      <a href="/public" aria-label="Magnat Professional">
         <img class="h-auto w-[216px]" src="/ico/MagnatProfessionalLogo.svg" alt="Magnat Professional" />
       </a>
 
