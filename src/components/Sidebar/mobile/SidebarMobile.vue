@@ -3,6 +3,7 @@ import { useSidebarMobile } from '../../../composables/Sidebar/useSidebarMobile'
 import MobileContactCards from './MobileContactCards.vue'
 import MobileHeader from './MobileHeader.vue'
 import MobileMenuNav from './MobileMenuNav.vue'
+import MobileThemeImage from './MobileThemeImage.vue'
 import './sidebar-mobile.css'
 
 const props = defineProps({
@@ -18,7 +19,6 @@ const {
   activeThemeIcon,
   closeMenu,
   inactiveThemeIcon,
-  isDarkBackgroundImage,
   isDarkTheme,
   isMenuOpen,
   isThemeButtonHovered,
@@ -31,19 +31,16 @@ const {
 
 <template>
   <aside
-    class="relative min-h-screen min-h-[100svh] overflow-hidden text-white transition-colors duration-500 ease-out"
-    :class="isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red'"
+    class="mobile-sidebar-shell relative min-h-screen min-h-[100svh] overflow-hidden text-white"
+    :class="isDarkTheme ? 'is-dark-theme' : ''"
   >
     <Transition name="mobile-sidebar-panel">
       <section
         v-if="!isMenuOpen"
         key="home"
-        class="mobile-sidebar-home absolute inset-0 flex min-h-screen min-h-[100svh] flex-col px-9 pb-[84px] pt-5 transition-colors duration-500 ease-out"
-        :class="[
-          isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red',
-          isDarkBackgroundImage ? 'is-dark-image' : '',
-        ]"
+        class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col px-9 pb-[84px] pt-5"
       >
+        <MobileThemeImage :theme="theme" />
         <MobileHeader @open-menu="openMenu" />
       </section>
     </Transition>
@@ -52,10 +49,10 @@ const {
       <section
         v-if="isMenuOpen"
         key="menu"
-        class="absolute inset-0 flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-[30px] pb-0 pt-5 transition-colors duration-500 ease-out"
-        :class="isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red'"
+        class="absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-[30px] pb-0 pt-5"
       >
         <MobileHeader
+          class="mx-1.5"
           is-menu-open
           :active-theme-icon="activeThemeIcon"
           :inactive-theme-icon="inactiveThemeIcon"

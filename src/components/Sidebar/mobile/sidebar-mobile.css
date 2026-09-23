@@ -1,34 +1,49 @@
+.mobile-sidebar-shell {
+  background-color: #c40f1c;
+  isolation: isolate;
+}
+
+.mobile-sidebar-shell::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-color: #222222;
+  content: '';
+  opacity: 0;
+  transform: translateZ(0);
+  transition: opacity 500ms ease-out;
+  will-change: opacity;
+}
+
+.mobile-sidebar-shell.is-dark-theme::before {
+  opacity: 1;
+}
+
 .mobile-sidebar-home {
   isolation: isolate;
 }
 
-.mobile-sidebar-home::before,
-.mobile-sidebar-home::after {
+.mobile-theme-image {
   position: absolute;
   inset: 0;
-  z-index: -1;
   background-position: 27% -142px;
   background-repeat: no-repeat;
   background-size: min(201vw, 1120px) auto;
-  content: '';
-  transition: opacity 500ms ease;
+  opacity: 0;
+  transform: translateZ(0);
+  transition: opacity 500ms ease-out;
+  will-change: opacity;
 }
 
-.mobile-sidebar-home::before {
+.mobile-theme-image--light {
   background-image: url('/main_page/TringleLogo_mobile.png');
-  opacity: 0.62;
 }
 
-.mobile-sidebar-home::after {
+.mobile-theme-image--dark {
   background-image: url('/main_page/TringleLogoBlack_mobile.png');
-  opacity: 0;
 }
 
-.mobile-sidebar-home.is-dark-image::before {
-  opacity: 0;
-}
-
-.mobile-sidebar-home.is-dark-image::after {
+.mobile-theme-image--visible {
   opacity: 0.62;
 }
 
@@ -82,6 +97,8 @@
 @media (prefers-reduced-motion: reduce) {
   .mobile-sidebar-panel-enter-active,
   .mobile-sidebar-panel-leave-active,
+  .mobile-sidebar-shell::before,
+  .mobile-theme-image,
   .mobile-menu-link,
   .mobile-menu-card {
     animation: none;

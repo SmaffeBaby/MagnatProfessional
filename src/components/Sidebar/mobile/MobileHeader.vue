@@ -40,22 +40,17 @@ const emit = defineEmits([
       <img class="h-auto w-[160px] max-w-[68vw]" src="/ico/MagnatProfessionalLogo.svg" alt="Magnat Professional" />
     </a>
 
-    <button
-      v-if="!isMenuOpen"
-      class="grid h-11 w-11 shrink-0 place-items-center rounded-full transition duration-300 ease-out hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-magnat-red active:scale-95"
-      type="button"
-      aria-label="Открыть меню"
-      @click="emit('open-menu')"
-    >
-      <img class="h-11 w-11" src="/ico/burger/burger_inactive.svg" alt="" />
-    </button>
-
-    <div v-else class="flex shrink-0 items-center gap-3.5">
+    <div class="flex shrink-0 items-center gap-3.5">
       <button
-        class="relative h-11 w-11 transition-transform duration-300 ease-out hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
-        :class="isDarkTheme ? 'focus-visible:ring-offset-[#222222]' : 'focus-visible:ring-offset-magnat-red'"
+        class="relative h-11 w-11 transition duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
+        :class="[
+          isMenuOpen ? 'opacity-100 hover:scale-[1.04]' : 'pointer-events-none opacity-0',
+          isDarkTheme ? 'focus-visible:ring-offset-[#222222]' : 'focus-visible:ring-offset-magnat-red',
+        ]"
         type="button"
         :aria-label="themeLabel"
+        :aria-hidden="!isMenuOpen"
+        :tabindex="isMenuOpen ? 0 : -1"
         @click="emit('toggle-theme')"
         @mouseenter="emit('theme-hover-change', true)"
         @mouseleave="emit('theme-hover-change', false)"
@@ -78,10 +73,14 @@ const emit = defineEmits([
         class="grid h-11 w-11 place-items-center rounded-full transition duration-300 ease-out hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
         :class="isDarkTheme ? 'focus-visible:ring-offset-[#222222]' : 'focus-visible:ring-offset-magnat-red'"
         type="button"
-        aria-label="Закрыть меню"
-        @click="emit('close-menu')"
+        :aria-label="isMenuOpen ? 'Закрыть меню' : 'Открыть меню'"
+        @click="emit(isMenuOpen ? 'close-menu' : 'open-menu')"
       >
-        <img class="h-11 w-11" src="/ico/cancel.svg" alt="" />
+        <img
+          class="h-11 w-11"
+          :src="isMenuOpen ? '/ico/cancel.svg' : '/ico/burger/burger_inactive.svg'"
+          alt=""
+        />
       </button>
     </div>
   </header>
