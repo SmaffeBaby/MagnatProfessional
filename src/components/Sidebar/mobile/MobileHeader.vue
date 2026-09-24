@@ -41,9 +41,9 @@ const languageStore = useLanguageStore()
 </script>
 
 <template>
-  <header class="relative z-10 flex items-start justify-between gap-2">
+  <header class="relative z-10 flex items-center justify-between gap-2">
     <a href="/public" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
-      <img class="h-auto w-[150px] max-w-[34vw]" src="/ico/MagnatProfessionalLogo.svg" :alt="t('sidebar.logo')" />
+      <img class="h-11 w-[178.98px] max-w-[44vw]" src="/ico/MagnatProfessionalLogo.svg" :alt="t('sidebar.logo')" />
     </a>
 
     <div class="flex shrink-0 items-center gap-1.5 min-[375px]:gap-2.5">
@@ -77,8 +77,8 @@ const languageStore = useLanguageStore()
 
       <button
         v-if="!isMenuOpen"
-        class="h-9 min-w-11 rounded-full border-2 border-white px-2 text-xs font-semibold uppercase leading-none text-white transition duration-300 ease-out hover:bg-white hover:text-magnat-red focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95 min-[375px]:h-11 min-[375px]:min-w-14 min-[375px]:px-3 min-[375px]:text-sm"
-        :class="isDarkTheme ? 'focus-visible:ring-offset-[#222222]' : 'focus-visible:ring-offset-magnat-red'"
+        class="h-9 min-w-11 rounded-full border-2 border-white px-2 text-xs font-semibold uppercase leading-none text-white transition duration-300 ease-out hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95 min-[375px]:h-11 min-[375px]:min-w-14 min-[375px]:px-3 min-[375px]:text-sm"
+        :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
         type="button"
         :aria-label="t('sidebarMobile.actions.switchLanguage')"
         @click="languageStore.toggleLocale"

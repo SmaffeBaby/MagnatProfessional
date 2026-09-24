@@ -17,7 +17,7 @@ export function useSidebar(props: SidebarProps, emit: SidebarEmit) {
   ))
 
   const activeThemeIcon = computed(() => (
-    isDarkTheme.value ? '/ico/sun/Sun_active.svg' : '/ico/moon/Moon_active.svg'
+    isDarkTheme.value ? '/ico/sun/Sun_active_dark.svg' : '/ico/moon/Moon_active.svg'
   ))
 
   function toggleTheme() {

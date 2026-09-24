@@ -11,6 +11,7 @@ const themeAssets = [
   '/ico/moon/Moon_active.svg',
   '/ico/sun/Sun_inactive.svg',
   '/ico/sun/Sun_active.svg',
+  '/ico/sun/Sun_active_dark.svg',
 ]
 
 const preloadedAssets = new Set<string>()

@@ -51,8 +51,8 @@ const navLinks = [
         <a
           v-for="navLink in navLinks"
           :key="navLink.href"
-          class="rounded-full border-2 border-white px-5 py-2 text-sm font-normal leading-none text-white transition duration-300 hover:bg-white hover:text-magnat-red focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
-          :class="isDarkTheme ? 'focus-visible:ring-offset-[#222222]' : 'focus-visible:ring-offset-magnat-red'"
+          class="rounded-full border-2 border-white px-5 py-2 text-sm font-normal leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+          :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
           :href="navLink.href"
         >
           {{ t(navLink.labelKey) }}
@@ -61,8 +61,8 @@ const navLinks = [
 
       <div class="flex shrink-0 items-center gap-3">
         <button
-          class="h-11 min-w-16 rounded-full border-2 border-white px-4 text-sm font-semibold uppercase leading-none text-white transition duration-300 hover:bg-white hover:text-magnat-red focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
-          :class="isDarkTheme ? 'focus-visible:ring-offset-[#222222]' : 'focus-visible:ring-offset-magnat-red'"
+          class="h-11 min-w-16 rounded-full border-2 border-white px-4 text-sm font-semibold uppercase leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
+          :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
           type="button"
           :aria-label="t('desktopHome.actions.switchLanguage')"
           @click="languageStore.toggleLocale"

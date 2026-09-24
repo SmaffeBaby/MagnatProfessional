@@ -13,7 +13,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:theme'])
+const emit = defineEmits(['update:theme', 'open-map'])
 
 const {
   activeThemeIcon,
@@ -37,7 +37,7 @@ const {
       <section
         v-if="!isMenuOpen"
         key="home"
-        class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col px-9 pb-[84px] pt-5"
+        class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col px-5 pb-[84px] pt-5"
       >
         <MobileThemeImage :theme="theme" />
         <MobileHeader :is-dark-theme="isDarkTheme" @open-menu="openMenu" />
@@ -48,10 +48,9 @@ const {
       <section
         v-if="isMenuOpen"
         key="menu"
-        class="absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-[30px] pb-0 pt-5"
+        class="absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-5 pb-0 pt-5"
       >
         <MobileHeader
-          class="mx-1.5"
           is-menu-open
           :active-theme-icon="activeThemeIcon"
           :inactive-theme-icon="inactiveThemeIcon"
@@ -64,7 +63,7 @@ const {
         />
 
         <MobileMenuNav :links="menuLinks" @navigate="closeMenu" />
-        <MobileContactCards />
+        <MobileContactCards @open-map="emit('open-map')" />
       </section>
     </Transition>
   </aside>

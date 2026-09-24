@@ -9,7 +9,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['update:theme'])
+const emit = defineEmits(['update:theme', 'open-map'])
 
 const {
   activeThemeIcon,
@@ -83,9 +83,13 @@ const serviceLinks = [
           {{ t('sidebar.contacts.officeText') }}
         </h2>
 
-        <a class="mt-6 inline-flex rounded-full border-2 border-magnat-light px-5 py-2.5 text-sm font-normal text-magnat-light transition hover:bg-magnat-light hover:text-white" href="#">
+        <button
+          class="mt-6 inline-flex rounded-full border-2 border-magnat-light px-5 py-2.5 text-sm font-normal text-magnat-light transition hover:bg-magnat-light hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-magnat-light focus-visible:ring-offset-2"
+          type="button"
+          @click="emit('open-map')"
+        >
           {{ t('sidebar.contacts.map') }}
-        </a>
+        </button>
       </section>
 
       <section class="rounded-[28px] bg-white p-7 text-black">
