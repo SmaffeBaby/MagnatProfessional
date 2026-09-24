@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '../../composables/useLanguageStore'
-import MainText from '../MainText/MainText.vue'
+import SwipeContentMain from '../SwipeContentMain/SwipeContentMain.vue'
 
 const props = defineProps({
   theme: {
@@ -33,7 +33,7 @@ const navLinks = [
 
 <template>
   <section
-    class="desktop-home relative min-h-screen flex-1 overflow-hidden transition-colors duration-500"
+    class="desktop-home relative h-screen flex-1 overflow-hidden transition-colors duration-500"
     :class="isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red'"
   >
     <div class="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
@@ -47,7 +47,7 @@ const navLinks = [
       />
     </div>
 
-    <header class="relative z-10 flex items-center justify-between gap-8 px-14 py-7 text-white">
+    <header class="desktop-home__header relative z-10 flex items-center justify-between gap-8 px-14 py-7 text-white">
       <nav class="flex items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
         <a
           v-for="navLink in navLinks"
@@ -73,13 +73,17 @@ const navLinks = [
       </div>
     </header>
 
-    <MainText :theme="theme" />
+    <SwipeContentMain :theme="theme" />
   </section>
 </template>
 
 <style scoped>
 .desktop-home {
   isolation: isolate;
+}
+
+.desktop-home__header {
+  min-height: 100px;
 }
 
 .desktop-theme-image {

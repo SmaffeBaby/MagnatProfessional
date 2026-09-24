@@ -1,0 +1,23 @@
+.swipe-content-main {
+  position: relative;
+  z-index: 1;
+  height: calc(100vh - 100px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+}
+
+.swipe-content-main::-webkit-scrollbar {
+  width: 8px;
+}
+
+.swipe-content-main::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.swipe-content-main::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+}
