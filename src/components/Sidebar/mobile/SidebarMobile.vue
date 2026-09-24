@@ -1,5 +1,6 @@
 <script setup>
 import { useSidebarMobile } from '../../../composables/Sidebar/useSidebarMobile'
+import MainText from '../../MainText/MainText.vue'
 import MobileContactCards from './MobileContactCards.vue'
 import MobileHeader from './MobileHeader.vue'
 import MobileMenuNav from './MobileMenuNav.vue'
@@ -37,10 +38,11 @@ const {
       <section
         v-if="!isMenuOpen"
         key="home"
-        class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col px-5 pb-[84px] pt-5"
+        class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-5 pb-[84px] pt-5"
       >
         <MobileThemeImage :theme="theme" />
         <MobileHeader :is-dark-theme="isDarkTheme" @open-menu="openMenu" />
+        <MainText :theme="theme" />
       </section>
     </Transition>
 

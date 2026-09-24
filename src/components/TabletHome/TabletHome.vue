@@ -2,6 +2,7 @@
 import { useI18n } from 'vue-i18n'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
 import { useLanguageStore } from '../../composables/useLanguageStore'
+import MainText from '../MainText/MainText.vue'
 
 const props = defineProps({
   theme: {
@@ -105,6 +106,8 @@ const navLinks = [
         {{ languageStore.nextLocaleLabel }}
       </button>
     </header>
+
+    <MainText :theme="theme" />
   </section>
 </template>
 

@@ -4,6 +4,7 @@ import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
 import { createClient } from '@supabase/supabase-js'
+import { getMainText } from './cache/mainTextCache.js'
 
 const {
   PORT = 4000,
@@ -54,6 +55,27 @@ app.get('/api/storage/buckets', async (_req, res, next) => {
     }
 
     res.json({ buckets: data })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/main-text', async (req, res, next) => {
+  try {
+    const payload = await getMainText(supabase)
+    const etag = `"${payload.updatedAt}"`
+
+    if (req.headers['if-none-match'] === etag) {
+      res.status(304).end()
+      return
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+        ETag: etag,
+      })
+      .json(payload)
   } catch (error) {
     next(error)
   }

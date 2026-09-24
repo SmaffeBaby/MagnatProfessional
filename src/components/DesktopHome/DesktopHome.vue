@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '../../composables/useLanguageStore'
+import MainText from '../MainText/MainText.vue'
 
 const props = defineProps({
   theme: {
@@ -71,6 +72,8 @@ const navLinks = [
         </button>
       </div>
     </header>
+
+    <MainText :theme="theme" />
   </section>
 </template>
 
