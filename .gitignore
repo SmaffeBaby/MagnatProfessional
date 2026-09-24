@@ -24,3 +24,16 @@ dist-ssr
 *.sw?
 /.vscode/
 /dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Backend env
+backend/.env
+backend/.env.*
+
+# Supabase
+supabase/.env
+supabase/.env.*

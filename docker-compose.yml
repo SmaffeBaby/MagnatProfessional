@@ -1,0 +1,44 @@
+name: magnat-professional
+
+include:
+  - path:
+      - ./supabase/docker-compose.yml
+      - ./supabase/docker-compose.kong.yml
+      - ./supabase/docker-compose.local.yml
+    env_file:
+      - ./supabase/.env
+
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: magnat-backend
+    restart: unless-stopped
+    env_file:
+      - ./supabase/.env
+    depends_on:
+      api-gw:
+        condition: service_healthy
+      storage:
+        condition: service_healthy
+    environment:
+      PORT: 4000
+      NODE_ENV: production
+      CORS_ORIGIN: http://localhost:3000,http://localhost:5173
+      SUPABASE_URL: http://api-gw:8000
+      SUPABASE_PUBLIC_URL: http://localhost:8000
+      SUPABASE_STORAGE_BUCKET: photos
+      SUPABASE_STORAGE_PUBLIC: "true"
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build:
+      context: .
+    container_name: magnat-frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "3000:80"

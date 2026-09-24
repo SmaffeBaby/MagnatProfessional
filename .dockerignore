@@ -1,0 +1,9 @@
+node_modules
+dist
+.git
+.DS_Store
+npm-debug.log
+backend/node_modules
+supabase/volumes/db/data
+supabase/volumes/storage
+supabase/backups
