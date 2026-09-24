@@ -1,4 +1,5 @@
 import flowbite from 'flowbite/plugin'
+import { screens } from './src/config/breakpoints.js'
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -8,6 +9,7 @@ export default {
     './node_modules/flowbite/**/*.js',
   ],
   theme: {
+    screens,
     extend: {
       fontFamily: {
         sans: ['Unbounded', 'system-ui', 'sans-serif'],

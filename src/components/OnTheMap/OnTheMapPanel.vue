@@ -35,7 +35,7 @@ onBeforeUnmount(() => {
   <Transition name="on-the-map-backdrop">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-50 bg-black/20 md:bg-black/10"
+      class="fixed inset-0 z-50 bg-black/20 desktop:bg-black/10"
       aria-hidden="true"
       @click="emit('close')"
     />
@@ -44,14 +44,14 @@ onBeforeUnmount(() => {
   <Transition name="on-the-map-panel">
     <aside
       v-if="isOpen"
-      class="on-the-map-panel fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-white text-black shadow-2xl md:left-auto md:w-1/2"
+      class="on-the-map-panel fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-white text-black shadow-2xl desktop:left-auto desktop:w-1/2"
       role="dialog"
       aria-modal="true"
       :aria-label="t('onTheMap.title')"
     >
-      <header class="relative shrink-0 px-5 pb-5 pt-5 md:px-[60px] md:pb-[74px] md:pt-[60px]">
+      <header class="relative shrink-0 px-5 pb-5 pt-5 desktop:px-[60px] desktop:pb-[74px] desktop:pt-[60px]">
         <button
-          class="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full border-2 border-black p-2 text-black transition duration-300 hover:bg-black hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 md:right-[60px] md:top-[60px]"
+          class="absolute right-5 top-5 grid h-11 w-11 place-items-center rounded-full border-2 border-black p-2 text-black transition duration-300 hover:bg-black hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 desktop:right-[60px] desktop:top-[60px]"
           type="button"
           :aria-label="t('onTheMap.actions.close')"
           @click="emit('close')"
@@ -68,18 +68,18 @@ onBeforeUnmount(() => {
         </button>
 
         <address class="not-italic">
-          <h2 class="max-w-[780px] pr-[54px] text-2xl font-medium leading-[1.05] tracking-normal md:pr-[72px] md:text-4xl">
+          <h2 class="max-w-[780px] pr-[54px] text-2xl font-medium leading-[1.05] tracking-normal desktop:pr-[72px] desktop:text-4xl">
             {{ t('onTheMap.address') }}
           </h2>
 
           <a
-            class="mt-10 block text-lg font-medium leading-none text-[#df1f2d] md:mt-[30px] md:text-2xl"
+            class="mt-10 block text-lg font-medium leading-none text-[#df1f2d] desktop:mt-[30px] desktop:text-2xl"
             href="tel:+78123404478"
           >
             +7 (812) 340-44-78
           </a>
           <a
-            class="mt-5 block break-words text-lg font-medium leading-tight text-black md:text-2xl"
+            class="mt-5 block break-words text-lg font-medium leading-tight text-black desktop:text-2xl"
             href="mailto:office@magnatmedia.com"
           >
             office@magnatmedia.com
@@ -87,7 +87,7 @@ onBeforeUnmount(() => {
         </address>
       </header>
 
-      <div class="min-h-[58vh] flex-1 md:min-h-0">
+      <div class="min-h-[58vh] flex-1 desktop:min-h-0">
         <YandexMapWidget :title="t('onTheMap.mapTitle')" />
       </div>
     </aside>

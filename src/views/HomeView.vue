@@ -4,6 +4,7 @@ import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
 import SidebarMobile from '../components/Sidebar/mobile/SidebarMobile.vue'
+import TabletHome from '../components/TabletHome/TabletHome.vue'
 import { useThemeStore } from '../composables/Sidebar/useThemeStore'
 
 const themeStore = useThemeStore()
@@ -22,11 +23,15 @@ const isMapOpen = ref(false)
     class="min-h-screen text-white transition-colors duration-500"
     :class="theme === 'dark' ? 'bg-[#222222]' : 'bg-magnat-red'"
   >
-    <div class="md:hidden">
+    <div class="tablet:hidden desktop:hidden">
       <SidebarMobile v-model:theme="theme" @open-map="isMapOpen = true" />
     </div>
 
-    <div class="hidden min-h-screen md:flex">
+    <div class="hidden tablet:block desktop:hidden">
+      <TabletHome v-model:theme="theme" />
+    </div>
+
+    <div class="hidden min-h-screen desktop:flex">
       <div class="w-[504px] shrink-0">
         <Sidebar v-model:theme="theme" @open-map="isMapOpen = true" />
       </div>

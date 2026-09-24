@@ -46,12 +46,12 @@ const navLinks = [
       />
     </div>
 
-    <header class="relative z-10 flex items-center justify-between gap-8 px-12 py-7 text-white xl:px-14">
+    <header class="relative z-10 flex items-center justify-between gap-8 px-14 py-7 text-white">
       <nav class="flex items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
         <a
           v-for="navLink in navLinks"
           :key="navLink.href"
-          class="rounded-full border-2 border-white px-5 py-2 text-sm font-normal leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
+          class="inline-flex h-11 items-center justify-center rounded-full border-2 border-white px-5 text-base font-normal leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
           :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
           :href="navLink.href"
         >
@@ -61,7 +61,7 @@ const navLinks = [
 
       <div class="flex shrink-0 items-center gap-3">
         <button
-          class="h-11 min-w-16 rounded-full border-2 border-white px-4 text-sm font-semibold uppercase leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
+          class="h-11 w-[62px] rounded-full border-2 border-white px-0 text-base font-semibold uppercase leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
           :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
           type="button"
           :aria-label="t('desktopHome.actions.switchLanguage')"
