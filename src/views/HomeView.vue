@@ -4,6 +4,7 @@ import AboutUs from '../components/AboutUs/AboutUs.vue'
 import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import DottedSeparator from '../components/DottedSeparator/DottedSeparator.vue'
+import Footer from '../components/Footer/Footer.vue'
 import HomePanels from '../components/HomePanels/HomePanels.vue'
 import Map from '../components/Map/Map.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
@@ -57,6 +58,7 @@ const {
       <DottedSeparator />
       <Stats />
       <Map />
+      <Footer />
     </div>
 
     <div class="home-tablet-page hidden tablet:block desktop:hidden">
@@ -67,6 +69,7 @@ const {
       <DottedSeparator />
       <Stats />
       <Map />
+      <Footer />
     </div>
 
     <Transition name="header-backing">

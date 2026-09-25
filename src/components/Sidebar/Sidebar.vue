@@ -1,6 +1,9 @@
 <script setup>
+import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
+import { useHomePanels } from '../../composables/useHomePanels'
+import { useLanguageStore } from '../../composables/useLanguageStore'
 
 const props = defineProps({
   theme: {
@@ -20,17 +23,13 @@ const {
 } = useSidebar(props, emit)
 
 const { t } = useI18n()
+const { panels } = useHomePanels()
+const languageStore = useLanguageStore()
+const { locale } = storeToRefs(languageStore)
 
-const serviceLinks = [
-  'sidebar.services.branding',
-  'sidebar.services.events',
-  'sidebar.services.digital',
-  'sidebar.services.souvenirs',
-  'sidebar.services.printing',
-  'sidebar.services.interiors',
-  'sidebar.services.structures',
-  'sidebar.services.exhibition',
-]
+function panelTitle(panel) {
+  return locale.value === 'en' && panel.titleEn ? panel.titleEn : panel.title
+}
 </script>
 
 <template>
@@ -66,14 +65,14 @@ const serviceLinks = [
       </button>
     </header>
 
-    <nav class="mt-11 flex flex-wrap gap-x-4 gap-y-3 text-[0.95rem] font-semibold leading-tight text-white/45" :aria-label="t('sidebar.servicesLabel')">
+    <nav class="mt-11 flex flex-wrap gap-x-2.5 gap-y-2.5 text-base font-normal leading-tight text-white/45" :aria-label="t('sidebar.servicesLabel')">
       <a
-        v-for="serviceLink in serviceLinks"
-        :key="serviceLink"
+        v-for="panel in panels"
+        :key="panel.id"
         class="transition hover:text-white"
-        href="#"
+        :href="panel.linkPath"
       >
-        {{ t(serviceLink) }}
+        {{ panelTitle(panel) }}
       </a>
     </nav>
 

@@ -2,6 +2,7 @@
 import AboutUs from '../AboutUs/AboutUs.vue'
 import Description from '../Description/Description.vue'
 import DottedSeparator from '../DottedSeparator/DottedSeparator.vue'
+import Footer from '../Footer/Footer.vue'
 import HomePanels from '../HomePanels/HomePanels.vue'
 import Map from '../Map/Map.vue'
 import MainText from '../MainText/MainText.vue'
@@ -24,6 +25,7 @@ defineProps({
     <DottedSeparator />
     <Stats />
     <Map />
+    <Footer />
   </div>
 </template>
 

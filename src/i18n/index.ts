@@ -1,6 +1,8 @@
 import { createI18n } from 'vue-i18n'
 import desktopHomeEn from '../components/DesktopHome/eng.json'
 import desktopHomeRu from '../components/DesktopHome/ru.json'
+import footerEn from '../components/Footer/eng.json'
+import footerRu from '../components/Footer/ru.json'
 import onTheMapEn from '../components/OnTheMap/eng.json'
 import onTheMapRu from '../components/OnTheMap/ru.json'
 import sidebarEn from '../components/Sidebar/eng.json'
@@ -20,12 +22,14 @@ export const i18n = createI18n({
   messages: {
     ru: {
       desktopHome: desktopHomeRu,
+      footer: footerRu,
       onTheMap: onTheMapRu,
       sidebar: sidebarRu,
       sidebarMobile: sidebarMobileRu,
     },
     en: {
       desktopHome: desktopHomeEn,
+      footer: footerEn,
       onTheMap: onTheMapEn,
       sidebar: sidebarEn,
       sidebarMobile: sidebarMobileEn,
