@@ -5,6 +5,7 @@ import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import DottedSeparator from '../components/DottedSeparator/DottedSeparator.vue'
 import HomePanels from '../components/HomePanels/HomePanels.vue'
+import Map from '../components/Map/Map.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
 import MobileHeader from '../components/Sidebar/mobile/MobileHeader.vue'
@@ -40,7 +41,7 @@ const {
 
 <template>
   <main
-    class="min-h-screen text-white transition-colors duration-500"
+    class="home-main min-h-screen text-white transition-colors duration-500"
     :class="theme === 'dark' ? 'bg-[#222222]' : 'bg-magnat-red'"
   >
     <div class="tablet:hidden desktop:hidden">
@@ -55,15 +56,17 @@ const {
       <Description :theme="theme" />
       <DottedSeparator />
       <Stats />
+      <Map />
     </div>
 
-    <div class="hidden tablet:block desktop:hidden">
+    <div class="home-tablet-page hidden tablet:block desktop:hidden">
       <TabletHome v-model:theme="theme" />
       <HomePanels :theme="theme" />
       <AboutUs :theme="theme" />
       <Description :theme="theme" />
       <DottedSeparator />
       <Stats />
+      <Map />
     </div>
 
     <Transition name="header-backing">
