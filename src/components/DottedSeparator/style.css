@@ -1,0 +1,23 @@
+.dotted-separator {
+  position: relative;
+  z-index: 1;
+  height: 75px;
+  margin: 40px 20px 0;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 18px,
+      rgba(255, 255, 255, 0.2) 18px,
+      rgba(255, 255, 255, 0.2) 20px,
+      transparent 20px,
+      transparent 32px
+    );
+}
+
+@media (min-width: 1040px) {
+  .dotted-separator {
+    margin: 80px 55px 0;
+  }
+}

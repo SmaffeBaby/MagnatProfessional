@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
 import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
+import DottedSeparator from '../components/DottedSeparator/DottedSeparator.vue'
 import HomePanels from '../components/HomePanels/HomePanels.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
@@ -51,6 +52,7 @@ const {
       <HomePanels :theme="theme" />
       <AboutUs :theme="theme" />
       <Description :theme="theme" />
+      <DottedSeparator />
     </div>
 
     <div class="hidden tablet:block desktop:hidden">
@@ -58,6 +60,7 @@ const {
       <HomePanels :theme="theme" />
       <AboutUs :theme="theme" />
       <Description :theme="theme" />
+      <DottedSeparator />
     </div>
 
     <Transition name="header-backing">
