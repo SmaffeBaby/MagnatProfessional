@@ -146,6 +146,30 @@ app.get('/api/description', async (_req, res, next) => {
   }
 })
 
+app.get('/api/stats', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('stats_items')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        items: data.map(statsItemFromDatabase),
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -305,6 +329,82 @@ app.put('/api/admin/description', requireAdminAuth, async (req, res, next) => {
     }
 
     res.json({ content: descriptionFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/stats', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('stats_items')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      items: data.map(statsItemFromDatabase),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/stats', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = statsItemToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('stats_items')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ item: statsItemFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/stats/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = statsItemToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('stats_items')
+      .update(payload)
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ item: statsItemFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/stats/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('stats_items')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
   } catch (error) {
     next(error)
   }
@@ -573,6 +673,43 @@ function descriptionToDatabase(content) {
     tablet_plaque_url: content.tabletPlaqueUrl || null,
     mobile_plaque_path: content.mobilePlaquePath || null,
     mobile_plaque_url: content.mobilePlaqueUrl || null,
+  }
+}
+
+function statsItemFromDatabase(item) {
+  return {
+    id: item.id,
+    numberText: item.number_text,
+    sortOrder: item.sort_order,
+    text: item.text,
+    textEn: item.text_en,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }
+}
+
+function statsItemToDatabase(item) {
+  const numberText = String(item.numberText || '').trim()
+  const text = String(item.text || '').trim()
+  const sortOrder = Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : 0
+
+  if (!numberText) {
+    const error = new Error('Number is required')
+    error.status = 400
+    throw error
+  }
+
+  if (!text) {
+    const error = new Error('Text is required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    number_text: numberText,
+    sort_order: sortOrder,
+    text,
+    text_en: normalizeOptionalText(item.textEn),
   }
 }
 

@@ -4,6 +4,7 @@ import Description from '../Description/Description.vue'
 import DottedSeparator from '../DottedSeparator/DottedSeparator.vue'
 import HomePanels from '../HomePanels/HomePanels.vue'
 import MainText from '../MainText/MainText.vue'
+import Stats from '../Stats/Stats.vue'
 
 defineProps({
   theme: {
@@ -20,6 +21,7 @@ defineProps({
     <AboutUs :theme="theme" />
     <Description :theme="theme" />
     <DottedSeparator />
+    <Stats />
   </div>
 </template>
 

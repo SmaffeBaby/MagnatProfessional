@@ -5,16 +5,19 @@ import AdminLogin from '../components/Admin/AdminLogin.vue'
 import AdminSidebar from '../components/Admin/AdminSidebar.vue'
 import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
+import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminDescription } from '../composables/Admin/useAdminDescription'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
+import { useAdminStats } from '../composables/Admin/useAdminStats'
 
 const activeSection = ref('home-panels')
 const auth = useAdminAuth()
 const aboutUs = useAdminAboutUs()
 const description = useAdminDescription()
 const homePanels = useAdminHomePanels()
+const stats = useAdminStats()
 
 onMounted(async () => {
   if (auth.isAuthorized.value && await auth.verifySession()) {
@@ -22,6 +25,7 @@ onMounted(async () => {
       homePanels.loadPanels(),
       aboutUs.loadContent(),
       description.loadContent(),
+      stats.loadItems(),
     ])
   }
 })
@@ -32,6 +36,7 @@ async function login() {
       homePanels.loadPanels(),
       aboutUs.loadContent(),
       description.loadContent(),
+      stats.loadItems(),
     ])
   })
 }
@@ -41,6 +46,7 @@ function logout() {
   homePanels.clearPanels()
   aboutUs.clearContent()
   description.clearContent()
+  stats.clearItems()
 }
 </script>
 
@@ -97,6 +103,21 @@ function logout() {
         :upload-field="description.uploadField.value"
         @save="description.saveContent"
         @upload="description.uploadPlaque"
+      />
+
+      <StatsAdminSection
+        v-if="activeSection === 'stats'"
+        :error="stats.error.value"
+        :form="stats.form"
+        :form-title="stats.formTitle.value"
+        :items="stats.items.value"
+        :is-loading="stats.isLoading.value"
+        :is-saving="stats.isSaving.value"
+        @new-item="stats.resetForm"
+        @save="stats.saveItem"
+        @reset="stats.resetForm"
+        @edit="stats.editItem"
+        @delete="stats.deleteItem"
       />
     </section>
   </main>

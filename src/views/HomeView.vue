@@ -9,6 +9,7 @@ import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
 import MobileHeader from '../components/Sidebar/mobile/MobileHeader.vue'
 import SidebarMobile from '../components/Sidebar/mobile/SidebarMobile.vue'
+import Stats from '../components/Stats/Stats.vue'
 import TabletHome from '../components/TabletHome/TabletHome.vue'
 import { useThemeStore } from '../composables/Sidebar/useThemeStore'
 import { useResponsiveHeaderBacking } from '../composables/useResponsiveHeaderBacking'
@@ -53,6 +54,7 @@ const {
       <AboutUs :theme="theme" />
       <Description :theme="theme" />
       <DottedSeparator />
+      <Stats />
     </div>
 
     <div class="hidden tablet:block desktop:hidden">
@@ -61,6 +63,7 @@ const {
       <AboutUs :theme="theme" />
       <Description :theme="theme" />
       <DottedSeparator />
+      <Stats />
     </div>
 
     <Transition name="header-backing">
