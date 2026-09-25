@@ -1,0 +1,36 @@
+.tablet-home {
+  isolation: isolate;
+}
+
+.tablet-theme-image {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: -260px;
+  left: 0;
+  background-position: clamp(18rem, 38vw, 34rem) -19rem;
+  background-repeat: no-repeat;
+  background-size: clamp(72rem, 124vw, 92rem) auto;
+  opacity: 0;
+  transform: translateZ(0);
+  transition: opacity 500ms ease-out;
+  will-change: opacity;
+}
+
+.tablet-theme-image--light {
+  background-image: url('/main_page/TringleLogo_mobile.png');
+}
+
+.tablet-theme-image--dark {
+  background-image: url('/main_page/TringleLogoBlack_mobile.png');
+}
+
+.tablet-theme-image--visible {
+  opacity: 0.62;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tablet-theme-image {
+    transition: none;
+  }
+}

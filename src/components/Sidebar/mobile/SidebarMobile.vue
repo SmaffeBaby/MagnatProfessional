@@ -12,9 +12,13 @@ const props = defineProps({
     type: String,
     default: 'light',
   },
+  showHeaderBacking: {
+    type: Boolean,
+    default: false,
+  },
 })
 
-const emit = defineEmits(['update:theme', 'open-map'])
+const emit = defineEmits(['update:theme', 'open-map', 'menu-open-change'])
 
 const {
   activeThemeIcon,
@@ -27,12 +31,19 @@ const {
   openMenu,
   toggleTheme,
 } = useSidebarMobile(props, emit)
+
+defineExpose({
+  openMenu,
+})
 </script>
 
 <template>
   <aside
-    class="mobile-sidebar-shell relative min-h-screen min-h-[100svh] overflow-hidden text-white"
-    :class="isDarkTheme ? 'is-dark-theme' : ''"
+    class="mobile-sidebar-shell min-h-screen min-h-[100svh] overflow-hidden text-white"
+    :class="[
+      isDarkTheme ? 'is-dark-theme' : '',
+      isMenuOpen ? 'fixed inset-0 z-[600]' : 'relative',
+    ]"
   >
     <Transition name="mobile-sidebar-panel">
       <section
@@ -41,7 +52,10 @@ const {
         class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-5 pb-[84px] pt-5"
       >
         <MobileThemeImage :theme="theme" />
-        <MobileHeader :is-dark-theme="isDarkTheme" @open-menu="openMenu" />
+        <MobileHeader
+          :is-dark-theme="isDarkTheme"
+          @open-menu="openMenu"
+        />
         <MainText :theme="theme" />
       </section>
     </Transition>
@@ -50,7 +64,7 @@ const {
       <section
         v-if="isMenuOpen"
         key="menu"
-        class="absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-5 pb-0 pt-5"
+        class="mobile-sidebar-menu absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-5 pb-0 pt-5"
       >
         <MobileHeader
           is-menu-open

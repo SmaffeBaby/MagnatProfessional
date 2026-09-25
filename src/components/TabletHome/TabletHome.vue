@@ -1,8 +1,10 @@
 <script setup>
 import { useI18n } from 'vue-i18n'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
+import { homeNavLinks } from '../../composables/useHomeNavigation'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import MainText from '../MainText/MainText.vue'
+import './style.css'
 
 const props = defineProps({
   theme: {
@@ -23,26 +25,11 @@ const {
 
 const { t } = useI18n()
 const languageStore = useLanguageStore()
-
-const navLinks = [
-  {
-    labelKey: 'desktopHome.navigation.portfolio',
-    href: '#portfolio',
-  },
-  {
-    labelKey: 'desktopHome.navigation.about',
-    href: '#about',
-  },
-  {
-    labelKey: 'desktopHome.navigation.contacts',
-    href: '#contacts',
-  },
-]
 </script>
 
 <template>
   <section
-    class="tablet-home relative min-h-screen overflow-hidden transition-colors duration-500"
+    class="tablet-home relative overflow-visible transition-colors duration-500"
     :class="isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red'"
   >
     <div class="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
@@ -58,7 +45,11 @@ const navLinks = [
 
     <header class="relative z-10 flex items-center gap-8 px-[55px] pt-[30px] text-white">
       <a class="shrink-0" href="/public" :aria-label="t('sidebar.logo')">
-        <img class="h-auto w-[244px]" src="/ico/MagnatProfessionalLogo.svg" :alt="t('sidebar.logo')" />
+        <img
+          class="h-auto w-[244px]"
+          src="/ico/MagnatProfessionalLogo.svg"
+          :alt="t('sidebar.logo')"
+        />
       </a>
 
       <button
@@ -86,7 +77,7 @@ const navLinks = [
 
       <nav class="flex min-w-0 items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
         <a
-          v-for="navLink in navLinks"
+          v-for="navLink in homeNavLinks"
           :key="navLink.href"
           class="rounded-full border-2 border-white px-5 py-2.5 text-lg font-normal leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
           :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
@@ -110,39 +101,3 @@ const navLinks = [
     <MainText :theme="theme" />
   </section>
 </template>
-
-<style scoped>
-.tablet-home {
-  isolation: isolate;
-}
-
-.tablet-theme-image {
-  position: absolute;
-  inset: 0;
-  background-position: clamp(18rem, 38vw, 34rem) -19rem;
-  background-repeat: no-repeat;
-  background-size: clamp(72rem, 124vw, 92rem) auto;
-  opacity: 0;
-  transform: translateZ(0);
-  transition: opacity 500ms ease-out;
-  will-change: opacity;
-}
-
-.tablet-theme-image--light {
-  background-image: url('/main_page/TringleLogo_mobile.png');
-}
-
-.tablet-theme-image--dark {
-  background-image: url('/main_page/TringleLogoBlack_mobile.png');
-}
-
-.tablet-theme-image--visible {
-  opacity: 0.62;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tablet-theme-image {
-    transition: none;
-  }
-}
-</style>

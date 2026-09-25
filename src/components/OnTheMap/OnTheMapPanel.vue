@@ -35,7 +35,7 @@ onBeforeUnmount(() => {
   <Transition name="on-the-map-backdrop">
     <div
       v-if="isOpen"
-      class="fixed inset-0 z-50 bg-black/20 desktop:bg-black/10"
+      class="fixed inset-0 z-[700] bg-black/20 desktop:bg-black/10"
       aria-hidden="true"
       @click="emit('close')"
     />
@@ -44,7 +44,7 @@ onBeforeUnmount(() => {
   <Transition name="on-the-map-panel">
     <aside
       v-if="isOpen"
-      class="on-the-map-panel fixed inset-0 z-[60] flex flex-col overflow-y-auto bg-white text-black shadow-2xl desktop:left-auto desktop:w-1/2"
+      class="on-the-map-panel fixed inset-0 z-[710] flex flex-col overflow-y-auto bg-white text-black shadow-2xl desktop:left-auto desktop:w-1/2"
       role="dialog"
       aria-modal="true"
       :aria-label="t('onTheMap.title')"
