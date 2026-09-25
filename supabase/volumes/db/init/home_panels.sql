@@ -56,3 +56,42 @@ drop policy if exists "Home panels are publicly readable." on public.home_panels
 create policy "Home panels are publicly readable."
   on public.home_panels for select
   using (true);
+
+create table if not exists public.about_us_content (
+  id boolean primary key default true,
+  text text not null default '',
+  text_en text,
+  button_text text not null default '',
+  button_text_en text,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint about_us_content_singleton_check check (id)
+);
+
+insert into public.about_us_content (id, text, text_en, button_text, button_text_en)
+values (true, '', null, '', null)
+on conflict (id) do nothing;
+
+create or replace function public.set_about_us_content_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_about_us_content_updated_at on public.about_us_content;
+
+create trigger set_about_us_content_updated_at
+before update on public.about_us_content
+for each row
+execute function public.set_about_us_content_updated_at();
+
+alter table public.about_us_content enable row level security;
+
+drop policy if exists "About us content is publicly readable." on public.about_us_content;
+create policy "About us content is publicly readable."
+  on public.about_us_content for select
+  using (true);

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from 'vue'
+import AboutUs from '../components/AboutUs/AboutUs.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import HomePanels from '../components/HomePanels/HomePanels.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
@@ -47,11 +48,13 @@ const {
         @open-map="isMapOpen = true"
       />
       <HomePanels :theme="theme" />
+      <AboutUs :theme="theme" />
     </div>
 
     <div class="hidden tablet:block desktop:hidden">
       <TabletHome v-model:theme="theme" />
       <HomePanels :theme="theme" />
+      <AboutUs :theme="theme" />
     </div>
 
     <Transition name="header-backing">

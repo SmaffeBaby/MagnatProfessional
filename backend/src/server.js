@@ -118,6 +118,20 @@ app.get('/api/home-panels', async (_req, res, next) => {
   }
 })
 
+app.get('/api/about-us', async (_req, res, next) => {
+  try {
+    const content = await getAboutUsContent()
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({ content })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -221,6 +235,34 @@ app.delete('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next
     }
 
     res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/about-us', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const content = await getAboutUsContent()
+    res.json({ content })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/about-us', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = aboutUsToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('about_us_content')
+      .upsert({ id: true, ...payload }, { onConflict: 'id' })
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ content: aboutUsFromDatabase(data) })
   } catch (error) {
     next(error)
   }
@@ -411,6 +453,39 @@ function panelToDatabase(panel) {
     poster_url: panel.posterUrl || null,
     link_path: linkPath,
     tile_type: tileType,
+  }
+}
+
+async function getAboutUsContent() {
+  const { data, error } = await supabase
+    .from('about_us_content')
+    .select('*')
+    .eq('id', true)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return aboutUsFromDatabase(data)
+}
+
+function aboutUsFromDatabase(content) {
+  return {
+    text: content?.text || '',
+    textEn: content?.text_en || null,
+    buttonText: content?.button_text || '',
+    buttonTextEn: content?.button_text_en || null,
+    updatedAt: content?.updated_at || null,
+  }
+}
+
+function aboutUsToDatabase(content) {
+  return {
+    text: String(content.text || '').trim(),
+    text_en: normalizeOptionalText(content.textEn),
+    button_text: String(content.buttonText || '').trim(),
+    button_text_en: normalizeOptionalText(content.buttonTextEn),
   }
 }
 

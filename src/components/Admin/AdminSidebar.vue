@@ -22,6 +22,14 @@ defineEmits<{
     >
       Панели на главной
     </button>
+    <button
+      class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'about-us' }"
+      type="button"
+      @click="$emit('update:activeSection', 'about-us')"
+    >
+      О нас компонент
+    </button>
     <button class="admin-sidebar__logout" type="button" @click="$emit('logout')">Выйти</button>
   </aside>
 </template>

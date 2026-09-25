@@ -1,0 +1,90 @@
+.about-us {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  margin: 120px 20px 0;
+  color: #ffffff;
+}
+
+.about-us__title {
+  width: 100%;
+  margin: 0;
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.16;
+  letter-spacing: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.about-us__button {
+  display: inline-flex;
+  min-width: 0;
+  height: 54px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 30px;
+  border-radius: 999px;
+  padding: 15px 20px 17px 21px;
+  color: #ef3332;
+  background: #ffffff;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.about-us--dark .about-us__button {
+  color: #000000;
+}
+
+.about-us__button:hover {
+  opacity: 0.9;
+}
+
+.about-us__button:active {
+  transform: scale(0.98);
+}
+
+.about-us__button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
+@media (min-width: 1040px) and (max-width: 1300px) {
+  .about-us {
+    margin: 121px 55px 0;
+  }
+
+  .about-us__title {
+    font-size: 50px;
+  }
+
+  .about-us__button {
+    margin-top: 40px;
+  }
+}
+
+@media (min-width: 1301px) {
+  .about-us {
+    margin: 122px 55px 0;
+  }
+
+  .about-us__title {
+    font-size: 60px;
+  }
+
+  .about-us__button {
+    margin-top: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .about-us__button {
+    transition: none;
+  }
+}

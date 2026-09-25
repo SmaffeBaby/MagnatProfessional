@@ -1,28 +1,40 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
+import AboutUsAdminSection from '../components/Admin/AboutUsAdminSection.vue'
 import AdminLogin from '../components/Admin/AdminLogin.vue'
 import AdminSidebar from '../components/Admin/AdminSidebar.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
+import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
 
 const activeSection = ref('home-panels')
 const auth = useAdminAuth()
+const aboutUs = useAdminAboutUs()
 const homePanels = useAdminHomePanels()
 
 onMounted(async () => {
   if (auth.isAuthorized.value && await auth.verifySession()) {
-    await homePanels.loadPanels()
+    await Promise.all([
+      homePanels.loadPanels(),
+      aboutUs.loadContent(),
+    ])
   }
 })
 
 async function login() {
-  await auth.login(homePanels.loadPanels)
+  await auth.login(async () => {
+    await Promise.all([
+      homePanels.loadPanels(),
+      aboutUs.loadContent(),
+    ])
+  })
 }
 
 function logout() {
   auth.logout()
   homePanels.clearPanels()
+  aboutUs.clearContent()
 }
 </script>
 
@@ -57,6 +69,16 @@ function logout() {
         @upload="homePanels.uploadFile"
         @edit="homePanels.editPanel"
         @delete="homePanels.deletePanel"
+      />
+
+      <AboutUsAdminSection
+        v-if="activeSection === 'about-us'"
+        :error="aboutUs.error.value"
+        :form="aboutUs.form"
+        :is-loading="aboutUs.isLoading.value"
+        :is-saving="aboutUs.isSaving.value"
+        :success-message="aboutUs.successMessage.value"
+        @save="aboutUs.saveContent"
       />
     </section>
   </main>

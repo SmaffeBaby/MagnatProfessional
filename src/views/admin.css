@@ -57,15 +57,27 @@
 }
 
 .admin-login input,
-.panel-form input {
+.panel-form input,
+.panel-form textarea {
   width: 100%;
-  height: 44px;
   border: 1px solid #d6d6d6;
   border-radius: 6px;
   padding: 0 12px;
   font: inherit;
   color: #171717;
   background: #ffffff;
+}
+
+.admin-login input,
+.panel-form input {
+  height: 44px;
+}
+
+.panel-form textarea {
+  min-height: 132px;
+  resize: vertical;
+  padding: 12px;
+  line-height: 1.45;
 }
 
 .admin-login input[type='file'],
@@ -110,6 +122,10 @@
   color: #b00020;
 }
 
+.admin-message--success {
+  color: #237a35;
+}
+
 .admin-shell {
   display: flex;
   min-height: 100vh;
@@ -130,10 +146,13 @@
 
 .admin-sidebar__link {
   justify-content: flex-start;
-  margin-top: 30px;
   border: 1px solid rgba(255, 255, 255, 0.28);
   text-align: left;
   background: transparent;
+}
+
+.admin-logo + .admin-sidebar__link {
+  margin-top: 30px;
 }
 
 .admin-sidebar__link--active {
