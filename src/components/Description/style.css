@@ -1,0 +1,133 @@
+.description {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  margin: 60px 20px 0;
+  color: #ffffff;
+}
+
+.description__text {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.description__card {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 440px;
+  margin-top: 60px;
+  overflow: hidden;
+  border-radius: 30px;
+  background: #ef3332;
+}
+
+.description__card picture {
+  position: absolute;
+  inset: 0;
+}
+
+.description__card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.description__card-text {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 30px 30px 0;
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: 0;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1040px) and (max-width: 1300px) {
+  .description {
+    grid-template-columns: minmax(0, 1fr) 452px;
+    gap: 11px;
+    align-items: start;
+    margin: 120px 55px 0;
+  }
+
+  .description__text {
+    display: flex;
+    height: 440px;
+    align-items: center;
+    font-size: 40px;
+  }
+
+  .description__card {
+    width: 452px;
+    height: 440px;
+    margin-top: 0;
+  }
+
+  .description__card-text {
+    padding: 50px 50px 0;
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1301px) {
+  .description {
+    grid-template-columns: minmax(420px, 1fr) 664px;
+    gap: clamp(56px, calc(100% - 420px - 664px), 236px);
+    align-items: start;
+    margin: 120px 55px 0;
+  }
+
+  .description__text {
+    display: flex;
+    height: 440px;
+    align-items: center;
+    font-size: 38px;
+    line-height: 1.02;
+    max-height: 440px;
+    overflow-wrap: normal;
+    word-break: normal;
+  }
+
+  .description__card {
+    width: 664px;
+    max-width: 100%;
+    height: 440px;
+    margin-top: 0;
+  }
+
+  .description__card-text {
+    padding: 50px 50px 0;
+    font-size: 24px;
+  }
+}
+
+@media (min-width: 1301px) and (max-width: 1700px) {
+  .description {
+    display: block;
+    margin-right: 55px;
+    margin-left: 55px;
+  }
+
+  .description__text {
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+
+  .description__card {
+    width: 100%;
+    margin-top: 80px;
+  }
+}

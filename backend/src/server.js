@@ -132,6 +132,20 @@ app.get('/api/about-us', async (_req, res, next) => {
   }
 })
 
+app.get('/api/description', async (_req, res, next) => {
+  try {
+    const content = await getDescriptionContent()
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({ content })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -263,6 +277,34 @@ app.put('/api/admin/about-us', requireAdminAuth, async (req, res, next) => {
     }
 
     res.json({ content: aboutUsFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/description', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const content = await getDescriptionContent()
+    res.json({ content })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/description', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = descriptionToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('description_content')
+      .upsert({ id: true, ...payload }, { onConflict: 'id' })
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ content: descriptionFromDatabase(data) })
   } catch (error) {
     next(error)
   }
@@ -486,6 +528,51 @@ function aboutUsToDatabase(content) {
     text_en: normalizeOptionalText(content.textEn),
     button_text: String(content.buttonText || '').trim(),
     button_text_en: normalizeOptionalText(content.buttonTextEn),
+  }
+}
+
+async function getDescriptionContent() {
+  const { data, error } = await supabase
+    .from('description_content')
+    .select('*')
+    .eq('id', true)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return descriptionFromDatabase(data)
+}
+
+function descriptionFromDatabase(content) {
+  return {
+    text: content?.text || '',
+    textEn: content?.text_en || null,
+    cardText: content?.card_text || '',
+    cardTextEn: content?.card_text_en || null,
+    desktopPlaquePath: content?.desktop_plaque_path || null,
+    desktopPlaqueUrl: content?.desktop_plaque_url || null,
+    tabletPlaquePath: content?.tablet_plaque_path || null,
+    tabletPlaqueUrl: content?.tablet_plaque_url || null,
+    mobilePlaquePath: content?.mobile_plaque_path || null,
+    mobilePlaqueUrl: content?.mobile_plaque_url || null,
+    updatedAt: content?.updated_at || null,
+  }
+}
+
+function descriptionToDatabase(content) {
+  return {
+    text: String(content.text || '').trim(),
+    text_en: normalizeOptionalText(content.textEn),
+    card_text: String(content.cardText || '').trim(),
+    card_text_en: normalizeOptionalText(content.cardTextEn),
+    desktop_plaque_path: content.desktopPlaquePath || null,
+    desktop_plaque_url: content.desktopPlaqueUrl || null,
+    tablet_plaque_path: content.tabletPlaquePath || null,
+    tablet_plaque_url: content.tabletPlaqueUrl || null,
+    mobile_plaque_path: content.mobilePlaquePath || null,
+    mobile_plaque_url: content.mobilePlaqueUrl || null,
   }
 }
 

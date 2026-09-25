@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
+import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import HomePanels from '../components/HomePanels/HomePanels.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
@@ -49,12 +50,14 @@ const {
       />
       <HomePanels :theme="theme" />
       <AboutUs :theme="theme" />
+      <Description :theme="theme" />
     </div>
 
     <div class="hidden tablet:block desktop:hidden">
       <TabletHome v-model:theme="theme" />
       <HomePanels :theme="theme" />
       <AboutUs :theme="theme" />
+      <Description :theme="theme" />
     </div>
 
     <Transition name="header-backing">
@@ -117,7 +120,7 @@ const {
     </Transition>
 
     <div class="hidden min-h-screen desktop:flex">
-      <div class="w-[504px] shrink-0">
+      <div class="desktop-sidebar-frame shrink-0">
         <Sidebar v-model:theme="theme" @open-map="isMapOpen = true" />
       </div>
 

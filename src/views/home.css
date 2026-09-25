@@ -11,6 +11,10 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
+.desktop-sidebar-frame {
+  width: clamp(400px, calc(400px + (100vw - 1301px) * 0.1185), 471px);
+}
+
 .responsive-header-backing--tablet {
   display: none;
   padding: 30px 55px;

@@ -1,5 +1,6 @@
 <script setup>
 import AboutUs from '../AboutUs/AboutUs.vue'
+import Description from '../Description/Description.vue'
 import HomePanels from '../HomePanels/HomePanels.vue'
 import MainText from '../MainText/MainText.vue'
 
@@ -16,6 +17,7 @@ defineProps({
     <MainText :theme="theme" />
     <HomePanels :theme="theme" />
     <AboutUs :theme="theme" />
+    <Description :theme="theme" />
   </div>
 </template>
 

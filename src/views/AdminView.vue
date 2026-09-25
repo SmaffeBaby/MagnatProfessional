@@ -3,14 +3,17 @@ import { onMounted, ref } from 'vue'
 import AboutUsAdminSection from '../components/Admin/AboutUsAdminSection.vue'
 import AdminLogin from '../components/Admin/AdminLogin.vue'
 import AdminSidebar from '../components/Admin/AdminSidebar.vue'
+import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
+import { useAdminDescription } from '../composables/Admin/useAdminDescription'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
 
 const activeSection = ref('home-panels')
 const auth = useAdminAuth()
 const aboutUs = useAdminAboutUs()
+const description = useAdminDescription()
 const homePanels = useAdminHomePanels()
 
 onMounted(async () => {
@@ -18,6 +21,7 @@ onMounted(async () => {
     await Promise.all([
       homePanels.loadPanels(),
       aboutUs.loadContent(),
+      description.loadContent(),
     ])
   }
 })
@@ -27,6 +31,7 @@ async function login() {
     await Promise.all([
       homePanels.loadPanels(),
       aboutUs.loadContent(),
+      description.loadContent(),
     ])
   })
 }
@@ -35,6 +40,7 @@ function logout() {
   auth.logout()
   homePanels.clearPanels()
   aboutUs.clearContent()
+  description.clearContent()
 }
 </script>
 
@@ -79,6 +85,18 @@ function logout() {
         :is-saving="aboutUs.isSaving.value"
         :success-message="aboutUs.successMessage.value"
         @save="aboutUs.saveContent"
+      />
+
+      <DescriptionAdminSection
+        v-if="activeSection === 'description'"
+        :error="description.error.value"
+        :form="description.form"
+        :is-loading="description.isLoading.value"
+        :is-saving="description.isSaving.value"
+        :success-message="description.successMessage.value"
+        :upload-field="description.uploadField.value"
+        @save="description.saveContent"
+        @upload="description.uploadPlaque"
       />
     </section>
   </main>
