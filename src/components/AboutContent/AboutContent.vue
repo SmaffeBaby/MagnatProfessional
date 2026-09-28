@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import AboutUs from '../AboutUs/AboutUs.vue'
 import Description from '../Description/Description.vue'
+import DirectorText from '../DirectorText/DirectorText.vue'
 import DottedSeparator from '../DottedSeparator/DottedSeparator.vue'
 import Stats from '../Stats/Stats.vue'
 import { useMainText } from '../../composables/useMainText'
@@ -33,5 +34,6 @@ const { content: mainTextContent } = useMainText()
     <Description :theme="theme" />
     <DottedSeparator />
     <Stats number-variant="gradient" />
+    <DirectorText :theme="theme" />
   </div>
 </template>

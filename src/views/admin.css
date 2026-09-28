@@ -329,12 +329,30 @@
   margin-top: 22px;
 }
 
-.description-admin-form__previews img {
+.description-admin-form__previews img,
+.director-text-admin-form__previews img {
   aspect-ratio: 1 / 1;
   overflow: hidden;
   border: 1px solid #dddddd;
   border-radius: 8px;
   background: #f7f7f7;
+}
+
+.director-text-admin-form__previews {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 180px));
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.director-text-admin-form__previews img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.director-text-admin-form__preview--round {
+  border-radius: 50%;
 }
 
 .panel-form__actions,

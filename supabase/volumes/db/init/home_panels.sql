@@ -186,3 +186,60 @@ drop policy if exists "Stats items are publicly readable." on public.stats_items
 create policy "Stats items are publicly readable."
   on public.stats_items for select
   using (true);
+
+create table if not exists public.director_text_content (
+  id boolean primary key default true,
+  text text not null default '',
+  text_en text,
+  photo_path text,
+  photo_url text,
+  thumbnail_path text,
+  thumbnail_url text,
+  name text not null default '',
+  name_en text,
+  position text not null default '',
+  position_en text,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint director_text_content_singleton_check check (id)
+);
+
+insert into public.director_text_content (
+  id,
+  text,
+  text_en,
+  photo_path,
+  photo_url,
+  thumbnail_path,
+  thumbnail_url,
+  name,
+  name_en,
+  position,
+  position_en
+)
+values (true, '', null, null, null, null, null, '', null, '', null)
+on conflict (id) do nothing;
+
+create or replace function public.set_director_text_content_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_director_text_content_updated_at on public.director_text_content;
+
+create trigger set_director_text_content_updated_at
+before update on public.director_text_content
+for each row
+execute function public.set_director_text_content_updated_at();
+
+alter table public.director_text_content enable row level security;
+
+drop policy if exists "Director text content is publicly readable." on public.director_text_content;
+create policy "Director text content is publicly readable."
+  on public.director_text_content for select
+  using (true);

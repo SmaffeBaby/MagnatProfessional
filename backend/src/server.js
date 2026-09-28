@@ -170,6 +170,20 @@ app.get('/api/stats', async (_req, res, next) => {
   }
 })
 
+app.get('/api/director-text', async (_req, res, next) => {
+  try {
+    const content = await getDirectorTextContent()
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({ content })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -405,6 +419,34 @@ app.delete('/api/admin/stats/:id', requireAdminAuth, async (req, res, next) => {
     }
 
     res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/director-text', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const content = await getDirectorTextContent()
+    res.json({ content })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/director-text', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = directorTextToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('director_text_content')
+      .upsert({ id: true, ...payload }, { onConflict: 'id' })
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ content: directorTextFromDatabase(data) })
   } catch (error) {
     next(error)
   }
@@ -710,6 +752,51 @@ function statsItemToDatabase(item) {
     sort_order: sortOrder,
     text,
     text_en: normalizeOptionalText(item.textEn),
+  }
+}
+
+async function getDirectorTextContent() {
+  const { data, error } = await supabase
+    .from('director_text_content')
+    .select('*')
+    .eq('id', true)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return directorTextFromDatabase(data)
+}
+
+function directorTextFromDatabase(content) {
+  return {
+    text: content?.text || '',
+    textEn: content?.text_en || null,
+    photoPath: content?.photo_path || null,
+    photoUrl: content?.photo_url || null,
+    thumbnailPath: content?.thumbnail_path || null,
+    thumbnailUrl: content?.thumbnail_url || null,
+    name: content?.name || '',
+    nameEn: content?.name_en || null,
+    position: content?.position || '',
+    positionEn: content?.position_en || null,
+    updatedAt: content?.updated_at || null,
+  }
+}
+
+function directorTextToDatabase(content) {
+  return {
+    text: String(content.text || '').trim(),
+    text_en: normalizeOptionalText(content.textEn),
+    photo_path: content.photoPath || null,
+    photo_url: content.photoUrl || null,
+    thumbnail_path: content.thumbnailPath || null,
+    thumbnail_url: content.thumbnailUrl || null,
+    name: String(content.name || '').trim(),
+    name_en: normalizeOptionalText(content.nameEn),
+    position: String(content.position || '').trim(),
+    position_en: normalizeOptionalText(content.positionEn),
   }
 }
 

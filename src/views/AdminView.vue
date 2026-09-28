@@ -4,10 +4,12 @@ import AboutUsAdminSection from '../components/Admin/AboutUsAdminSection.vue'
 import AdminLogin from '../components/Admin/AdminLogin.vue'
 import AdminSidebar from '../components/Admin/AdminSidebar.vue'
 import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection.vue'
+import DirectorTextAdminSection from '../components/Admin/DirectorTextAdminSection.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminDescription } from '../composables/Admin/useAdminDescription'
+import { useAdminDirectorText } from '../composables/Admin/useAdminDirectorText'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
@@ -16,6 +18,7 @@ const activeSection = ref('home-panels')
 const auth = useAdminAuth()
 const aboutUs = useAdminAboutUs()
 const description = useAdminDescription()
+const directorText = useAdminDirectorText()
 const homePanels = useAdminHomePanels()
 const stats = useAdminStats()
 
@@ -25,6 +28,7 @@ onMounted(async () => {
       homePanels.loadPanels(),
       aboutUs.loadContent(),
       description.loadContent(),
+      directorText.loadContent(),
       stats.loadItems(),
     ])
   }
@@ -36,6 +40,7 @@ async function login() {
       homePanels.loadPanels(),
       aboutUs.loadContent(),
       description.loadContent(),
+      directorText.loadContent(),
       stats.loadItems(),
     ])
   })
@@ -46,6 +51,7 @@ function logout() {
   homePanels.clearPanels()
   aboutUs.clearContent()
   description.clearContent()
+  directorText.clearContent()
   stats.clearItems()
 }
 </script>
@@ -118,6 +124,18 @@ function logout() {
         @reset="stats.resetForm"
         @edit="stats.editItem"
         @delete="stats.deleteItem"
+      />
+
+      <DirectorTextAdminSection
+        v-if="activeSection === 'director-text'"
+        :error="directorText.error.value"
+        :form="directorText.form"
+        :is-loading="directorText.isLoading.value"
+        :is-saving="directorText.isSaving.value"
+        :success-message="directorText.successMessage.value"
+        :upload-field="directorText.uploadField.value"
+        @save="directorText.saveContent"
+        @upload="directorText.uploadPhoto"
       />
     </section>
   </main>

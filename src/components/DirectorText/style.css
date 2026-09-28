@@ -1,0 +1,161 @@
+.director-text {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 497px;
+  margin: 88.73px 20px 0;
+  overflow: visible;
+  border: 1px solid currentColor;
+  border-radius: 28px;
+  padding: 20px 20px;
+  color: #000000;
+  background: #ffffff;
+}
+
+.director-text::before {
+  position: absolute;
+  right: -20px;
+  bottom: calc(100% + 28px);
+  left: -20px;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.16);
+  content: '';
+}
+
+.director-text--dark {
+  color: #ffffff;
+  background: #222222;
+}
+
+.director-text--dark::before {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.director-text__copy,
+.director-text__name,
+.director-text__position {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.director-text__copy {
+  max-width: 100%;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.18;
+}
+
+.director-text__person {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-top: auto;
+  padding-top: 30px;
+}
+
+.director-text__avatar {
+  display: block;
+  width: 60px;
+  height: 60px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.director-text__person-text {
+  min-width: 0;
+  margin-top: 10px;
+}
+
+.director-text__name {
+  font-size: 18px;
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.director-text__position {
+  margin-top: 8px;
+  color: #858585;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.08;
+}
+
+.director-text__arrow {
+  display: none;
+}
+
+.director-text--dark .director-text__position {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+@media (min-width: 1040px) {
+  .director-text {
+    min-height: 599px;
+    margin: 80px 55px 0;
+    overflow: hidden;
+    border-radius: 24px;
+    padding: 60px;
+  }
+
+  .director-text::before {
+    display: none;
+  }
+
+  .director-text__copy {
+    font-size: 24px;
+    line-height: 1.16;
+  }
+
+  .director-text__person {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 60px;
+  }
+
+  .director-text__avatar {
+    width: 100px;
+    height: 100px;
+  }
+
+  .director-text__person-text {
+    margin-top: 0;
+    margin-left: 20px;
+  }
+
+  .director-text__name {
+    font-size: 24px;
+    line-height: 1.14;
+  }
+
+  .director-text__position {
+    margin-top: 8px;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.12;
+  }
+
+  .director-text__arrow {
+    position: absolute;
+    z-index: 1;
+    right: 60px;
+    bottom: 60px;
+    display: block;
+    width: min(300px, 28%);
+    height: auto;
+    opacity: 0.45;
+    pointer-events: none;
+  }
+}
+
+@media (min-width: 1301px) {
+  .director-text {
+    min-height: 483px;
+  }
+}
