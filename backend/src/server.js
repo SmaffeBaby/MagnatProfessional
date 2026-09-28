@@ -184,6 +184,30 @@ app.get('/api/director-text', async (_req, res, next) => {
   }
 })
 
+app.get('/api/hystory-company', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('hystory_company_items')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        items: data.map(hystoryCompanyItemFromDatabase),
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -447,6 +471,82 @@ app.put('/api/admin/director-text', requireAdminAuth, async (req, res, next) => 
     }
 
     res.json({ content: directorTextFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/hystory-company', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('hystory_company_items')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      items: data.map(hystoryCompanyItemFromDatabase),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/hystory-company', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = hystoryCompanyItemToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('hystory_company_items')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ item: hystoryCompanyItemFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/hystory-company/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = hystoryCompanyItemToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('hystory_company_items')
+      .update(payload)
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ item: hystoryCompanyItemFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/hystory-company/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('hystory_company_items')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
   } catch (error) {
     next(error)
   }
@@ -797,6 +897,54 @@ function directorTextToDatabase(content) {
     name_en: normalizeOptionalText(content.nameEn),
     position: String(content.position || '').trim(),
     position_en: normalizeOptionalText(content.positionEn),
+  }
+}
+
+function hystoryCompanyItemFromDatabase(item) {
+  return {
+    id: item.id,
+    year: item.year,
+    sortOrder: item.sort_order,
+    title: item.title,
+    titleEn: item.title_en,
+    text: item.text,
+    textEn: item.text_en,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }
+}
+
+function hystoryCompanyItemToDatabase(item) {
+  const year = String(item.year || '').trim()
+  const title = String(item.title || '').trim()
+  const text = String(item.text || '').trim()
+  const sortOrder = Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : 0
+
+  if (!year) {
+    const error = new Error('Year is required')
+    error.status = 400
+    throw error
+  }
+
+  if (!title) {
+    const error = new Error('Title is required')
+    error.status = 400
+    throw error
+  }
+
+  if (!text) {
+    const error = new Error('Text is required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    year,
+    sort_order: sortOrder,
+    title,
+    title_en: normalizeOptionalText(item.titleEn),
+    text,
+    text_en: normalizeOptionalText(item.textEn),
   }
 }
 

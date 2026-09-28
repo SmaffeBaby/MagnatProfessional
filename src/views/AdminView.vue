@@ -6,12 +6,14 @@ import AdminSidebar from '../components/Admin/AdminSidebar.vue'
 import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection.vue'
 import DirectorTextAdminSection from '../components/Admin/DirectorTextAdminSection.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
+import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminDescription } from '../composables/Admin/useAdminDescription'
 import { useAdminDirectorText } from '../composables/Admin/useAdminDirectorText'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
+import { useAdminHystoryCompany } from '../composables/Admin/useAdminHystoryCompany'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
 
 const activeSection = ref('home-panels')
@@ -20,6 +22,7 @@ const aboutUs = useAdminAboutUs()
 const description = useAdminDescription()
 const directorText = useAdminDirectorText()
 const homePanels = useAdminHomePanels()
+const hystoryCompany = useAdminHystoryCompany()
 const stats = useAdminStats()
 
 onMounted(async () => {
@@ -29,6 +32,7 @@ onMounted(async () => {
       aboutUs.loadContent(),
       description.loadContent(),
       directorText.loadContent(),
+      hystoryCompany.loadItems(),
       stats.loadItems(),
     ])
   }
@@ -41,6 +45,7 @@ async function login() {
       aboutUs.loadContent(),
       description.loadContent(),
       directorText.loadContent(),
+      hystoryCompany.loadItems(),
       stats.loadItems(),
     ])
   })
@@ -52,6 +57,7 @@ function logout() {
   aboutUs.clearContent()
   description.clearContent()
   directorText.clearContent()
+  hystoryCompany.clearItems()
   stats.clearItems()
 }
 </script>
@@ -136,6 +142,21 @@ function logout() {
         :upload-field="directorText.uploadField.value"
         @save="directorText.saveContent"
         @upload="directorText.uploadPhoto"
+      />
+
+      <HystoryCompanyAdminSection
+        v-if="activeSection === 'hystory-company'"
+        :error="hystoryCompany.error.value"
+        :form="hystoryCompany.form"
+        :form-title="hystoryCompany.formTitle.value"
+        :items="hystoryCompany.items.value"
+        :is-loading="hystoryCompany.isLoading.value"
+        :is-saving="hystoryCompany.isSaving.value"
+        @new-item="hystoryCompany.resetForm"
+        @save="hystoryCompany.saveItem"
+        @reset="hystoryCompany.resetForm"
+        @edit="hystoryCompany.editItem"
+        @delete="hystoryCompany.deleteItem"
       />
     </section>
   </main>

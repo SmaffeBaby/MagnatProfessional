@@ -54,6 +54,14 @@ defineEmits<{
     >
       DirectorText компонент
     </button>
+    <button
+      class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'hystory-company' }"
+      type="button"
+      @click="$emit('update:activeSection', 'hystory-company')"
+    >
+      История компании
+    </button>
     <button class="admin-sidebar__logout" type="button" @click="$emit('logout')">Выйти</button>
   </aside>
 </template>
