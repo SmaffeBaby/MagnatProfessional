@@ -56,7 +56,7 @@ const languageStore = useLanguageStore()
       showBacking && !isMenuOpen ? 'mobile-header--backed bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]' : 'bg-transparent',
     ]"
   >
-    <a href="/public" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
+    <a href="/" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
       <img
         class="h-11 w-[178.98px] max-w-[44vw] transition duration-300 ease-out"
         :src="showBacking && !isMenuOpen ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"

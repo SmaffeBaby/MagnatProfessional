@@ -1,4 +1,4 @@
-.swipe-content-main {
+.home-content {
   position: relative;
   z-index: 1;
   height: calc(100vh - 100px);
@@ -9,15 +9,15 @@
   scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
 }
 
-.swipe-content-main::-webkit-scrollbar {
+.home-content::-webkit-scrollbar {
   width: 8px;
 }
 
-.swipe-content-main::-webkit-scrollbar-track {
+.home-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.swipe-content-main::-webkit-scrollbar-thumb {
+.home-content::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.42);
 }

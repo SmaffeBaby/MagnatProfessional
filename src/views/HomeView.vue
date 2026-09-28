@@ -1,5 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import AboutContent from '../components/AboutContent/AboutContent.vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
 import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
@@ -19,6 +21,7 @@ import './home.css'
 
 const themeStore = useThemeStore()
 themeStore.preloadThemeAssets()
+const route = useRoute()
 
 const theme = computed({
   get: () => themeStore.theme,
@@ -26,6 +29,7 @@ const theme = computed({
 })
 
 const isMapOpen = ref(false)
+const isAboutActive = computed(() => route.name === 'about')
 const {
   inactiveThemeIcon,
   isDarkTheme,
@@ -43,7 +47,7 @@ const {
 <template>
   <main
     class="home-main min-h-screen text-white transition-colors duration-500"
-    :class="theme === 'dark' ? 'bg-[#222222]' : 'bg-magnat-red'"
+    :class="theme === 'dark' ? 'bg-[#222222]' : isAboutActive ? 'bg-white' : 'bg-magnat-red'"
   >
     <div class="tablet:hidden desktop:hidden">
       <SidebarMobile
@@ -52,24 +56,30 @@ const {
         @menu-open-change="isMobileMenuOpen = $event"
         @open-map="isMapOpen = true"
       />
-      <HomePanels :theme="theme" />
-      <AboutUs :theme="theme" />
-      <Description :theme="theme" />
-      <DottedSeparator />
-      <Stats />
-      <Map />
-      <Footer />
+      <AboutContent v-if="isAboutActive" :theme="theme" />
+      <template v-else>
+        <HomePanels :theme="theme" />
+        <AboutUs :theme="theme" />
+        <Description :theme="theme" />
+        <DottedSeparator />
+        <Stats />
+        <Map />
+        <Footer />
+      </template>
     </div>
 
     <div class="home-tablet-page hidden tablet:block desktop:hidden">
       <TabletHome v-model:theme="theme" />
-      <HomePanels :theme="theme" />
-      <AboutUs :theme="theme" />
-      <Description :theme="theme" />
-      <DottedSeparator />
-      <Stats />
-      <Map />
-      <Footer />
+      <AboutContent v-if="isAboutActive" :theme="theme" />
+      <template v-else>
+        <HomePanels :theme="theme" />
+        <AboutUs :theme="theme" />
+        <Description :theme="theme" />
+        <DottedSeparator />
+        <Stats />
+        <Map />
+        <Footer />
+      </template>
     </div>
 
     <Transition name="header-backing">
@@ -88,7 +98,7 @@ const {
         v-if="isHeaderBackingVisible"
         class="responsive-header-backing responsive-header-backing--tablet"
       >
-        <a class="responsive-header-backing__logo-link" href="/public" :aria-label="t('sidebar.logo')">
+        <a class="responsive-header-backing__logo-link" href="/" :aria-label="t('sidebar.logo')">
           <img
             class="responsive-header-backing__logo"
             src="/ico/MagnatProfessionalLogo_color.svg"
@@ -110,14 +120,14 @@ const {
         </button>
 
         <nav class="responsive-header-backing__nav" :aria-label="t('desktopHome.navigationLabel')">
-          <a
+          <RouterLink
             v-for="navLink in navLinks"
             :key="navLink.href"
             class="responsive-header-backing__nav-link"
-            :href="navLink.href"
+            :to="navLink.href"
           >
             {{ t(navLink.labelKey) }}
-          </a>
+          </RouterLink>
         </nav>
 
         <button
@@ -133,10 +143,14 @@ const {
 
     <div class="hidden min-h-screen desktop:flex">
       <div class="desktop-sidebar-frame shrink-0">
-        <Sidebar v-model:theme="theme" @open-map="isMapOpen = true" />
+        <Sidebar
+          v-model:theme="theme"
+          :is-about-active="isAboutActive"
+          @open-map="isMapOpen = true"
+        />
       </div>
 
-      <DesktopHome :theme="theme" />
+      <DesktopHome :theme="theme" :is-about-active="isAboutActive" />
     </div>
 
     <OnTheMapPanel :is-open="isMapOpen" @close="isMapOpen = false" />

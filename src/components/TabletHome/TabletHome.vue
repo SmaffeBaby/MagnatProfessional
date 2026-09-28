@@ -44,7 +44,7 @@ const languageStore = useLanguageStore()
     </div>
 
     <header class="relative z-10 flex items-center gap-8 px-[55px] pt-[30px] text-white">
-      <a class="shrink-0" href="/public" :aria-label="t('sidebar.logo')">
+      <a class="shrink-0" href="/" :aria-label="t('sidebar.logo')">
         <img
           class="h-auto w-[244px]"
           src="/ico/MagnatProfessionalLogo.svg"

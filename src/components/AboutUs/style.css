@@ -18,6 +18,14 @@
   overflow-wrap: anywhere;
 }
 
+.about-us__title-highlight {
+  color: #e3222a;
+}
+
+.about-us--dark .about-us__title-highlight {
+  color: #e3222a;
+}
+
 .about-us__button {
   display: inline-flex;
   min-width: 0;

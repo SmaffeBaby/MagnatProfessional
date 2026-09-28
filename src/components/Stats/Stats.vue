@@ -4,6 +4,13 @@ import NumberFlow from '@number-flow/vue'
 import { continuous } from '@number-flow/vue'
 import { useStats } from '../../composables/useStats'
 
+const props = defineProps({
+  numberVariant: {
+    type: String,
+    default: 'animated',
+  },
+})
+
 const { localizedItems } = useStats()
 const statsElement = ref<HTMLElement | null>(null)
 const isVisible = ref(false)
@@ -12,6 +19,7 @@ let observer: IntersectionObserver | null = null
 let animationFrame = 0
 let hasAnimated = false
 const numberFlowPlugins = [continuous]
+const isGradientVariant = computed(() => props.numberVariant === 'gradient')
 
 const animatedItems = computed(() => localizedItems.value.map((item) => {
   const numericValue = Number(String(item.numberText).replace(/[^\d.-]/g, ''))
@@ -97,8 +105,31 @@ watch(isVisible, () => {
   <section v-if="animatedItems.length" ref="statsElement" class="stats" aria-label="Статистика">
     <article v-for="item in animatedItems" :key="item.id" class="stats__item">
       <p class="stats__number">
+        <span
+          v-if="isGradientVariant && item.numericValue !== null"
+          class="stats__number-gradient-flow"
+        >
+          <NumberFlow
+            :value="displayValues[item.id] || 0"
+            :plugins="numberFlowPlugins"
+            :spin-timing="{ duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }"
+            :transform-timing="{ duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }"
+            :opacity-timing="{ duration: 450, easing: 'ease-out' }"
+            class="stats__number-flow stats__number-flow--gradient-base"
+          />
+          <NumberFlow
+            :value="displayValues[item.id] || 0"
+            :plugins="numberFlowPlugins"
+            :spin-timing="{ duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }"
+            :transform-timing="{ duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }"
+            :opacity-timing="{ duration: 450, easing: 'ease-out' }"
+            class="stats__number-flow stats__number-flow--gradient-accent"
+            aria-hidden="true"
+          />
+        </span>
+        <span v-else-if="isGradientVariant" class="stats__number-gradient">{{ item.numberText }}</span>
         <NumberFlow
-          v-if="item.numericValue !== null"
+          v-else-if="item.numericValue !== null"
           :value="displayValues[item.id] || 0"
           :plugins="numberFlowPlugins"
           :spin-timing="{ duration: 420, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' }"

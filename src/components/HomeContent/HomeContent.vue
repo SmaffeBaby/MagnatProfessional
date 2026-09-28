@@ -7,6 +7,7 @@ import HomePanels from '../HomePanels/HomePanels.vue'
 import Map from '../Map/Map.vue'
 import MainText from '../MainText/MainText.vue'
 import Stats from '../Stats/Stats.vue'
+import './style.css'
 
 defineProps({
   theme: {
@@ -17,7 +18,7 @@ defineProps({
 </script>
 
 <template>
-  <div class="swipe-content-main">
+  <div class="home-content">
     <MainText :theme="theme" />
     <HomePanels :theme="theme" />
     <AboutUs :theme="theme" />
@@ -28,5 +29,3 @@ defineProps({
     <Footer />
   </div>
 </template>
-
-<style src="./style.css" scoped></style>

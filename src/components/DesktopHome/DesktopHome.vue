@@ -2,31 +2,37 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '../../composables/useLanguageStore'
-import SwipeContentMain from '../SwipeContentMain/SwipeContentMain.vue'
+import AboutContent from '../AboutContent/AboutContent.vue'
+import HomeContent from '../HomeContent/HomeContent.vue'
 
 const props = defineProps({
   theme: {
     type: String,
     default: 'light',
   },
+  isAboutActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
+const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
 const { t } = useI18n()
 const languageStore = useLanguageStore()
 
 const navLinks = [
   {
     labelKey: 'desktopHome.navigation.portfolio',
-    href: '#portfolio',
+    href: '/',
   },
   {
     labelKey: 'desktopHome.navigation.about',
-    href: '#about',
+    href: '/about',
   },
   {
     labelKey: 'desktopHome.navigation.contacts',
-    href: '#contacts',
+    href: '/#contacts',
   },
 ]
 </script>
@@ -34,9 +40,16 @@ const navLinks = [
 <template>
   <section
     class="desktop-home relative h-screen flex-1 overflow-hidden transition-colors duration-500"
-    :class="isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red'"
+    :class="[
+      isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red',
+      { 'desktop-home--about-light': isAboutLight },
+    ]"
   >
-    <div class="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+    <div
+      class="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500"
+      :class="props.isAboutActive ? 'opacity-0' : 'opacity-100'"
+      aria-hidden="true"
+    >
       <div
         class="desktop-theme-image desktop-theme-image--light"
         :class="isDarkTheme ? '' : 'desktop-theme-image--visible'"
@@ -47,23 +60,34 @@ const navLinks = [
       />
     </div>
 
-    <header class="desktop-home__header relative z-10 flex items-center justify-between gap-8 px-14 py-7 text-white">
+    <header
+      class="desktop-home__header relative z-10 flex items-center justify-between gap-8 px-14 py-7 transition-colors duration-500"
+      :class="isAboutLight ? 'text-black' : 'text-white'"
+    >
       <nav class="flex items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
-        <a
+        <RouterLink
           v-for="navLink in navLinks"
           :key="navLink.href"
-          class="inline-flex h-11 items-center justify-center rounded-full border-2 border-white px-5 text-base font-normal leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2"
-          :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
-          :href="navLink.href"
+          class="inline-flex h-11 items-center justify-center rounded-full border-2 px-5 text-base font-normal leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+          :class="isAboutLight
+            ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white focus-visible:ring-magnat-light focus-visible:ring-offset-white'
+            : isDarkTheme
+              ? 'border-white text-white hover:bg-white hover:text-black focus-visible:ring-white focus-visible:ring-offset-[#222222]'
+              : 'border-white text-white hover:bg-white hover:text-magnat-red focus-visible:ring-white focus-visible:ring-offset-magnat-red'"
+          :to="navLink.href"
         >
           {{ t(navLink.labelKey) }}
-        </a>
+        </RouterLink>
       </nav>
 
       <div class="flex shrink-0 items-center gap-3">
         <button
-          class="h-11 w-[62px] rounded-full border-2 border-white px-0 text-base font-semibold uppercase leading-none text-white transition duration-300 hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"
-          :class="isDarkTheme ? 'hover:text-black focus-visible:ring-offset-[#222222]' : 'hover:text-magnat-red focus-visible:ring-offset-magnat-red'"
+          class="h-11 w-[62px] rounded-full border-2 px-0 text-base font-semibold uppercase leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95"
+          :class="isAboutLight
+            ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white focus-visible:ring-magnat-light focus-visible:ring-offset-white'
+            : isDarkTheme
+              ? 'border-white text-white hover:bg-white hover:text-black focus-visible:ring-white focus-visible:ring-offset-[#222222]'
+              : 'border-white text-white hover:bg-white hover:text-magnat-red focus-visible:ring-white focus-visible:ring-offset-magnat-red'"
           type="button"
           :aria-label="t('desktopHome.actions.switchLanguage')"
           @click="languageStore.toggleLocale"
@@ -73,7 +97,10 @@ const navLinks = [
       </div>
     </header>
 
-    <SwipeContentMain :theme="theme" />
+    <Transition name="desktop-content" mode="out-in">
+      <AboutContent v-if="props.isAboutActive" :theme="theme" />
+      <HomeContent v-else :theme="theme" />
+    </Transition>
   </section>
 </template>
 
@@ -82,8 +109,22 @@ const navLinks = [
   isolation: isolate;
 }
 
+.desktop-home--about-light {
+  background: #ffffff;
+}
+
 .desktop-home__header {
   min-height: 100px;
+}
+
+.desktop-content-enter-active,
+.desktop-content-leave-active {
+  transition: opacity 260ms ease;
+}
+
+.desktop-content-enter-from,
+.desktop-content-leave-to {
+  opacity: 0;
 }
 
 .desktop-theme-image {
@@ -118,7 +159,9 @@ const navLinks = [
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .desktop-theme-image {
+  .desktop-theme-image,
+  .desktop-content-enter-active,
+  .desktop-content-leave-active {
     transition: none;
   }
 }
