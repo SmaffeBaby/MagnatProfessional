@@ -14,15 +14,15 @@ type SidebarMobileEmit = {
 const menuLinks = [
   {
     labelKey: 'sidebarMobile.navigation.portfolio',
-    href: '#portfolio',
+    href: '/',
   },
   {
     labelKey: 'sidebarMobile.navigation.about',
-    href: '#about',
+    href: '/about',
   },
   {
     labelKey: 'sidebarMobile.navigation.contacts',
-    href: '#contacts',
+    href: '/#contacts',
   },
 ]
 

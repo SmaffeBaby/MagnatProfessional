@@ -35,6 +35,10 @@ defineProps({
     type: String,
     default: '',
   },
+  isAboutLight: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits([
@@ -59,7 +63,7 @@ const languageStore = useLanguageStore()
     <a href="/" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
       <img
         class="h-11 w-[178.98px] max-w-[44vw] transition duration-300 ease-out"
-        :src="showBacking && !isMenuOpen ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
+        :src="(showBacking || isAboutLight) && !isMenuOpen ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
         :alt="t('sidebar.logo')"
       />
     </a>
@@ -97,9 +101,9 @@ const languageStore = useLanguageStore()
         v-if="!isMenuOpen"
         class="h-9 min-w-11 rounded-full border-2 px-2 text-xs font-semibold uppercase leading-none transition duration-300 ease-out hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95 mobile:h-11 mobile:min-w-14 mobile:px-3 mobile:text-sm"
         :class="[
-          showBacking ? 'border-black text-black hover:text-black focus-visible:ring-offset-white' : 'border-white text-white',
-          isDarkTheme && !showBacking ? 'hover:text-black focus-visible:ring-offset-[#222222]' : '',
-          !isDarkTheme && !showBacking ? 'hover:text-magnat-red focus-visible:ring-offset-magnat-red' : '',
+          showBacking || isAboutLight ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white active:border-magnat-light active:bg-white active:text-magnat-light focus-visible:ring-offset-white' : 'border-white text-white active:border-white active:bg-white active:text-magnat-red',
+          isDarkTheme && !showBacking && !isAboutLight ? 'hover:text-black focus-visible:ring-offset-[#222222]' : '',
+          !isDarkTheme && !showBacking && !isAboutLight ? 'hover:text-magnat-red focus-visible:ring-offset-magnat-red' : '',
         ]"
         type="button"
         :aria-label="t('sidebarMobile.actions.switchLanguage')"
@@ -117,7 +121,10 @@ const languageStore = useLanguageStore()
       >
         <img
           class="h-9 w-9 transition duration-300 ease-out mobile:h-11 mobile:w-11"
-          :class="showBacking && !isMenuOpen ? 'brightness-0' : ''"
+          :class="[
+            (showBacking || isAboutLight) && !isMenuOpen ? 'brightness-0' : '',
+            isAboutLight && !isMenuOpen ? 'mobile-header__menu-icon--about' : '',
+          ]"
           :src="isMenuOpen ? '/ico/cancel.svg' : '/ico/burger/burger_inactive.svg'"
           alt=""
         />
@@ -125,3 +132,11 @@ const languageStore = useLanguageStore()
     </div>
   </header>
 </template>
+
+<style scoped>
+.mobile-header__menu-icon--about:hover,
+button:hover .mobile-header__menu-icon--about,
+button:active .mobile-header__menu-icon--about {
+  filter: brightness(0) saturate(100%) invert(24%) sepia(86%) saturate(3292%) hue-rotate(344deg) brightness(93%) contrast(96%);
+}
+</style>

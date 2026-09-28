@@ -9,6 +9,23 @@
   background: #ffffff;
   color: #000000;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition:
+    background-color 500ms ease,
+    color 500ms ease,
+    box-shadow 500ms ease,
+    opacity 300ms ease-out,
+    transform 300ms ease-out;
+}
+
+.responsive-header-backing--light {
+  background: #ffffff;
+  color: #000000;
+}
+
+.responsive-header-backing--dark {
+  background: #222222;
+  color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
 .desktop-sidebar-frame {
@@ -77,6 +94,10 @@
   transition: opacity 300ms ease-out;
 }
 
+.responsive-header-backing--dark .responsive-header-backing__theme-icon {
+  filter: none;
+}
+
 .responsive-header-backing__nav {
   display: flex;
   min-width: 0;
@@ -98,6 +119,12 @@
     transform 300ms ease;
 }
 
+.responsive-header-backing--dark .responsive-header-backing__nav-link,
+.responsive-header-backing--dark .responsive-header-backing__language-button {
+  border-color: #ffffff;
+  color: #ffffff;
+}
+
 .responsive-header-backing__nav-link {
   padding: 10px 20px;
   text-decoration: none;
@@ -113,17 +140,37 @@
 
 .responsive-header-backing__nav-link:hover,
 .responsive-header-backing__language-button:hover {
+  border-color: #e3222a;
+  background: #e3222a;
+  color: #ffffff;
+}
+
+.responsive-header-backing--dark .responsive-header-backing__nav-link:hover,
+.responsive-header-backing--dark .responsive-header-backing__language-button:hover {
+  border-color: #ffffff;
   background: #ffffff;
   color: #000000;
 }
 
+.responsive-header-backing__nav-link:active,
+.responsive-header-backing__language-button:active {
+  border-color: #e3222a;
+  background: #e3222a;
+  color: #ffffff;
+}
+
 .responsive-header-backing__language-button:active {
   transform: scale(0.95);
+  border-color: #e3222a;
+  background: #e3222a;
+  color: #ffffff;
 }
 
 .header-backing-enter-active,
 .header-backing-leave-active {
   transition:
+    background-color 500ms ease,
+    color 500ms ease,
     opacity 300ms ease-out,
     transform 300ms ease-out;
 }

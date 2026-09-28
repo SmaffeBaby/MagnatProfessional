@@ -11,6 +11,10 @@
   background: #ffffff;
   scrollbar-width: thin;
   scrollbar-color: rgba(0, 0, 0, 0.24) transparent;
+  transition:
+    background-color 500ms ease,
+    color 500ms ease,
+    scrollbar-color 500ms ease;
 }
 
 .about-content--dark {
@@ -145,4 +149,13 @@
       transparent 20px,
       transparent 32px
     );
+}
+
+@media (max-width: 1300px) {
+  .about-content {
+    height: auto;
+    min-height: calc(100vh - 100px);
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
 }

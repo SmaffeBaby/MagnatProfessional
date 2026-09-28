@@ -16,6 +16,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isAboutActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:theme', 'open-map', 'menu-open-change'])
@@ -39,9 +43,11 @@ defineExpose({
 
 <template>
   <aside
-    class="mobile-sidebar-shell min-h-screen min-h-[100svh] overflow-hidden text-white"
+    class="mobile-sidebar-shell overflow-hidden text-white"
     :class="[
       isDarkTheme ? 'is-dark-theme' : '',
+      isAboutActive && !isDarkTheme ? 'is-about-light' : '',
+      isAboutActive && !isMenuOpen ? 'relative' : 'min-h-screen min-h-[100svh]',
       isMenuOpen ? 'fixed inset-0 z-[600]' : 'relative',
     ]"
   >
@@ -49,14 +55,16 @@ defineExpose({
       <section
         v-if="!isMenuOpen"
         key="home"
-        class="mobile-sidebar-home absolute inset-0 z-[1] flex min-h-screen min-h-[100svh] flex-col overflow-y-auto px-5 pb-[84px] pt-5"
+        class="mobile-sidebar-home z-[1] flex flex-col overflow-y-auto px-5 pt-5"
+        :class="isAboutActive ? 'relative pb-5' : 'absolute inset-0 min-h-screen min-h-[100svh] pb-[84px]'"
       >
-        <MobileThemeImage :theme="theme" />
+        <MobileThemeImage v-if="!isAboutActive" :theme="theme" />
         <MobileHeader
           :is-dark-theme="isDarkTheme"
+          :is-about-light="isAboutActive && !isDarkTheme"
           @open-menu="openMenu"
         />
-        <MainText :theme="theme" />
+        <MainText v-if="!isAboutActive" :theme="theme" />
       </section>
     </Transition>
 

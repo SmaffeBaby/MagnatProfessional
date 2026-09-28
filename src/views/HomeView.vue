@@ -53,6 +53,7 @@ const {
       <SidebarMobile
         ref="mobileSidebar"
         v-model:theme="theme"
+        :is-about-active="isAboutActive"
         @menu-open-change="isMobileMenuOpen = $event"
         @open-map="isMapOpen = true"
       />
@@ -69,7 +70,7 @@ const {
     </div>
 
     <div class="home-tablet-page hidden tablet:block desktop:hidden">
-      <TabletHome v-model:theme="theme" />
+      <TabletHome v-model:theme="theme" :is-about-active="isAboutActive" />
       <AboutContent v-if="isAboutActive" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
@@ -89,6 +90,7 @@ const {
         is-fixed
         show-backing
         :is-dark-theme="isDarkTheme"
+        :is-about-light="isAboutActive && !isDarkTheme"
         @open-menu="openMobileMenu"
       />
     </Transition>
@@ -97,11 +99,12 @@ const {
       <header
         v-if="isHeaderBackingVisible"
         class="responsive-header-backing responsive-header-backing--tablet"
+        :class="isDarkTheme ? 'responsive-header-backing--dark' : 'responsive-header-backing--light'"
       >
         <a class="responsive-header-backing__logo-link" href="/" :aria-label="t('sidebar.logo')">
           <img
             class="responsive-header-backing__logo"
-            src="/ico/MagnatProfessionalLogo_color.svg"
+            :src="isDarkTheme ? '/ico/MagnatProfessionalLogo.svg' : '/ico/MagnatProfessionalLogo_color.svg'"
             :alt="t('sidebar.logo')"
           />
         </a>
