@@ -355,6 +355,44 @@
   border-radius: 50%;
 }
 
+.mission-values-admin-form__cards {
+  margin-top: 28px;
+}
+
+.rich-text-editor {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.rich-text-editor__label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.rich-text-editor__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.rich-text-editor__surface {
+  min-height: 160px;
+  overflow: auto;
+  border: 1px solid #d6d6d6;
+  border-radius: 6px;
+  padding: 12px;
+  color: #171717;
+  background: #ffffff;
+  font: inherit;
+  line-height: 1.45;
+}
+
+.rich-text-editor__surface--focused {
+  outline: 2px solid rgba(239, 51, 50, 0.22);
+  outline-offset: 2px;
+}
+
 .panel-form__actions,
 .panel-list__actions {
   display: flex;

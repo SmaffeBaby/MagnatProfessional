@@ -208,6 +208,32 @@ app.get('/api/hystory-company', async (_req, res, next) => {
   }
 })
 
+app.get('/api/mission-values', async (_req, res, next) => {
+  try {
+    const content = await getMissionValuesContent()
+    const { data, error } = await supabase
+      .from('mission_values_cards')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        content,
+        cards: data.map(missionValuesCardFromDatabase),
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -539,6 +565,103 @@ app.delete('/api/admin/hystory-company/:id', requireAdminAuth, async (req, res, 
   try {
     const { error } = await supabase
       .from('hystory_company_items')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/mission-values', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const content = await getMissionValuesContent()
+    const { data, error } = await supabase
+      .from('mission_values_cards')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      content,
+      cards: data.map(missionValuesCardFromDatabase),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/mission-values', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = missionValuesContentToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('mission_values_content')
+      .upsert({ id: true, ...payload }, { onConflict: 'id' })
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ content: missionValuesContentFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/mission-values/cards', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = missionValuesCardToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('mission_values_cards')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ card: missionValuesCardFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/mission-values/cards/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = missionValuesCardToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('mission_values_cards')
+      .update(payload)
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ card: missionValuesCardFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/mission-values/cards/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('mission_values_cards')
       .delete()
       .eq('id', req.params.id)
 
@@ -946,6 +1069,100 @@ function hystoryCompanyItemToDatabase(item) {
     text,
     text_en: normalizeOptionalText(item.textEn),
   }
+}
+
+async function getMissionValuesContent() {
+  const { data, error } = await supabase
+    .from('mission_values_content')
+    .select('*')
+    .eq('id', true)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return missionValuesContentFromDatabase(data)
+}
+
+function missionValuesContentFromDatabase(content) {
+  return {
+    mainText: content?.main_text || '',
+    mainTextEn: content?.main_text_en || null,
+    mainTextHtml: content?.main_text_html || '',
+    mainTextHtmlEn: content?.main_text_html_en || null,
+    updatedAt: content?.updated_at || null,
+  }
+}
+
+function missionValuesContentToDatabase(content) {
+  return {
+    main_text: plainTextFromHtml(content.mainTextHtml) || String(content.mainText || '').trim(),
+    main_text_en: normalizeOptionalText(plainTextFromHtml(content.mainTextHtmlEn) || content.mainTextEn),
+    main_text_html: normalizeRichText(content.mainTextHtml || content.mainText),
+    main_text_html_en: normalizeOptionalText(normalizeRichText(content.mainTextHtmlEn || content.mainTextEn)),
+  }
+}
+
+function missionValuesCardFromDatabase(card) {
+  return {
+    id: card.id,
+    sortOrder: card.sort_order,
+    title: card.title,
+    titleEn: card.title_en,
+    text: card.text,
+    textEn: card.text_en,
+    createdAt: card.created_at,
+    updatedAt: card.updated_at,
+  }
+}
+
+function missionValuesCardToDatabase(card) {
+  const title = String(card.title || '').trim()
+  const text = String(card.text || '').trim()
+  const sortOrder = Number.isFinite(Number(card.sortOrder)) ? Number(card.sortOrder) : 0
+
+  if (!title) {
+    const error = new Error('Title is required')
+    error.status = 400
+    throw error
+  }
+
+  if (!text) {
+    const error = new Error('Text is required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    sort_order: sortOrder,
+    title,
+    title_en: normalizeOptionalText(card.titleEn),
+    text,
+    text_en: normalizeOptionalText(card.textEn),
+  }
+}
+
+function normalizeRichText(value) {
+  return String(value || '')
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/\son\w+="[^"]*"/gi, '')
+    .replace(/\son\w+='[^']*'/gi, '')
+    .replace(/javascript:/gi, '')
+    .trim()
+}
+
+function plainTextFromHtml(value) {
+  return String(value || '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6])>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
 }
 
 function normalizeOptionalText(value) {

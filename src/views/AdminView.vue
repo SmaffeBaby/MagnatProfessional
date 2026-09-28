@@ -7,6 +7,7 @@ import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection
 import DirectorTextAdminSection from '../components/Admin/DirectorTextAdminSection.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
 import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminSection.vue'
+import MissionValuesAdminSection from '../components/Admin/MissionValuesAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminDescription } from '../composables/Admin/useAdminDescription'
@@ -14,6 +15,7 @@ import { useAdminDirectorText } from '../composables/Admin/useAdminDirectorText'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
 import { useAdminHystoryCompany } from '../composables/Admin/useAdminHystoryCompany'
+import { useAdminMissionValues } from '../composables/Admin/useAdminMissionValues'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
 
 const activeSection = ref('home-panels')
@@ -23,6 +25,7 @@ const description = useAdminDescription()
 const directorText = useAdminDirectorText()
 const homePanels = useAdminHomePanels()
 const hystoryCompany = useAdminHystoryCompany()
+const missionValues = useAdminMissionValues()
 const stats = useAdminStats()
 
 onMounted(async () => {
@@ -33,6 +36,7 @@ onMounted(async () => {
       description.loadContent(),
       directorText.loadContent(),
       hystoryCompany.loadItems(),
+      missionValues.loadContent(),
       stats.loadItems(),
     ])
   }
@@ -46,6 +50,7 @@ async function login() {
       description.loadContent(),
       directorText.loadContent(),
       hystoryCompany.loadItems(),
+      missionValues.loadContent(),
       stats.loadItems(),
     ])
   })
@@ -58,6 +63,7 @@ function logout() {
   description.clearContent()
   directorText.clearContent()
   hystoryCompany.clearItems()
+  missionValues.clearContent()
   stats.clearItems()
 }
 </script>
@@ -157,6 +163,25 @@ function logout() {
         @reset="hystoryCompany.resetForm"
         @edit="hystoryCompany.editItem"
         @delete="hystoryCompany.deleteItem"
+      />
+
+      <MissionValuesAdminSection
+        v-if="activeSection === 'mission-values'"
+        :cards="missionValues.cards.value"
+        :card-form="missionValues.cardForm"
+        :card-form-title="missionValues.cardFormTitle.value"
+        :content-form="missionValues.contentForm"
+        :error="missionValues.error.value"
+        :is-loading="missionValues.isLoading.value"
+        :is-saving-card="missionValues.isSavingCard.value"
+        :is-saving-content="missionValues.isSavingContent.value"
+        :success-message="missionValues.successMessage.value"
+        @save-content="missionValues.saveContent"
+        @new-card="missionValues.resetCardForm"
+        @save-card="missionValues.saveCard"
+        @reset-card="missionValues.resetCardForm"
+        @edit-card="missionValues.editCard"
+        @delete-card="missionValues.deleteCard"
       />
     </section>
   </main>

@@ -279,3 +279,83 @@ drop policy if exists "Hystory company items are publicly readable." on public.h
 create policy "Hystory company items are publicly readable."
   on public.hystory_company_items for select
   using (true);
+
+create table if not exists public.mission_values_content (
+  id boolean primary key default true,
+  main_text text not null default '',
+  main_text_en text,
+  main_text_html text not null default '',
+  main_text_html_en text,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint mission_values_content_singleton_check check (id)
+);
+
+insert into public.mission_values_content (
+  id,
+  main_text,
+  main_text_en,
+  main_text_html,
+  main_text_html_en
+)
+values (true, '', null, '', null)
+on conflict (id) do nothing;
+
+create or replace function public.set_mission_values_content_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_mission_values_content_updated_at on public.mission_values_content;
+
+create trigger set_mission_values_content_updated_at
+before update on public.mission_values_content
+for each row
+execute function public.set_mission_values_content_updated_at();
+
+alter table public.mission_values_content enable row level security;
+
+drop policy if exists "Mission values content is publicly readable." on public.mission_values_content;
+create policy "Mission values content is publicly readable."
+  on public.mission_values_content for select
+  using (true);
+
+create table if not exists public.mission_values_cards (
+  id uuid primary key default gen_random_uuid(),
+  sort_order integer not null default 0,
+  title text not null,
+  title_en text,
+  text text not null,
+  text_en text,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now()
+);
+
+create or replace function public.set_mission_values_cards_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_mission_values_cards_updated_at on public.mission_values_cards;
+
+create trigger set_mission_values_cards_updated_at
+before update on public.mission_values_cards
+for each row
+execute function public.set_mission_values_cards_updated_at();
+
+alter table public.mission_values_cards enable row level security;
+
+drop policy if exists "Mission values cards are publicly readable." on public.mission_values_cards;
+create policy "Mission values cards are publicly readable."
+  on public.mission_values_cards for select
+  using (true);

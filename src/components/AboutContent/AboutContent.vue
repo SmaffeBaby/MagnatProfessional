@@ -5,6 +5,7 @@ import Description from '../Description/Description.vue'
 import DirectorText from '../DirectorText/DirectorText.vue'
 import DottedSeparator from '../DottedSeparator/DottedSeparator.vue'
 import HystoryCompany from '../HystoryCompany/HystoryCompany.vue'
+import MissionValues from '../MissionValues/MissionValues.vue'
 import Stats from '../Stats/Stats.vue'
 import { useMainText } from '../../composables/useMainText'
 import './style.css'
@@ -37,5 +38,6 @@ const { content: mainTextContent } = useMainText()
     <Stats number-variant="gradient" />
     <DirectorText :theme="theme" />
     <HystoryCompany :theme="theme" />
+    <MissionValues :theme="theme" />
   </div>
 </template>

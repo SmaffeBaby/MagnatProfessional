@@ -62,6 +62,14 @@ defineEmits<{
     >
       История компании
     </button>
+    <button
+      class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'mission-values' }"
+      type="button"
+      @click="$emit('update:activeSection', 'mission-values')"
+    >
+      Миссия и ценности
+    </button>
     <button class="admin-sidebar__logout" type="button" @click="$emit('logout')">Выйти</button>
   </aside>
 </template>
