@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import AboutUs from '../AboutUs/AboutUs.vue'
+import Clients from '../Clients/Clients.vue'
 import Description from '../Description/Description.vue'
 import DirectorText from '../DirectorText/DirectorText.vue'
 import DottedSeparator from '../DottedSeparator/DottedSeparator.vue'
@@ -39,5 +40,6 @@ const { content: mainTextContent } = useMainText()
     <DirectorText :theme="theme" />
     <HystoryCompany :theme="theme" />
     <MissionValues :theme="theme" />
+    <Clients :theme="theme" />
   </div>
 </template>

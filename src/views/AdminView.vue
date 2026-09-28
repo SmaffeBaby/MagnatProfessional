@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import AboutUsAdminSection from '../components/Admin/AboutUsAdminSection.vue'
 import AdminLogin from '../components/Admin/AdminLogin.vue'
 import AdminSidebar from '../components/Admin/AdminSidebar.vue'
+import ClientsAdminSection from '../components/Admin/ClientsAdminSection.vue'
 import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection.vue'
 import DirectorTextAdminSection from '../components/Admin/DirectorTextAdminSection.vue'
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
@@ -10,6 +11,7 @@ import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminS
 import MissionValuesAdminSection from '../components/Admin/MissionValuesAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
+import { useAdminClients } from '../composables/Admin/useAdminClients'
 import { useAdminDescription } from '../composables/Admin/useAdminDescription'
 import { useAdminDirectorText } from '../composables/Admin/useAdminDirectorText'
 import { useAdminAuth } from '../composables/Admin/useAdminAuth'
@@ -21,6 +23,7 @@ import { useAdminStats } from '../composables/Admin/useAdminStats'
 const activeSection = ref('home-panels')
 const auth = useAdminAuth()
 const aboutUs = useAdminAboutUs()
+const clients = useAdminClients()
 const description = useAdminDescription()
 const directorText = useAdminDirectorText()
 const homePanels = useAdminHomePanels()
@@ -33,6 +36,7 @@ onMounted(async () => {
     await Promise.all([
       homePanels.loadPanels(),
       aboutUs.loadContent(),
+      clients.loadItems(),
       description.loadContent(),
       directorText.loadContent(),
       hystoryCompany.loadItems(),
@@ -47,6 +51,7 @@ async function login() {
     await Promise.all([
       homePanels.loadPanels(),
       aboutUs.loadContent(),
+      clients.loadItems(),
       description.loadContent(),
       directorText.loadContent(),
       hystoryCompany.loadItems(),
@@ -60,6 +65,7 @@ function logout() {
   auth.logout()
   homePanels.clearPanels()
   aboutUs.clearContent()
+  clients.clearItems()
   description.clearContent()
   directorText.clearContent()
   hystoryCompany.clearItems()
@@ -182,6 +188,23 @@ function logout() {
         @reset-card="missionValues.resetCardForm"
         @edit-card="missionValues.editCard"
         @delete-card="missionValues.deleteCard"
+      />
+
+      <ClientsAdminSection
+        v-if="activeSection === 'clients'"
+        :error="clients.error.value"
+        :form="clients.form"
+        :form-title="clients.formTitle.value"
+        :items="clients.items.value"
+        :is-loading="clients.isLoading.value"
+        :is-saving="clients.isSaving.value"
+        :upload-field="clients.uploadField.value"
+        @new-item="clients.resetForm"
+        @save="clients.saveItem"
+        @reset="clients.resetForm"
+        @upload="clients.uploadImage"
+        @edit="clients.editItem"
+        @delete="clients.deleteItem"
       />
     </section>
   </main>

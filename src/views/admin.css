@@ -393,6 +393,36 @@
   outline-offset: 2px;
 }
 
+.clients-admin-preview {
+  display: grid;
+  width: 200px;
+  height: 200px;
+  place-items: center;
+  margin-top: 20px;
+  border: 1px dashed #c9c9c9;
+  border-radius: 8px;
+  background: #f7f7f7;
+}
+
+.clients-admin-preview img,
+.clients-admin-list-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.clients-admin-list-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.clients-admin-list-item img {
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+}
+
 .panel-form__actions,
 .panel-list__actions {
   display: flex;

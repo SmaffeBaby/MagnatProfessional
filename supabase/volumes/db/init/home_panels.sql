@@ -359,3 +359,37 @@ drop policy if exists "Mission values cards are publicly readable." on public.mi
 create policy "Mission values cards are publicly readable."
   on public.mission_values_cards for select
   using (true);
+
+create table if not exists public.clients_items (
+  id uuid primary key default gen_random_uuid(),
+  sort_order integer not null default 0,
+  image_path text,
+  image_url text not null,
+  link_url text,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now()
+);
+
+create or replace function public.set_clients_items_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_clients_items_updated_at on public.clients_items;
+
+create trigger set_clients_items_updated_at
+before update on public.clients_items
+for each row
+execute function public.set_clients_items_updated_at();
+
+alter table public.clients_items enable row level security;
+
+drop policy if exists "Clients items are publicly readable." on public.clients_items;
+create policy "Clients items are publicly readable."
+  on public.clients_items for select
+  using (true);

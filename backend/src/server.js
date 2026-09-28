@@ -234,6 +234,30 @@ app.get('/api/mission-values', async (_req, res, next) => {
   }
 })
 
+app.get('/api/clients', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('clients_items')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        items: data.map(clientItemFromDatabase),
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/auth/login', async (req, res, next) => {
   try {
     const { email, password } = req.body
@@ -662,6 +686,82 @@ app.delete('/api/admin/mission-values/cards/:id', requireAdminAuth, async (req, 
   try {
     const { error } = await supabase
       .from('mission_values_cards')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/clients', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('clients_items')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      items: data.map(clientItemFromDatabase),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/clients', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = clientItemToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('clients_items')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ item: clientItemFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = clientItemToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('clients_items')
+      .update(payload)
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ item: clientItemFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('clients_items')
       .delete()
       .eq('id', req.params.id)
 
@@ -1143,6 +1243,36 @@ function missionValuesCardToDatabase(card) {
   }
 }
 
+function clientItemFromDatabase(item) {
+  return {
+    id: item.id,
+    sortOrder: item.sort_order,
+    imagePath: item.image_path,
+    imageUrl: item.image_url,
+    linkUrl: item.link_url,
+    createdAt: item.created_at,
+    updatedAt: item.updated_at,
+  }
+}
+
+function clientItemToDatabase(item) {
+  const imageUrl = String(item.imageUrl || '').trim()
+  const sortOrder = Number.isFinite(Number(item.sortOrder)) ? Number(item.sortOrder) : 0
+
+  if (!imageUrl) {
+    const error = new Error('Image is required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    sort_order: sortOrder,
+    image_path: item.imagePath || null,
+    image_url: imageUrl,
+    link_url: normalizeOptionalUrl(item.linkUrl),
+  }
+}
+
 function normalizeRichText(value) {
   return String(value || '')
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
@@ -1168,6 +1298,16 @@ function plainTextFromHtml(value) {
 function normalizeOptionalText(value) {
   const normalized = String(value || '').trim()
   return normalized || null
+}
+
+function normalizeOptionalUrl(value) {
+  const normalized = String(value || '').trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  return /^https?:\/\//i.test(normalized) ? normalized : `https://${normalized}`
 }
 
 function normalizeHexColor(value, fallback) {
