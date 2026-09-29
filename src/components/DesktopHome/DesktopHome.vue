@@ -40,6 +40,7 @@ const isAboutLight = computed(() => isLightPage.value && !isDarkTheme.value)
 const { t } = useI18n()
 const languageStore = useLanguageStore()
 const isHeaderRevealed = ref(true)
+const isHeaderScrolled = ref(false)
 const lastContentScrollTop = ref(0)
 
 const navLinks = [
@@ -61,6 +62,8 @@ function handleContentScroll(event) {
   const currentScrollTop = event.currentTarget?.scrollTop ?? 0
   const scrollDelta = Math.abs(currentScrollTop - lastContentScrollTop.value)
 
+  isHeaderScrolled.value = currentScrollTop > 24
+
   if (scrollDelta < 4) {
     return
   }
@@ -73,6 +76,7 @@ watch(
   () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive, props.isPortfolioDetailActive],
   () => {
     isHeaderRevealed.value = true
+    isHeaderScrolled.value = false
     lastContentScrollTop.value = 0
   },
 )
@@ -102,10 +106,15 @@ watch(
     </div>
 
     <header
-      class="desktop-home__header relative z-10 flex items-center justify-between gap-8 px-14 py-7 transition-colors duration-500"
+      class="desktop-home__header fixed top-0 z-20 flex items-center justify-between gap-8 px-14 py-7 transition-colors duration-500"
       :class="[
         isAboutLight ? 'text-black' : 'text-white',
-        { 'desktop-home__header--hidden': !isHeaderRevealed },
+        {
+          'desktop-home__header--hidden': !isHeaderRevealed,
+          'desktop-home__header--scrolled': isHeaderScrolled,
+          'desktop-home__header--dark': isDarkTheme,
+          'desktop-home__header--light-page': isAboutLight,
+        },
       ]"
     >
       <nav class="flex items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
@@ -186,13 +195,29 @@ watch(
 }
 
 .desktop-home__header {
+  right: 0;
+  left: clamp(400px, calc(400px + (100vw - 1301px) * 0.1185), 471px);
   min-height: 100px;
+  background: transparent;
   transform: translateY(0);
   transition:
+    background-color 500ms ease,
     color 500ms ease,
     opacity 320ms ease,
     transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, opacity;
+}
+
+.desktop-home__header--scrolled {
+  background: #c40f1c;
+}
+
+.desktop-home__header--scrolled.desktop-home__header--light-page {
+  background: #ffffff;
+}
+
+.desktop-home__header--scrolled.desktop-home__header--dark {
+  background: #222222;
 }
 
 .desktop-home__header--hidden {

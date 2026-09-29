@@ -1,7 +1,7 @@
 .about-content {
   position: relative;
   z-index: 1;
-  height: calc(100vh - 100px);
+  height: 100vh;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;

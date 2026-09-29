@@ -238,7 +238,7 @@
 
 @media (min-width: 1301px) {
   .portfolio-detail {
-    height: calc(100vh - 100px);
+    height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -248,7 +248,7 @@
   }
 
   .portfolio-detail__hero {
-    padding-top: 44px;
+    padding-top: 144px;
   }
 
   .portfolio-detail__title {

@@ -20,6 +20,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isPortfolioActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:theme'])
@@ -40,7 +44,7 @@ const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
 <template>
   <section
     class="tablet-home relative overflow-visible transition-colors duration-500"
-    :class="isDarkTheme ? 'bg-[#222222]' : isAboutActive ? 'bg-white' : 'bg-magnat-red'"
+    :class="isDarkTheme ? 'bg-[#222222]' : isAboutActive ? 'bg-white' : isPortfolioActive ? 'bg-[#bd0f1c]' : 'bg-magnat-red'"
   >
     <div
       v-if="!isContentPageActive"

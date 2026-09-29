@@ -250,7 +250,7 @@
 
 @media (min-width: 1301px) {
   .contacts-content {
-    height: calc(100vh - 100px);
+    height: 100vh;
     overflow-x: hidden;
     overflow-y: auto;
     overscroll-behavior: contain;
@@ -285,7 +285,7 @@
   }
 
   .contacts-content__main {
-    padding-top: 44px;
+    padding-top: 144px;
   }
 
   .contacts-content__address {

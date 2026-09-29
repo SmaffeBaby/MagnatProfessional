@@ -36,6 +36,7 @@ const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
 const isPortfolioActive = computed(() => route.name === 'portfolio')
 const isPortfolioDetailActive = computed(() => route.name === 'portfolio-detail')
+const isPortfolioPageActive = computed(() => isPortfolioActive.value || isPortfolioDetailActive.value)
 const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value)
 const isContentPageActive = computed(() => (
   isAboutActive.value || isContactsActive.value || isPortfolioActive.value || isPortfolioDetailActive.value
@@ -52,26 +53,30 @@ const {
   t,
   toggleTheme,
 } = useResponsiveHeaderBacking(theme)
+
+function setMobileSidebar(instance) {
+  mobileSidebar.value = instance
+}
 </script>
 
 <template>
   <main
     class="home-main min-h-screen text-white transition-colors duration-500"
-    :class="theme === 'dark' ? 'bg-[#222222]' : isLightPageActive ? 'bg-white' : 'bg-magnat-red'"
+    :class="theme === 'dark' ? 'bg-[#222222]' : isLightPageActive ? 'bg-white' : isPortfolioPageActive ? 'bg-[#bd0f1c]' : 'bg-magnat-red'"
   >
     <div class="tablet:hidden desktop:hidden">
       <SidebarMobile
-        ref="mobileSidebar"
+        :ref="setMobileSidebar"
         v-model:theme="theme"
         :is-about-active="isLightPageActive"
         :is-content-page-active="isContentPageActive"
         @menu-open-change="isMobileMenuOpen = $event"
         @open-map="isMapOpen = true"
       />
-      <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
-      <ContactsContent v-else-if="isContactsActive" :key="route.fullPath" :theme="theme" />
-      <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="route.fullPath" :theme="theme" />
-      <PortfolioContent v-else-if="isPortfolioActive" :key="route.fullPath" :theme="theme" />
+      <AboutContent v-if="isAboutActive" :key="`mobile-about-${route.fullPath}`" :theme="theme" />
+      <ContactsContent v-else-if="isContactsActive" :key="`mobile-contacts-${route.fullPath}`" :theme="theme" />
+      <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="`mobile-portfolio-detail-${route.fullPath}`" :theme="theme" />
+      <PortfolioContent v-else-if="isPortfolioActive" :key="`mobile-portfolio-${route.fullPath}`" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
@@ -88,11 +93,12 @@ const {
         v-model:theme="theme"
         :is-about-active="isLightPageActive"
         :is-content-page-active="isContentPageActive"
+        :is-portfolio-active="isPortfolioPageActive"
       />
-      <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
-      <ContactsContent v-else-if="isContactsActive" :key="route.fullPath" :theme="theme" />
-      <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="route.fullPath" :theme="theme" />
-      <PortfolioContent v-else-if="isPortfolioActive" :key="route.fullPath" :theme="theme" />
+      <AboutContent v-if="isAboutActive" :key="`tablet-about-${route.fullPath}`" :theme="theme" />
+      <ContactsContent v-else-if="isContactsActive" :key="`tablet-contacts-${route.fullPath}`" :theme="theme" />
+      <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="`tablet-portfolio-detail-${route.fullPath}`" :theme="theme" />
+      <PortfolioContent v-else-if="isPortfolioActive" :key="`tablet-portfolio-${route.fullPath}`" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
