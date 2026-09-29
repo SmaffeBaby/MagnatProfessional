@@ -7,7 +7,9 @@ import DirectorText from '../DirectorText/DirectorText.vue'
 import DottedSeparator from '../DottedSeparator/DottedSeparator.vue'
 import HystoryCompany from '../HystoryCompany/HystoryCompany.vue'
 import MissionValues from '../MissionValues/MissionValues.vue'
+import QuestionsForm from '../QuestionsForm/QuestionsForm.vue'
 import Stats from '../Stats/Stats.vue'
+import Footer from '../Footer/Footer.vue'
 import { useMainText } from '../../composables/useMainText'
 import './style.css'
 
@@ -41,5 +43,7 @@ const { content: mainTextContent } = useMainText()
     <HystoryCompany :theme="theme" />
     <MissionValues :theme="theme" />
     <Clients :theme="theme" />
+    <QuestionsForm />
+    <Footer />
   </div>
 </template>

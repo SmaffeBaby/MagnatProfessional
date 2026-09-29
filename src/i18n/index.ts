@@ -5,6 +5,8 @@ import footerEn from '../components/Footer/eng.json'
 import footerRu from '../components/Footer/ru.json'
 import onTheMapEn from '../components/OnTheMap/eng.json'
 import onTheMapRu from '../components/OnTheMap/ru.json'
+import questionsFormEn from '../components/QuestionsForm/eng.json'
+import questionsFormRu from '../components/QuestionsForm/ru.json'
 import sidebarEn from '../components/Sidebar/eng.json'
 import sidebarMobileEn from '../components/Sidebar/mobile/eng.json'
 import sidebarMobileRu from '../components/Sidebar/mobile/ru.json'
@@ -24,6 +26,7 @@ export const i18n = createI18n({
       desktopHome: desktopHomeRu,
       footer: footerRu,
       onTheMap: onTheMapRu,
+      questionsForm: questionsFormRu,
       sidebar: sidebarRu,
       sidebarMobile: sidebarMobileRu,
     },
@@ -31,6 +34,7 @@ export const i18n = createI18n({
       desktopHome: desktopHomeEn,
       footer: footerEn,
       onTheMap: onTheMapEn,
+      questionsForm: questionsFormEn,
       sidebar: sidebarEn,
       sidebarMobile: sidebarMobileEn,
     },

@@ -1,0 +1,299 @@
+.questions-form {
+  position: relative;
+  z-index: 1;
+  margin: 120px 0 0;
+  color: #ffffff;
+}
+
+.questions-form__panel {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 60px 20px 16px;
+  overflow: visible;
+  border: 0;
+  border-radius: 30px;
+  background: #e3222a;
+}
+
+.questions-form__header {
+  position: static;
+  z-index: 2;
+  display: flex;
+  min-width: 0;
+}
+
+.questions-form__intro {
+  position: relative;
+  z-index: 2;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.questions-form__cat-frame {
+  position: absolute;
+  top: -70px;
+  right: 0;
+  width: 205px;
+  height: 230px;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.questions-form__cat {
+  position: absolute;
+  top: 0;
+  right: -58px;
+  display: block;
+  width: 205px;
+  max-width: none;
+  height: auto;
+}
+
+.questions-form__title,
+.questions-form__lead,
+.questions-form__agreement {
+  position: relative;
+  z-index: 2;
+  margin: 0;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.questions-form__title {
+  max-width: calc(100% - 120px);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.03;
+}
+
+.questions-form__lead {
+  max-width: calc(100% - 90px);
+  margin-top: 20px;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.18;
+}
+
+.questions-form__fields {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 22px;
+}
+
+.questions-form__field {
+  display: block;
+  min-width: 0;
+}
+
+.questions-form__input,
+.questions-form__textarea {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 2px solid rgba(255, 255, 255, 0.92);
+  border-radius: 0;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  outline: none;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.questions-form__input {
+  height: 29px;
+  padding: 0 0 8px;
+}
+
+.questions-form__input::placeholder,
+.questions-form__textarea::placeholder {
+  color: #ffffff;
+  opacity: 1;
+}
+
+.questions-form__textarea-wrap {
+  position: relative;
+}
+
+.questions-form__textarea-wrap::after {
+  position: absolute;
+  right: 2px;
+  bottom: 3px;
+  z-index: 3;
+  width: 12px;
+  height: 12px;
+  background:
+    linear-gradient(135deg, transparent 0 45%, rgba(255, 255, 255, 0.95) 46% 54%, transparent 55%),
+    linear-gradient(135deg, transparent 0 66%, rgba(255, 255, 255, 0.95) 67% 75%, transparent 76%);
+  content: '';
+  pointer-events: none;
+}
+
+.questions-form__textarea {
+  min-height: 112px;
+  padding: 0 18px 8px 0;
+  resize: vertical;
+}
+
+.questions-form__textarea::-webkit-resizer {
+  background: transparent;
+}
+
+.questions-form__agreement {
+  max-width: 100%;
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.12;
+}
+
+.questions-form__button {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  width: 100%;
+  height: 54px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 22px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #e3222a;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition:
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.questions-form__button:hover {
+  opacity: 0.88;
+}
+
+.questions-form__button:active {
+  transform: scale(0.98);
+}
+
+.questions-form__button:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 4px;
+}
+
+@media (min-width: 1040px) {
+  .questions-form {
+    margin: 120px 55px 0;
+  }
+
+  .questions-form__panel {
+    padding: 51px 60px 49px;
+    border-radius: 50px;
+  }
+
+  .questions-form__cat-frame {
+    display: none;
+  }
+
+  .questions-form__title {
+    max-width: 100%;
+    font-size: 60px;
+    line-height: 1.04;
+  }
+
+  .questions-form__lead {
+    max-width: 880px;
+    margin-top: 39px;
+    font-size: 24px;
+    line-height: 1.14;
+  }
+
+  .questions-form__fields {
+    gap: 39.5px;
+    margin-top: 39.5px;
+  }
+
+  .questions-form__input,
+  .questions-form__textarea {
+    font-size: 24px;
+  }
+
+  .questions-form__input {
+    height: 38px;
+    padding-bottom: 8px;
+  }
+
+  .questions-form__textarea {
+    min-height: 146px;
+  }
+
+  .questions-form__agreement {
+    max-width: 850px;
+    margin-top: 18px;
+    font-size: 16px;
+    line-height: 1.1;
+  }
+
+  .questions-form__button {
+    width: auto;
+    min-width: 168px;
+    height: 61px;
+    margin-top: 28px;
+    padding: 0 25px;
+    font-size: 20px;
+  }
+}
+
+@media (min-width: 1301px) {
+  .questions-form {
+    margin-top: 100px;
+  }
+
+  .questions-form__panel {
+    padding-top: 60px;
+    padding-bottom: 60px;
+  }
+
+  .questions-form__cat-frame {
+    top: -92px;
+    right: 0;
+    display: block;
+    width: 345px;
+    height: 305px;
+  }
+
+  .questions-form__cat {
+    top: 0;
+    right: -90px;
+    width: 330px;
+  }
+
+  .questions-form__title {
+    max-width: calc(100% - 340px);
+  }
+
+  .questions-form__lead {
+    max-width: calc(100% - 360px);
+    margin-top: 30px;
+  }
+
+  .questions-form__fields {
+    gap: 30px;
+    margin-top: 30px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .questions-form__button {
+    transition: none;
+  }
+}

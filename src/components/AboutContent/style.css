@@ -6,7 +6,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-top: 1px;
-  padding-bottom: 88px;
+  padding-bottom: 0;
   color: #000000;
   background: #ffffff;
   scrollbar-width: thin;
@@ -125,6 +125,35 @@
   color: #000000;
 }
 
+.about-content .site-footer {
+  margin-top: 62px;
+  color: #000000;
+}
+
+.about-content .site-footer__line {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.about-content .site-footer__content {
+  padding-top: 30px;
+}
+
+.about-content .site-footer__privacy:focus-visible {
+  outline-color: #000000;
+}
+
+.about-content--dark .site-footer {
+  color: #ffffff;
+}
+
+.about-content--dark .site-footer__line {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.about-content--dark .site-footer__privacy:focus-visible {
+  outline-color: #ffffff;
+}
+
 .about-content .dotted-separator {
   background:
     repeating-linear-gradient(
@@ -157,5 +186,17 @@
     min-height: calc(100vh - 100px);
     overflow: visible;
     overscroll-behavior: auto;
+  }
+}
+
+@media (min-width: 1040px) {
+  .about-content .site-footer {
+    margin-top: 55px;
+  }
+}
+
+@media (min-width: 1301px) {
+  .about-content .site-footer {
+    margin-top: 200px;
   }
 }

@@ -123,8 +123,18 @@ watch(
     </header>
 
     <Transition name="desktop-content" mode="out-in">
-      <AboutContent v-if="props.isAboutActive" :theme="theme" @scroll.passive="handleContentScroll" />
-      <HomeContent v-else :theme="theme" @scroll.passive="handleContentScroll" />
+      <AboutContent
+        v-if="props.isAboutActive"
+        key="about-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
+      <HomeContent
+        v-else
+        key="home-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
     </Transition>
   </section>
 </template>

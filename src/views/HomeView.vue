@@ -57,7 +57,7 @@ const {
         @menu-open-change="isMobileMenuOpen = $event"
         @open-map="isMapOpen = true"
       />
-      <AboutContent v-if="isAboutActive" :theme="theme" />
+      <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
@@ -71,7 +71,7 @@ const {
 
     <div class="home-tablet-page hidden tablet:block desktop:hidden">
       <TabletHome v-model:theme="theme" :is-about-active="isAboutActive" />
-      <AboutContent v-if="isAboutActive" :theme="theme" />
+      <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />

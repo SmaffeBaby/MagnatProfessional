@@ -1,0 +1,12 @@
+{
+  "title": "Any questions?",
+  "lead": "Fill out the form and we will contact you to answer all your questions",
+  "fields": {
+    "name": "Name",
+    "phone": "Phone",
+    "email": "Email",
+    "message": "Message"
+  },
+  "agreement": "I have read the User Agreement and consent to the processing of personal data in accordance with the Personal Data Processing Policy",
+  "submit": "Send"
+}
