@@ -119,6 +119,17 @@
     margin-right: 55px;
     margin-left: 55px;
   }
+
+  .home-panels--portfolio .home-panels__item,
+  .home-panels--portfolio .home-panels__item--vertical {
+    height: auto;
+    aspect-ratio: 440 / 586;
+  }
+
+  .home-panels--portfolio .home-panels__item--wide {
+    height: auto;
+    aspect-ratio: 890 / 586;
+  }
 }
 
 @media (min-width: 1301px) {
@@ -151,11 +162,13 @@
 
   .home-panels--portfolio .home-panels__item,
   .home-panels--portfolio .home-panels__item--vertical {
-    height: 367px;
+    height: auto;
+    aspect-ratio: 440 / 586;
   }
 
   .home-panels--portfolio .home-panels__item--wide {
-    height: 367px;
+    height: auto;
+    aspect-ratio: 890 / 586;
   }
 }
 

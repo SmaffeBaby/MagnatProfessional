@@ -94,17 +94,32 @@ function logout() {
         v-if="activeSection === 'home-panels'"
         :error="homePanels.error.value"
         :form="homePanels.panelForm"
+        :card-form="homePanels.cardForm"
         :form-title="homePanels.formTitle.value"
+        :card-form-title="homePanels.cardFormTitle.value"
         :panels="homePanels.panels.value"
+        :cards="homePanels.cards.value"
+        :selected-panel="homePanels.selectedPanel.value"
         :is-loading="homePanels.isLoading.value"
+        :is-loading-cards="homePanels.isLoadingCards.value"
         :is-saving="homePanels.isSaving.value"
+        :is-saving-card="homePanels.isSavingCard.value"
         :upload-field="homePanels.uploadField.value"
         @new-panel="homePanels.resetForm"
+        @new-card="homePanels.resetCardForm"
         @save="homePanels.savePanel"
         @reset="homePanels.resetForm"
         @upload="homePanels.uploadFile"
+        @upload-card="homePanels.uploadCardFile"
+        @delete-file="homePanels.deletePanelFile"
+        @delete-card-file="homePanels.deleteCardFile"
         @edit="homePanels.editPanel"
+        @select-cards="homePanels.loadCards"
         @delete="homePanels.deletePanel"
+        @save-card="homePanels.saveCard"
+        @reset-card="homePanels.resetCardForm"
+        @edit-card="homePanels.editCard"
+        @delete-card="homePanels.deleteCard"
       />
 
       <AboutUsAdminSection
@@ -127,6 +142,7 @@ function logout() {
         :upload-field="description.uploadField.value"
         @save="description.saveContent"
         @upload="description.uploadPlaque"
+        @delete-file="description.deletePlaque"
       />
 
       <StatsAdminSection
@@ -154,6 +170,7 @@ function logout() {
         :upload-field="directorText.uploadField.value"
         @save="directorText.saveContent"
         @upload="directorText.uploadPhoto"
+        @delete-file="directorText.deletePhoto"
       />
 
       <HystoryCompanyAdminSection
@@ -203,6 +220,7 @@ function logout() {
         @save="clients.saveItem"
         @reset="clients.resetForm"
         @upload="clients.uploadImage"
+        @delete-file="clients.deleteImage"
         @edit="clients.editItem"
         @delete="clients.deleteItem"
       />

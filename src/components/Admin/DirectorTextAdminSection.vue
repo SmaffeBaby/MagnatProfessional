@@ -16,6 +16,7 @@ defineProps<{
 const emit = defineEmits<{
   save: []
   upload: [file: File, target: DirectorTextPhotoTarget]
+  deleteFile: [target: DirectorTextPhotoTarget]
 }>()
 
 function uploadFile(event: Event, target: DirectorTextPhotoTarget) {
@@ -61,12 +62,14 @@ function uploadFile(event: Event, target: DirectorTextPhotoTarget) {
           <span>Фото</span>
           <input type="file" accept="image/*" @change="uploadFile($event, 'photo')">
           <small v-if="form.photoUrl">Файл загружен</small>
+          <button v-if="form.photoPath" type="button" class="button-secondary" @click="$emit('deleteFile', 'photo')">Удалить файл</button>
         </label>
 
         <label>
           <span>Миниатюра круглая</span>
           <input type="file" accept="image/*" @change="uploadFile($event, 'thumbnail')">
           <small v-if="form.thumbnailUrl">Файл загружен</small>
+          <button v-if="form.thumbnailPath" type="button" class="button-secondary" @click="$emit('deleteFile', 'thumbnail')">Удалить файл</button>
         </label>
       </div>
 

@@ -6,6 +6,11 @@ export type HomePanel = {
   id: string
   title: string
   titleEn?: string | null
+  slug?: string | null
+  detailText?: string | null
+  detailTextEn?: string | null
+  mascotPath?: string | null
+  mascotUrl?: string | null
   sortOrder: number
   gradientFromColor: string
   gradientFromOpacity: number
@@ -20,6 +25,10 @@ export type HomePanel = {
   posterUrl?: string | null
   linkPath: string
   tileType: HomePanelTileType
+}
+
+export type PortfolioCard = HomePanel & {
+  panelId: string
 }
 
 const HOME_PANELS_REFRESH_MS = 10000

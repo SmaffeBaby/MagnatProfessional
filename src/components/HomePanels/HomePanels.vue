@@ -64,12 +64,12 @@ function clamp(value: number, min: number, max: number) {
     ]"
     aria-label="Панели на главной"
   >
-    <a
+    <RouterLink
       v-for="panel in panels"
       :key="panel.id"
       class="home-panels__item"
       :class="`home-panels__item--${panel.tileType}`"
-      :href="panel.linkPath"
+      :to="panel.linkPath"
       :style="panelGradient(panel)"
     >
       <video
@@ -93,7 +93,7 @@ function clamp(value: number, min: number, max: number) {
 
       <span class="home-panels__shade" aria-hidden="true" />
       <span class="home-panels__title">{{ panelTitle(panel) }}</span>
-    </a>
+    </RouterLink>
   </section>
 </template>
 

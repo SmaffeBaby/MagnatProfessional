@@ -41,13 +41,20 @@ export async function adminRequest(path: string, options: RequestInit = {}) {
   return response.json()
 }
 
-export async function uploadAdminFile(file: File) {
+export async function uploadAdminFile(file: File, bucket = 'home-panels') {
   const body = new FormData()
   body.append('file', file)
-  body.append('bucket', 'home-panels')
+  body.append('bucket', bucket)
 
   return adminRequest('/api/admin/storage/upload', {
     method: 'POST',
     body,
+  })
+}
+
+export async function deleteAdminFile(bucket: string, path: string) {
+  return adminRequest('/api/admin/storage/file', {
+    method: 'DELETE',
+    body: JSON.stringify({ bucket, path }),
   })
 }

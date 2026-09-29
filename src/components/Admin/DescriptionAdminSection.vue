@@ -16,6 +16,7 @@ defineProps<{
 const emit = defineEmits<{
   save: []
   upload: [file: File, target: DescriptionPlaqueTarget]
+  deleteFile: [target: DescriptionPlaqueTarget]
 }>()
 
 function uploadFile(event: Event, target: DescriptionPlaqueTarget) {
@@ -71,18 +72,21 @@ function uploadFile(event: Event, target: DescriptionPlaqueTarget) {
           <span>Плашка для ПК 664×440</span>
           <input type="file" accept="image/*" @change="uploadFile($event, 'desktopPlaque')">
           <small v-if="form.desktopPlaqueUrl">Файл загружен</small>
+          <button v-if="form.desktopPlaquePath" type="button" class="button-secondary" @click="$emit('deleteFile', 'desktopPlaque')">Удалить файл</button>
         </label>
 
         <label>
           <span>Плашка для tablet 452×440</span>
           <input type="file" accept="image/*" @change="uploadFile($event, 'tabletPlaque')">
           <small v-if="form.tabletPlaqueUrl">Файл загружен</small>
+          <button v-if="form.tabletPlaquePath" type="button" class="button-secondary" @click="$emit('deleteFile', 'tabletPlaque')">Удалить файл</button>
         </label>
 
         <label>
           <span>Плашка для телефона 335×440</span>
           <input type="file" accept="image/*" @change="uploadFile($event, 'mobilePlaque')">
           <small v-if="form.mobilePlaqueUrl">Файл загружен</small>
+          <button v-if="form.mobilePlaquePath" type="button" class="button-secondary" @click="$emit('deleteFile', 'mobilePlaque')">Удалить файл</button>
         </label>
       </div>
 

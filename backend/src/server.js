@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
+import pg from 'pg'
 import { createClient } from '@supabase/supabase-js'
 import { getMainText } from './cache/mainTextCache.js'
 
@@ -15,7 +16,14 @@ const {
   SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY,
   SUPABASE_STORAGE_BUCKET = 'photos',
   SUPABASE_HOME_PANELS_BUCKET = 'home-panels',
+  SUPABASE_PORTFOLIO_BUCKET = 'portfolio',
+  SUPABASE_BUCKET_FILE_SIZE_LIMIT = String(50 * 1024 * 1024),
   SUPABASE_STORAGE_PUBLIC = 'true',
+  POSTGRES_HOST = 'db',
+  POSTGRES_PORT = '5432',
+  POSTGRES_DB = 'postgres',
+  POSTGRES_USER = 'postgres',
+  POSTGRES_PASSWORD,
 } = process.env
 
 if (!SUPABASE_SERVICE_ROLE_KEY) {
@@ -47,6 +55,8 @@ const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: false,
   },
 })
+
+const { Client: PgClient } = pg
 
 app.use(cors({ origin: CORS_ORIGIN.split(',').map((origin) => origin.trim()) }))
 app.use(express.json())
@@ -112,6 +122,47 @@ app.get('/api/home-panels', async (_req, res, next) => {
       })
       .json({
         panels: data.map(panelFromDatabase),
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/portfolio/:panelSlug', async (req, res, next) => {
+  try {
+    const { data: panel, error: panelError } = await supabase
+      .from('home_panels')
+      .select('*')
+      .eq('slug', req.params.panelSlug)
+      .maybeSingle()
+
+    if (panelError) {
+      throw panelError
+    }
+
+    if (!panel) {
+      res.status(404).json({ error: 'Portfolio panel not found' })
+      return
+    }
+
+    const { data: cards, error: cardsError } = await supabase
+      .from('portfolio_cards')
+      .select('*')
+      .eq('panel_id', panel.id)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (cardsError) {
+      throw cardsError
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        panel: panelFromDatabase(panel),
+        cards: cards.map((card) => portfolioCardFromDatabase(card, panel.slug)),
       })
   } catch (error) {
     next(error)
@@ -310,6 +361,100 @@ app.get('/api/admin/home-panels', requireAdminAuth, async (_req, res, next) => {
   }
 })
 
+app.get('/api/admin/home-panels/:panelId/cards', requireAdminAuth, async (req, res, next) => {
+  try {
+    const panel = await getPanelById(req.params.panelId)
+    const { data, error } = await supabase
+      .from('portfolio_cards')
+      .select('*')
+      .eq('panel_id', req.params.panelId)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      cards: data.map((card) => portfolioCardFromDatabase(card, panel.slug)),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/home-panels/:panelId/cards', requireAdminAuth, async (req, res, next) => {
+  try {
+    const panel = await getPanelById(req.params.panelId)
+    const payload = portfolioCardToDatabase(req.body, panel)
+    const { data, error } = await supabase
+      .from('portfolio_cards')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ card: portfolioCardFromDatabase(data, panel.slug) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, async (req, res, next) => {
+  try {
+    const panel = await getPanelById(req.params.panelId)
+    const payload = portfolioCardToDatabase(req.body, panel)
+    const { data, error } = await supabase
+      .from('portfolio_cards')
+      .update(payload)
+      .eq('id', req.params.cardId)
+      .eq('panel_id', req.params.panelId)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ card: portfolioCardFromDatabase(data, panel.slug) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { data: card, error: fetchError } = await supabase
+      .from('portfolio_cards')
+      .select('*')
+      .eq('id', req.params.cardId)
+      .eq('panel_id', req.params.panelId)
+      .maybeSingle()
+
+    if (fetchError) {
+      throw fetchError
+    }
+
+    const { error } = await supabase
+      .from('portfolio_cards')
+      .delete()
+      .eq('id', req.params.cardId)
+      .eq('panel_id', req.params.panelId)
+
+    if (error) {
+      throw error
+    }
+
+    await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, collectMediaPaths(card))
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.post('/api/admin/home-panels', requireAdminAuth, async (req, res, next) => {
   try {
     const payload = panelToDatabase(req.body)
@@ -351,6 +496,25 @@ app.put('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next) =
 
 app.delete('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next) => {
   try {
+    const { data: panel, error: panelFetchError } = await supabase
+      .from('home_panels')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle()
+
+    if (panelFetchError) {
+      throw panelFetchError
+    }
+
+    const { data: cards, error: cardsFetchError } = await supabase
+      .from('portfolio_cards')
+      .select('*')
+      .eq('panel_id', req.params.id)
+
+    if (cardsFetchError) {
+      throw cardsFetchError
+    }
+
     const { error } = await supabase
       .from('home_panels')
       .delete()
@@ -360,6 +524,11 @@ app.delete('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next
       throw error
     }
 
+    await deleteStorageFiles(SUPABASE_HOME_PANELS_BUCKET, collectMediaPaths(panel))
+    await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, [
+      ...(panel?.mascot_path ? [panel.mascot_path] : []),
+      ...cards.flatMap(collectMediaPaths),
+    ])
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -760,6 +929,16 @@ app.put('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) => {
 
 app.delete('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) => {
   try {
+    const { data: item, error: fetchError } = await supabase
+      .from('clients_items')
+      .select('*')
+      .eq('id', req.params.id)
+      .maybeSingle()
+
+    if (fetchError) {
+      throw fetchError
+    }
+
     const { error } = await supabase
       .from('clients_items')
       .delete()
@@ -769,6 +948,7 @@ app.delete('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) =>
       throw error
     }
 
+    await deleteStorageFiles('clients', collectMediaPaths(item))
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -779,9 +959,26 @@ app.post('/api/admin/storage/upload', requireAdminAuth, upload.single('file'), a
   try {
     const result = await uploadStorageFile(req, {
       defaultBucket: SUPABASE_HOME_PANELS_BUCKET,
-      allowRequestBucket: false,
+      allowRequestBucket: true,
     })
     res.status(201).json(result)
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/storage/file', requireAdminAuth, async (req, res, next) => {
+  try {
+    const bucket = String(req.body.bucket || '').trim()
+    const path = String(req.body.path || '').trim()
+
+    if (!bucket || !path) {
+      res.status(400).json({ error: 'Bucket and path are required' })
+      return
+    }
+
+    await deleteStorageFiles(bucket, [path])
+    res.status(204).end()
   } catch (error) {
     next(error)
   }
@@ -816,6 +1013,12 @@ async function ensureBucket(bucket) {
   const existingBucket = buckets.find((item) => item.name === bucket)
 
   if (existingBucket) {
+    const { error: updateError } = await supabase.storage.updateBucket(bucket, bucketOptions())
+
+    if (updateError) {
+      throw updateError
+    }
+
     return
   }
 
@@ -829,7 +1032,7 @@ async function ensureBucket(bucket) {
 function bucketOptions() {
   return {
     public: SUPABASE_STORAGE_PUBLIC === 'true',
-    fileSizeLimit: 100 * 1024 * 1024,
+    fileSizeLimit: Number(SUPABASE_BUCKET_FILE_SIZE_LIMIT) || 50 * 1024 * 1024,
     allowedMimeTypes: [
       'image/jpeg',
       'image/png',
@@ -902,11 +1105,44 @@ async function uploadStorageFile(req, { defaultBucket, allowRequestBucket }) {
   }
 }
 
+async function deleteStorageFiles(bucket, paths) {
+  const uniquePaths = [...new Set(paths.filter(Boolean))]
+
+  if (!bucket || uniquePaths.length === 0) {
+    return
+  }
+
+  const { error } = await supabase.storage
+    .from(bucket)
+    .remove(uniquePaths)
+
+  if (error) {
+    console.warn(`Failed to delete files from bucket ${bucket}:`, error.message)
+  }
+}
+
+function collectMediaPaths(item) {
+  if (!item) {
+    return []
+  }
+
+  return [
+    item.image_path,
+    item.video_path,
+    item.poster_path,
+  ].filter(Boolean)
+}
+
 function panelFromDatabase(panel) {
   return {
     id: panel.id,
     title: panel.title,
     titleEn: panel.title_en,
+    slug: panel.slug || slugify(panel.title),
+    detailText: panel.detail_text || '',
+    detailTextEn: panel.detail_text_en,
+    mascotPath: panel.mascot_path,
+    mascotUrl: panel.mascot_url,
     sortOrder: panel.sort_order,
     gradientFromColor: panel.gradient_from_color,
     gradientFromOpacity: Number(panel.gradient_from_opacity),
@@ -919,7 +1155,7 @@ function panelFromDatabase(panel) {
     videoUrl: panel.video_url,
     posterPath: panel.poster_path,
     posterUrl: panel.poster_url,
-    linkPath: panel.link_path,
+    linkPath: `/portfolio/${panel.slug || slugify(panel.title)}/`,
     tileType: panel.tile_type,
     createdAt: panel.created_at,
     updatedAt: panel.updated_at,
@@ -928,7 +1164,7 @@ function panelFromDatabase(panel) {
 
 function panelToDatabase(panel) {
   const title = String(panel.title || '').trim()
-  const linkPath = normalizeInternalPath(panel.linkPath)
+  const slug = normalizeSlug(panel.slug || title)
   const tileType = panel.tileType === 'vertical' ? 'vertical' : 'wide'
   const sortOrder = Number.isFinite(Number(panel.sortOrder)) ? Number(panel.sortOrder) : 0
   const gradientFromColor = normalizeHexColor(panel.gradientFromColor, '#DA2128')
@@ -946,6 +1182,11 @@ function panelToDatabase(panel) {
   return {
     title,
     title_en: normalizeOptionalText(panel.titleEn),
+    slug,
+    detail_text: String(panel.detailText || '').trim(),
+    detail_text_en: normalizeOptionalText(panel.detailTextEn),
+    mascot_path: panel.mascotPath || null,
+    mascot_url: panel.mascotUrl || null,
     sort_order: sortOrder,
     gradient_from_color: gradientFromColor,
     gradient_from_opacity: gradientFromOpacity,
@@ -958,9 +1199,89 @@ function panelToDatabase(panel) {
     video_url: panel.videoUrl || null,
     poster_path: panel.posterPath || null,
     poster_url: panel.posterUrl || null,
-    link_path: linkPath,
+    link_path: `/portfolio/${slug}/`,
     tile_type: tileType,
   }
+}
+
+function portfolioCardFromDatabase(card, panelSlug) {
+  const slug = card.slug || slugify(card.title)
+
+  return {
+    id: card.id,
+    panelId: card.panel_id,
+    title: card.title,
+    titleEn: card.title_en,
+    slug,
+    sortOrder: card.sort_order,
+    gradientFromColor: card.gradient_from_color,
+    gradientFromOpacity: Number(card.gradient_from_opacity),
+    gradientToColor: card.gradient_to_color,
+    gradientToOpacity: Number(card.gradient_to_opacity),
+    gradientToPosition: card.gradient_to_position,
+    imagePath: card.image_path,
+    imageUrl: card.image_url,
+    videoPath: card.video_path,
+    videoUrl: card.video_url,
+    posterPath: card.poster_path,
+    posterUrl: card.poster_url,
+    linkPath: `/portfolio/${panelSlug}/${slug}/`,
+    tileType: card.tile_type,
+    createdAt: card.created_at,
+    updatedAt: card.updated_at,
+  }
+}
+
+function portfolioCardToDatabase(card, panel) {
+  const title = String(card.title || '').trim()
+  const slug = normalizeSlug(card.slug || title)
+  const tileType = card.tileType === 'wide' ? 'wide' : 'vertical'
+  const sortOrder = Number.isFinite(Number(card.sortOrder)) ? Number(card.sortOrder) : 0
+  const gradientFromColor = normalizeHexColor(card.gradientFromColor, '#DA2128')
+  const gradientFromOpacity = clampNumber(card.gradientFromOpacity, 0, 1, 1)
+  const gradientToColor = normalizeHexColor(card.gradientToColor, '#DA2128')
+  const gradientToOpacity = clampNumber(card.gradientToOpacity, 0, 1, 0)
+  const gradientToPosition = Math.round(clampNumber(card.gradientToPosition, 0, 100, 70))
+
+  if (!title) {
+    const error = new Error('Title is required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    panel_id: panel.id,
+    title,
+    title_en: normalizeOptionalText(card.titleEn),
+    slug,
+    sort_order: sortOrder,
+    gradient_from_color: gradientFromColor,
+    gradient_from_opacity: gradientFromOpacity,
+    gradient_to_color: gradientToColor,
+    gradient_to_opacity: gradientToOpacity,
+    gradient_to_position: gradientToPosition,
+    image_path: card.imagePath || null,
+    image_url: card.imageUrl || null,
+    video_path: card.videoPath || null,
+    video_url: card.videoUrl || null,
+    poster_path: card.posterPath || null,
+    poster_url: card.posterUrl || null,
+    tile_type: tileType,
+  }
+}
+
+async function getPanelById(panelId) {
+  const { data, error } = await supabase
+    .from('home_panels')
+    .select('*')
+    .eq('id', panelId)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data
 }
 
 async function getAboutUsContent() {
@@ -1336,6 +1657,62 @@ function normalizeInternalPath(path) {
   return rawPath.startsWith('/') ? rawPath : `/${rawPath}`
 }
 
+function normalizeSlug(value) {
+  const slug = slugify(value)
+
+  if (!slug) {
+    const error = new Error('Slug is required')
+    error.status = 400
+    throw error
+  }
+
+  return slug
+}
+
+function slugify(value) {
+  const transliterated = String(value || '')
+    .trim()
+    .toLowerCase()
+    .replace(/[а]/g, 'a')
+    .replace(/[б]/g, 'b')
+    .replace(/[в]/g, 'v')
+    .replace(/[г]/g, 'g')
+    .replace(/[д]/g, 'd')
+    .replace(/[её]/g, 'e')
+    .replace(/[ж]/g, 'zh')
+    .replace(/[з]/g, 'z')
+    .replace(/[и]/g, 'i')
+    .replace(/[й]/g, 'y')
+    .replace(/[к]/g, 'k')
+    .replace(/[л]/g, 'l')
+    .replace(/[м]/g, 'm')
+    .replace(/[н]/g, 'n')
+    .replace(/[о]/g, 'o')
+    .replace(/[п]/g, 'p')
+    .replace(/[р]/g, 'r')
+    .replace(/[с]/g, 's')
+    .replace(/[т]/g, 't')
+    .replace(/[у]/g, 'u')
+    .replace(/[ф]/g, 'f')
+    .replace(/[х]/g, 'h')
+    .replace(/[ц]/g, 'ts')
+    .replace(/[ч]/g, 'ch')
+    .replace(/[ш]/g, 'sh')
+    .replace(/[щ]/g, 'sch')
+    .replace(/[ъь]/g, '')
+    .replace(/[ы]/g, 'y')
+    .replace(/[э]/g, 'e')
+    .replace(/[ю]/g, 'yu')
+    .replace(/[я]/g, 'ya')
+
+  return transliterated
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 100)
+}
+
 function sanitizeBaseName(fileName) {
   return fileName
     .replace(/\.[^/.]+$/, '')
@@ -1350,6 +1727,131 @@ function extensionFromFile(fileName) {
   return match ? match[0].toLowerCase() : ''
 }
 
-app.listen(PORT, () => {
-  console.log(`Backend listening on http://0.0.0.0:${PORT}`)
-})
+async function ensureDatabaseSchema() {
+  if (!POSTGRES_PASSWORD) {
+    console.warn('POSTGRES_PASSWORD is not set, skipping database schema migration')
+    return
+  }
+
+  const client = new PgClient({
+    host: POSTGRES_HOST,
+    port: Number(POSTGRES_PORT),
+    database: POSTGRES_DB,
+    user: POSTGRES_USER,
+    password: POSTGRES_PASSWORD,
+  })
+
+  await client.connect()
+
+  try {
+    await client.query(`
+      create extension if not exists "pgcrypto";
+
+      alter table if exists public.home_panels
+        add column if not exists slug text,
+        add column if not exists detail_text text not null default '',
+        add column if not exists detail_text_en text,
+        add column if not exists mascot_path text,
+        add column if not exists mascot_url text;
+
+      update public.home_panels
+      set slug = lower(regexp_replace(id::text, '[^a-zA-Z0-9]+', '-', 'g'))
+      where slug is null or slug = '';
+
+      alter table if exists public.home_panels
+        alter column slug set not null;
+
+      create unique index if not exists home_panels_slug_unique
+        on public.home_panels (slug);
+
+      create table if not exists public.portfolio_cards (
+        id uuid primary key default gen_random_uuid(),
+        panel_id uuid not null references public.home_panels(id) on delete cascade,
+        title text not null,
+        title_en text,
+        slug text not null,
+        sort_order integer not null default 0,
+        gradient_from_color text not null default '#DA2128',
+        gradient_from_opacity numeric(4, 3) not null default 1,
+        gradient_to_color text not null default '#DA2128',
+        gradient_to_opacity numeric(4, 3) not null default 0,
+        gradient_to_position integer not null default 70,
+        image_path text,
+        image_url text,
+        video_path text,
+        video_url text,
+        poster_path text,
+        poster_url text,
+        tile_type text not null default 'vertical',
+        created_at timestamp with time zone not null default now(),
+        updated_at timestamp with time zone not null default now(),
+        constraint portfolio_cards_tile_type_check check (tile_type in ('wide', 'vertical')),
+        constraint portfolio_cards_gradient_from_color_check check (gradient_from_color ~ '^#[0-9A-Fa-f]{6}$'),
+        constraint portfolio_cards_gradient_to_color_check check (gradient_to_color ~ '^#[0-9A-Fa-f]{6}$'),
+        constraint portfolio_cards_gradient_from_opacity_check check (gradient_from_opacity >= 0 and gradient_from_opacity <= 1),
+        constraint portfolio_cards_gradient_to_opacity_check check (gradient_to_opacity >= 0 and gradient_to_opacity <= 1),
+        constraint portfolio_cards_gradient_to_position_check check (gradient_to_position >= 0 and gradient_to_position <= 100)
+      );
+
+      create unique index if not exists portfolio_cards_panel_slug_unique
+        on public.portfolio_cards (panel_id, slug);
+
+      create or replace function public.set_portfolio_cards_updated_at()
+      returns trigger
+      language plpgsql
+      as $$
+      begin
+        new.updated_at = now();
+        return new;
+      end;
+      $$;
+
+      drop trigger if exists set_portfolio_cards_updated_at on public.portfolio_cards;
+
+      create trigger set_portfolio_cards_updated_at
+      before update on public.portfolio_cards
+      for each row
+      execute function public.set_portfolio_cards_updated_at();
+
+      alter table public.portfolio_cards enable row level security;
+
+      drop policy if exists "Portfolio cards are publicly readable." on public.portfolio_cards;
+      create policy "Portfolio cards are publicly readable."
+        on public.portfolio_cards for select
+        using (true);
+    `)
+
+    const { rows: panels } = await client.query('select id, title, slug from public.home_panels order by created_at asc')
+    const usedSlugs = new Set()
+
+    for (const panel of panels) {
+      let nextSlug = slugify(panel.title) || String(panel.id)
+      const baseSlug = nextSlug
+      let index = 2
+
+      while (usedSlugs.has(nextSlug)) {
+        nextSlug = `${baseSlug}-${index}`
+        index += 1
+      }
+
+      usedSlugs.add(nextSlug)
+
+      if (panel.slug !== nextSlug) {
+        await client.query('update public.home_panels set slug = $1 where id = $2', [nextSlug, panel.id])
+      }
+    }
+  } finally {
+    await client.end()
+  }
+}
+
+ensureDatabaseSchema()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Backend listening on http://0.0.0.0:${PORT}`)
+    })
+  })
+  .catch((error) => {
+    console.error('Failed to prepare database schema', error)
+    process.exit(1)
+  })

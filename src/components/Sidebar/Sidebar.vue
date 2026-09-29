@@ -44,13 +44,13 @@ function panelTitle(panel) {
     :class="isAboutLight ? 'border-[#d8d8d8] bg-white text-black' : isDarkTheme ? 'border-white/15 bg-[#222222] text-white' : 'border-white/15 bg-magnat-red text-white'"
   >
     <header class="flex items-start justify-between gap-5">
-      <a href="/" :aria-label="t('sidebar.logo')">
+      <RouterLink to="/" :aria-label="t('sidebar.logo')">
         <img
           class="h-auto w-[216px]"
           :src="isAboutLight ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
           :alt="t('sidebar.logo')"
         />
-      </a>
+      </RouterLink>
 
       <button
         class="relative h-11 w-11 shrink-0 transition-transform duration-300 ease-out hover:scale-[1.03]"
@@ -86,15 +86,15 @@ function panelTitle(panel) {
       :class="isAboutLight ? 'text-black/45' : 'text-white/45'"
       :aria-label="t('sidebar.servicesLabel')"
     >
-      <a
+      <RouterLink
         v-for="panel in panels"
         :key="panel.id"
         class="transition"
         :class="isAboutLight ? 'hover:text-black' : 'hover:text-white'"
-        :href="panel.linkPath"
+        :to="panel.linkPath || '/portfolio'"
       >
         {{ panelTitle(panel) }}
-      </a>
+      </RouterLink>
     </nav>
 
     <div class="mt-auto space-y-0 pt-8">

@@ -4,6 +4,11 @@ create table if not exists public.home_panels (
   id uuid primary key default gen_random_uuid(),
   title text not null,
   title_en text,
+  slug text not null,
+  detail_text text not null default '',
+  detail_text_en text,
+  mascot_path text,
+  mascot_url text,
   sort_order integer not null default 0,
   gradient_from_color text not null default '#DA2128',
   gradient_from_opacity numeric(4, 3) not null default 1,
@@ -33,6 +38,9 @@ create table if not exists public.home_panels (
   )
 );
 
+create unique index if not exists home_panels_slug_unique
+  on public.home_panels (slug);
+
 create or replace function public.set_home_panels_updated_at()
 returns trigger
 language plpgsql
@@ -55,6 +63,62 @@ alter table public.home_panels enable row level security;
 drop policy if exists "Home panels are publicly readable." on public.home_panels;
 create policy "Home panels are publicly readable."
   on public.home_panels for select
+  using (true);
+
+create table if not exists public.portfolio_cards (
+  id uuid primary key default gen_random_uuid(),
+  panel_id uuid not null references public.home_panels(id) on delete cascade,
+  title text not null,
+  title_en text,
+  slug text not null,
+  sort_order integer not null default 0,
+  gradient_from_color text not null default '#DA2128',
+  gradient_from_opacity numeric(4, 3) not null default 1,
+  gradient_to_color text not null default '#DA2128',
+  gradient_to_opacity numeric(4, 3) not null default 0,
+  gradient_to_position integer not null default 70,
+  image_path text,
+  image_url text,
+  video_path text,
+  video_url text,
+  poster_path text,
+  poster_url text,
+  tile_type text not null default 'vertical',
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint portfolio_cards_tile_type_check check (tile_type in ('wide', 'vertical')),
+  constraint portfolio_cards_gradient_from_color_check check (gradient_from_color ~ '^#[0-9A-Fa-f]{6}$'),
+  constraint portfolio_cards_gradient_to_color_check check (gradient_to_color ~ '^#[0-9A-Fa-f]{6}$'),
+  constraint portfolio_cards_gradient_from_opacity_check check (gradient_from_opacity >= 0 and gradient_from_opacity <= 1),
+  constraint portfolio_cards_gradient_to_opacity_check check (gradient_to_opacity >= 0 and gradient_to_opacity <= 1),
+  constraint portfolio_cards_gradient_to_position_check check (gradient_to_position >= 0 and gradient_to_position <= 100)
+);
+
+create unique index if not exists portfolio_cards_panel_slug_unique
+  on public.portfolio_cards (panel_id, slug);
+
+create or replace function public.set_portfolio_cards_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_portfolio_cards_updated_at on public.portfolio_cards;
+
+create trigger set_portfolio_cards_updated_at
+before update on public.portfolio_cards
+for each row
+execute function public.set_portfolio_cards_updated_at();
+
+alter table public.portfolio_cards enable row level security;
+
+drop policy if exists "Portfolio cards are publicly readable." on public.portfolio_cards;
+create policy "Portfolio cards are publicly readable."
+  on public.portfolio_cards for select
   using (true);
 
 create table if not exists public.about_us_content (

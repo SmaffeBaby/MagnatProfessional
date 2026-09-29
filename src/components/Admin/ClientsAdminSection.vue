@@ -17,6 +17,7 @@ const emit = defineEmits<{
   save: []
   reset: []
   upload: [file: File]
+  deleteFile: []
   edit: [item: ClientItem]
   delete: [item: ClientItem]
 }>()
@@ -58,6 +59,7 @@ function uploadFile(event: Event) {
           <span>Изображение 200×200</span>
           <input type="file" accept="image/*" @change="uploadFile">
           <small v-if="form.imageUrl">Файл загружен</small>
+          <button v-if="form.imagePath" type="button" class="button-secondary" @click="$emit('deleteFile')">Удалить файл</button>
         </label>
 
         <p v-if="uploadField" class="admin-message">Загружаем файл...</p>

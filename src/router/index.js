@@ -23,6 +23,11 @@ const routes = [
     component: HomeView,
   },
   {
+    path: '/portfolio/:panelSlug/:cardSlug?',
+    name: 'portfolio-detail',
+    component: HomeView,
+  },
+  {
     path: '/admin',
     name: 'admin',
     component: () => import('../views/AdminView.vue'),

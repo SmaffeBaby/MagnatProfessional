@@ -5,6 +5,7 @@ import { useLanguageStore } from '../../composables/useLanguageStore'
 import AboutContent from '../AboutContent/AboutContent.vue'
 import ContactsContent from '../ContactsContent/ContactsContent.vue'
 import HomeContent from '../HomeContent/HomeContent.vue'
+import PortfolioDetailContent from '../PortfolioDetailContent/PortfolioDetailContent.vue'
 import PortfolioContent from '../PortfolioContent/PortfolioContent.vue'
 
 const props = defineProps({
@@ -24,11 +25,17 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isPortfolioDetailActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
 const isLightPage = computed(() => props.isAboutActive || props.isContactsActive)
-const isContentPage = computed(() => props.isAboutActive || props.isContactsActive || props.isPortfolioActive)
+const isContentPage = computed(() => (
+  props.isAboutActive || props.isContactsActive || props.isPortfolioActive || props.isPortfolioDetailActive
+))
 const isAboutLight = computed(() => isLightPage.value && !isDarkTheme.value)
 const { t } = useI18n()
 const languageStore = useLanguageStore()
@@ -63,7 +70,7 @@ function handleContentScroll(event) {
 }
 
 watch(
-  () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive],
+  () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive, props.isPortfolioDetailActive],
   () => {
     isHeaderRevealed.value = true
     lastContentScrollTop.value = 0
@@ -144,6 +151,12 @@ watch(
       <ContactsContent
         v-else-if="props.isContactsActive"
         key="contacts-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
+      <PortfolioDetailContent
+        v-else-if="props.isPortfolioDetailActive"
+        key="portfolio-detail-content"
         :theme="theme"
         @scroll.passive="handleContentScroll"
       />

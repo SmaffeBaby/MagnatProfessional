@@ -1,5 +1,5 @@
 import { reactive, ref } from 'vue'
-import { adminRequest, uploadAdminFile } from '../useAdminApi'
+import { adminRequest, deleteAdminFile, uploadAdminFile } from '../useAdminApi'
 import type { DescriptionContent } from '../useDescription'
 
 export type DescriptionPlaqueTarget = 'desktopPlaque' | 'tabletPlaque' | 'mobilePlaque'
@@ -96,7 +96,7 @@ export function useAdminDescription() {
     successMessage.value = ''
 
     try {
-      const uploaded = await uploadAdminFile(file)
+      const uploaded = await uploadAdminFile(file, 'description')
       const pathKey = `${target}Path` as keyof DescriptionForm
       const urlKey = `${target}Url` as keyof DescriptionForm
       form[pathKey] = uploaded.path
@@ -106,6 +106,19 @@ export function useAdminDescription() {
     } finally {
       uploadField.value = ''
     }
+  }
+
+  async function deletePlaque(target: DescriptionPlaqueTarget) {
+    const pathKey = `${target}Path` as keyof DescriptionForm
+    const urlKey = `${target}Url` as keyof DescriptionForm
+    const path = form[pathKey]
+
+    if (typeof path === 'string' && path) {
+      await deleteAdminFile('description', path)
+    }
+
+    form[pathKey] = null
+    form[urlKey] = null
   }
 
   function clearContent() {
@@ -125,6 +138,7 @@ export function useAdminDescription() {
     loadContent,
     saveContent,
     uploadPlaque,
+    deletePlaque,
     clearContent,
   }
 }

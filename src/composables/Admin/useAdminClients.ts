@@ -1,5 +1,5 @@
 import { computed, reactive, ref } from 'vue'
-import { adminRequest, uploadAdminFile } from '../useAdminApi'
+import { adminRequest, deleteAdminFile, uploadAdminFile } from '../useAdminApi'
 import type { ClientItem } from '../useClients'
 
 export type ClientForm = {
@@ -94,7 +94,7 @@ export function useAdminClients() {
     error.value = ''
 
     try {
-      const uploaded = await uploadAdminFile(file)
+      const uploaded = await uploadAdminFile(file, 'clients')
       form.imagePath = uploaded.path
       form.imageUrl = uploaded.publicUrl
     } catch (requestError) {
@@ -102,6 +102,15 @@ export function useAdminClients() {
     } finally {
       uploadField.value = ''
     }
+  }
+
+  async function deleteImage() {
+    if (form.imagePath) {
+      await deleteAdminFile('clients', form.imagePath)
+    }
+
+    form.imagePath = null
+    form.imageUrl = null
   }
 
   function editItem(item: ClientItem) {
@@ -137,6 +146,7 @@ export function useAdminClients() {
     saveItem,
     deleteItem,
     uploadImage,
+    deleteImage,
     editItem,
     resetForm,
     clearItems,

@@ -8,6 +8,7 @@ defineProps<{
 
 defineEmits<{
   edit: [panel: HomePanel]
+  selectCards: [panel: HomePanel]
   delete: [panel: HomePanel]
 }>()
 </script>
@@ -23,6 +24,7 @@ defineEmits<{
       </div>
       <div class="panel-list__actions">
         <button type="button" @click="$emit('edit', panel)">Изменить</button>
+        <button type="button" class="button-secondary" @click="$emit('selectCards', panel)">Карточки</button>
         <button type="button" class="button-danger" @click="$emit('delete', panel)">Удалить</button>
       </div>
     </article>

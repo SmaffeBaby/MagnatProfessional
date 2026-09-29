@@ -12,6 +12,7 @@ const emit = defineEmits<{
   save: []
   reset: []
   upload: [file: File, target: PanelUploadTarget]
+  deleteFile: [target: PanelUploadTarget]
 }>()
 
 function uploadFile(event: Event, target: PanelUploadTarget) {
@@ -38,6 +39,16 @@ function uploadFile(event: Event, target: PanelUploadTarget) {
     <label>
       <span>Название[en]</span>
       <input v-model="form.titleEn" type="text">
+    </label>
+
+    <label>
+      <span>Текст для детальной страницы</span>
+      <textarea v-model="form.detailText" rows="4" />
+    </label>
+
+    <label>
+      <span>Текст для детальной страницы[en]</span>
+      <textarea v-model="form.detailTextEn" rows="4" />
     </label>
 
     <label>
@@ -83,10 +94,7 @@ function uploadFile(event: Event, target: PanelUploadTarget) {
       />
     </fieldset>
 
-    <label>
-      <span>Ссылка при нажатии</span>
-      <input v-model="form.linkPath" type="text" placeholder="/portfolio/project">
-    </label>
+    <p class="admin-message">Ссылка формируется автоматически: {{ form.linkPath }}</p>
 
     <fieldset class="panel-form__choice">
       <legend>Плашка</legend>
@@ -105,18 +113,28 @@ function uploadFile(event: Event, target: PanelUploadTarget) {
         <span>Изображение</span>
         <input type="file" accept="image/*" @change="uploadFile($event, 'image')">
         <small v-if="form.imageUrl">Файл загружен</small>
+        <button v-if="form.imagePath" type="button" class="button-secondary" @click="$emit('deleteFile', 'image')">Удалить файл</button>
       </label>
 
       <label>
         <span>Видео</span>
         <input type="file" accept="video/mp4,video/webm,video/quicktime" @change="uploadFile($event, 'video')">
         <small v-if="form.videoUrl">Файл загружен</small>
+        <button v-if="form.videoPath" type="button" class="button-secondary" @click="$emit('deleteFile', 'video')">Удалить файл</button>
       </label>
 
       <label>
         <span>Фото-заставка</span>
         <input type="file" accept="image/*" @change="uploadFile($event, 'poster')">
         <small v-if="form.posterUrl">Файл загружен</small>
+        <button v-if="form.posterPath" type="button" class="button-secondary" @click="$emit('deleteFile', 'poster')">Удалить файл</button>
+      </label>
+
+      <label>
+        <span>Маскот для детальной страницы</span>
+        <input type="file" accept="image/*" @change="uploadFile($event, 'mascot')">
+        <small v-if="form.mascotUrl">Файл загружен</small>
+        <button v-if="form.mascotPath" type="button" class="button-secondary" @click="$emit('deleteFile', 'mascot')">Удалить файл</button>
       </label>
     </div>
 

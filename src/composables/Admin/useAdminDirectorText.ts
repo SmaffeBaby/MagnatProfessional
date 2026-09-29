@@ -1,5 +1,5 @@
 import { reactive, ref } from 'vue'
-import { adminRequest, uploadAdminFile } from '../useAdminApi'
+import { adminRequest, deleteAdminFile, uploadAdminFile } from '../useAdminApi'
 import type { DirectorTextContent } from '../useDirectorText'
 
 export type DirectorTextPhotoTarget = 'photo' | 'thumbnail'
@@ -96,7 +96,7 @@ export function useAdminDirectorText() {
     successMessage.value = ''
 
     try {
-      const uploaded = await uploadAdminFile(file)
+      const uploaded = await uploadAdminFile(file, 'director-text')
       const pathKey = `${target}Path` as keyof DirectorTextForm
       const urlKey = `${target}Url` as keyof DirectorTextForm
       form[pathKey] = uploaded.path
@@ -106,6 +106,19 @@ export function useAdminDirectorText() {
     } finally {
       uploadField.value = ''
     }
+  }
+
+  async function deletePhoto(target: DirectorTextPhotoTarget) {
+    const pathKey = `${target}Path` as keyof DirectorTextForm
+    const urlKey = `${target}Url` as keyof DirectorTextForm
+    const path = form[pathKey]
+
+    if (typeof path === 'string' && path) {
+      await deleteAdminFile('director-text', path)
+    }
+
+    form[pathKey] = null
+    form[urlKey] = null
   }
 
   function clearContent() {
@@ -125,6 +138,7 @@ export function useAdminDirectorText() {
     loadContent,
     saveContent,
     uploadPhoto,
+    deletePhoto,
     clearContent,
   }
 }
