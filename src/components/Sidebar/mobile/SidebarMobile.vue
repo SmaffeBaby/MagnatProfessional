@@ -20,6 +20,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isContentPageActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:theme', 'open-map', 'menu-open-change'])
@@ -47,7 +51,7 @@ defineExpose({
     :class="[
       isDarkTheme ? 'is-dark-theme' : '',
       isAboutActive && !isDarkTheme ? 'is-about-light' : '',
-      isAboutActive && !isMenuOpen ? 'relative' : 'min-h-screen min-h-[100svh]',
+      isContentPageActive && !isMenuOpen ? 'relative' : 'min-h-screen min-h-[100svh]',
       isMenuOpen ? 'fixed inset-0 z-[600]' : 'relative',
     ]"
   >
@@ -56,15 +60,15 @@ defineExpose({
         v-if="!isMenuOpen"
         key="home"
         class="mobile-sidebar-home z-[1] flex flex-col overflow-y-auto px-5 pt-5"
-        :class="isAboutActive ? 'relative pb-5' : 'absolute inset-0 min-h-screen min-h-[100svh] pb-[84px]'"
+        :class="isContentPageActive ? 'relative pb-5' : 'absolute inset-0 min-h-screen min-h-[100svh] pb-[84px]'"
       >
-        <MobileThemeImage v-if="!isAboutActive" :theme="theme" />
+        <MobileThemeImage v-if="!isContentPageActive" :theme="theme" />
         <MobileHeader
           :is-dark-theme="isDarkTheme"
           :is-about-light="isAboutActive && !isDarkTheme"
           @open-menu="openMenu"
         />
-        <MainText v-if="!isAboutActive" :theme="theme" />
+        <MainText v-if="!isContentPageActive" :theme="theme" />
       </section>
     </Transition>
 

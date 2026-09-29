@@ -16,6 +16,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isContentPageActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const emit = defineEmits(['update:theme'])
@@ -39,7 +43,7 @@ const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
     :class="isDarkTheme ? 'bg-[#222222]' : isAboutActive ? 'bg-white' : 'bg-magnat-red'"
   >
     <div
-      v-if="!isAboutActive"
+      v-if="!isContentPageActive"
       class="pointer-events-none absolute inset-0 z-0"
       aria-hidden="true"
     >
@@ -125,7 +129,7 @@ const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
       </button>
     </header>
 
-    <MainText v-if="!isAboutActive" :theme="theme" />
+    <MainText v-if="!isContentPageActive" :theme="theme" />
   </section>
 </template>
 

@@ -5,6 +5,7 @@ import { useLanguageStore } from '../../composables/useLanguageStore'
 import AboutContent from '../AboutContent/AboutContent.vue'
 import ContactsContent from '../ContactsContent/ContactsContent.vue'
 import HomeContent from '../HomeContent/HomeContent.vue'
+import PortfolioContent from '../PortfolioContent/PortfolioContent.vue'
 
 const props = defineProps({
   theme: {
@@ -19,10 +20,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isPortfolioActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
 const isLightPage = computed(() => props.isAboutActive || props.isContactsActive)
+const isContentPage = computed(() => props.isAboutActive || props.isContactsActive || props.isPortfolioActive)
 const isAboutLight = computed(() => isLightPage.value && !isDarkTheme.value)
 const { t } = useI18n()
 const languageStore = useLanguageStore()
@@ -32,7 +38,7 @@ const lastContentScrollTop = ref(0)
 const navLinks = [
   {
     labelKey: 'desktopHome.navigation.portfolio',
-    href: '/',
+    href: '/portfolio',
   },
   {
     labelKey: 'desktopHome.navigation.about',
@@ -57,7 +63,7 @@ function handleContentScroll(event) {
 }
 
 watch(
-  () => [props.isAboutActive, props.isContactsActive],
+  () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive],
   () => {
     isHeaderRevealed.value = true
     lastContentScrollTop.value = 0
@@ -75,7 +81,7 @@ watch(
   >
     <div
       class="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500"
-      :class="isLightPage ? 'opacity-0' : 'opacity-100'"
+      :class="isContentPage ? 'opacity-0' : 'opacity-100'"
       aria-hidden="true"
     >
       <div
@@ -138,6 +144,12 @@ watch(
       <ContactsContent
         v-else-if="props.isContactsActive"
         key="contacts-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
+      <PortfolioContent
+        v-else-if="props.isPortfolioActive"
+        key="portfolio-content"
         :theme="theme"
         @scroll.passive="handleContentScroll"
       />

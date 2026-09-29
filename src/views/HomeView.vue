@@ -11,6 +11,7 @@ import Footer from '../components/Footer/Footer.vue'
 import HomePanels from '../components/HomePanels/HomePanels.vue'
 import Map from '../components/Map/Map.vue'
 import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
+import PortfolioContent from '../components/PortfolioContent/PortfolioContent.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
 import MobileHeader from '../components/Sidebar/mobile/MobileHeader.vue'
 import SidebarMobile from '../components/Sidebar/mobile/SidebarMobile.vue'
@@ -32,7 +33,9 @@ const theme = computed({
 const isMapOpen = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
+const isPortfolioActive = computed(() => route.name === 'portfolio')
 const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value)
+const isContentPageActive = computed(() => isAboutActive.value || isContactsActive.value || isPortfolioActive.value)
 const {
   inactiveThemeIcon,
   isDarkTheme,
@@ -57,11 +60,13 @@ const {
         ref="mobileSidebar"
         v-model:theme="theme"
         :is-about-active="isLightPageActive"
+        :is-content-page-active="isContentPageActive"
         @menu-open-change="isMobileMenuOpen = $event"
         @open-map="isMapOpen = true"
       />
       <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
       <ContactsContent v-else-if="isContactsActive" :key="route.fullPath" :theme="theme" />
+      <PortfolioContent v-else-if="isPortfolioActive" :key="route.fullPath" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
@@ -74,9 +79,14 @@ const {
     </div>
 
     <div class="home-tablet-page hidden tablet:block desktop:hidden">
-      <TabletHome v-model:theme="theme" :is-about-active="isLightPageActive" />
+      <TabletHome
+        v-model:theme="theme"
+        :is-about-active="isLightPageActive"
+        :is-content-page-active="isContentPageActive"
+      />
       <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
       <ContactsContent v-else-if="isContactsActive" :key="route.fullPath" :theme="theme" />
+      <PortfolioContent v-else-if="isPortfolioActive" :key="route.fullPath" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
@@ -162,6 +172,7 @@ const {
         :theme="theme"
         :is-about-active="isAboutActive"
         :is-contacts-active="isContactsActive"
+        :is-portfolio-active="isPortfolioActive"
       />
     </div>
 

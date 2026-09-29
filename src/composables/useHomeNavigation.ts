@@ -1,7 +1,7 @@
 export const homeNavLinks = [
   {
     labelKey: 'desktopHome.navigation.portfolio',
-    href: '/',
+    href: '/portfolio',
   },
   {
     labelKey: 'desktopHome.navigation.about',

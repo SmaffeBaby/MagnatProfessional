@@ -84,6 +84,16 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
+.home-panels--portfolio {
+  z-index: 2;
+  margin-top: 0;
+  padding-bottom: 0;
+}
+
+.home-panels--portfolio .home-panels__item {
+  width: 100%;
+}
+
 @media (min-width: 1040px) and (max-width: 1300px) {
   .home-panels {
     display: grid;
@@ -103,6 +113,11 @@
     grid-column: span 1;
     width: 100%;
     height: 339px;
+  }
+
+  .home-panels--portfolio {
+    margin-right: 55px;
+    margin-left: 55px;
   }
 }
 
@@ -127,6 +142,20 @@
     width: 100%;
     height: 586px;
     grid-column: span 2;
+  }
+
+  .home-panels--portfolio {
+    margin-right: 55px;
+    margin-left: 55px;
+  }
+
+  .home-panels--portfolio .home-panels__item,
+  .home-panels--portfolio .home-panels__item--vertical {
+    height: 367px;
+  }
+
+  .home-panels--portfolio .home-panels__item--wide {
+    height: 367px;
   }
 }
 

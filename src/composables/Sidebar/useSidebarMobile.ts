@@ -14,7 +14,7 @@ type SidebarMobileEmit = {
 const menuLinks = [
   {
     labelKey: 'sidebarMobile.navigation.portfolio',
-    href: '/',
+    href: '/portfolio',
   },
   {
     labelKey: 'sidebarMobile.navigation.about',

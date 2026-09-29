@@ -9,6 +9,10 @@ const props = defineProps({
     type: String,
     default: 'light',
   },
+  variant: {
+    type: String,
+    default: 'home',
+  },
 })
 
 const { panels } = useHomePanels()
@@ -54,7 +58,10 @@ function clamp(value: number, min: number, max: number) {
   <section
     v-if="panels.length"
     class="home-panels"
-    :class="{ 'home-panels--dark': isDarkTheme }"
+    :class="[
+      { 'home-panels--dark': isDarkTheme },
+      `home-panels--${props.variant}`,
+    ]"
     aria-label="Панели на главной"
   >
     <a
