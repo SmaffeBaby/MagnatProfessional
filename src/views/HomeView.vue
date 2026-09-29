@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AboutContent from '../components/AboutContent/AboutContent.vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
+import ContactsContent from '../components/ContactsContent/ContactsContent.vue'
 import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import DottedSeparator from '../components/DottedSeparator/DottedSeparator.vue'
@@ -30,6 +31,8 @@ const theme = computed({
 
 const isMapOpen = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
+const isContactsActive = computed(() => route.name === 'contacts')
+const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value)
 const {
   inactiveThemeIcon,
   isDarkTheme,
@@ -47,17 +50,18 @@ const {
 <template>
   <main
     class="home-main min-h-screen text-white transition-colors duration-500"
-    :class="theme === 'dark' ? 'bg-[#222222]' : isAboutActive ? 'bg-white' : 'bg-magnat-red'"
+    :class="theme === 'dark' ? 'bg-[#222222]' : isLightPageActive ? 'bg-white' : 'bg-magnat-red'"
   >
     <div class="tablet:hidden desktop:hidden">
       <SidebarMobile
         ref="mobileSidebar"
         v-model:theme="theme"
-        :is-about-active="isAboutActive"
+        :is-about-active="isLightPageActive"
         @menu-open-change="isMobileMenuOpen = $event"
         @open-map="isMapOpen = true"
       />
       <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
+      <ContactsContent v-else-if="isContactsActive" :key="route.fullPath" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
@@ -70,8 +74,9 @@ const {
     </div>
 
     <div class="home-tablet-page hidden tablet:block desktop:hidden">
-      <TabletHome v-model:theme="theme" :is-about-active="isAboutActive" />
+      <TabletHome v-model:theme="theme" :is-about-active="isLightPageActive" />
       <AboutContent v-if="isAboutActive" :key="route.fullPath" :theme="theme" />
+      <ContactsContent v-else-if="isContactsActive" :key="route.fullPath" :theme="theme" />
       <template v-else>
         <HomePanels :theme="theme" />
         <AboutUs :theme="theme" />
@@ -90,7 +95,7 @@ const {
         is-fixed
         show-backing
         :is-dark-theme="isDarkTheme"
-        :is-about-light="isAboutActive && !isDarkTheme"
+        :is-about-light="isLightPageActive && !isDarkTheme"
         @open-menu="openMobileMenu"
       />
     </Transition>
@@ -148,12 +153,16 @@ const {
       <div class="desktop-sidebar-frame shrink-0">
         <Sidebar
           v-model:theme="theme"
-          :is-about-active="isAboutActive"
+          :is-about-active="isLightPageActive"
           @open-map="isMapOpen = true"
         />
       </div>
 
-      <DesktopHome :theme="theme" :is-about-active="isAboutActive" />
+      <DesktopHome
+        :theme="theme"
+        :is-about-active="isAboutActive"
+        :is-contacts-active="isContactsActive"
+      />
     </div>
 
     <OnTheMapPanel :is-open="isMapOpen" @close="isMapOpen = false" />

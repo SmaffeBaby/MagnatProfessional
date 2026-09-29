@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import AboutContent from '../AboutContent/AboutContent.vue'
+import ContactsContent from '../ContactsContent/ContactsContent.vue'
 import HomeContent from '../HomeContent/HomeContent.vue'
 
 const props = defineProps({
@@ -14,10 +15,15 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isContactsActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
-const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
+const isLightPage = computed(() => props.isAboutActive || props.isContactsActive)
+const isAboutLight = computed(() => isLightPage.value && !isDarkTheme.value)
 const { t } = useI18n()
 const languageStore = useLanguageStore()
 const isHeaderRevealed = ref(true)
@@ -34,7 +40,7 @@ const navLinks = [
   },
   {
     labelKey: 'desktopHome.navigation.contacts',
-    href: '/#contacts',
+    href: '/contacts',
   },
 ]
 
@@ -51,7 +57,7 @@ function handleContentScroll(event) {
 }
 
 watch(
-  () => props.isAboutActive,
+  () => [props.isAboutActive, props.isContactsActive],
   () => {
     isHeaderRevealed.value = true
     lastContentScrollTop.value = 0
@@ -63,13 +69,13 @@ watch(
   <section
     class="desktop-home relative h-screen flex-1 overflow-hidden transition-colors duration-500"
     :class="[
-      isDarkTheme ? 'bg-[#222222]' : 'bg-magnat-red',
+      isDarkTheme ? 'bg-[#222222]' : isLightPage ? 'bg-white' : 'bg-magnat-red',
       { 'desktop-home--about-light': isAboutLight },
     ]"
   >
     <div
       class="pointer-events-none absolute inset-0 z-0 transition-opacity duration-500"
-      :class="props.isAboutActive ? 'opacity-0' : 'opacity-100'"
+      :class="isLightPage ? 'opacity-0' : 'opacity-100'"
       aria-hidden="true"
     >
       <div
@@ -126,6 +132,12 @@ watch(
       <AboutContent
         v-if="props.isAboutActive"
         key="about-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
+      <ContactsContent
+        v-else-if="props.isContactsActive"
+        key="contacts-content"
         :theme="theme"
         @scroll.passive="handleContentScroll"
       />

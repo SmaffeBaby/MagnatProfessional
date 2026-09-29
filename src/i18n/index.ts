@@ -1,4 +1,6 @@
 import { createI18n } from 'vue-i18n'
+import contactsContentEn from '../components/ContactsContent/eng.json'
+import contactsContentRu from '../components/ContactsContent/ru.json'
 import desktopHomeEn from '../components/DesktopHome/eng.json'
 import desktopHomeRu from '../components/DesktopHome/ru.json'
 import footerEn from '../components/Footer/eng.json'
@@ -23,6 +25,7 @@ export const i18n = createI18n({
   fallbackLocale: DEFAULT_LOCALE,
   messages: {
     ru: {
+      contactsContent: contactsContentRu,
       desktopHome: desktopHomeRu,
       footer: footerRu,
       onTheMap: onTheMapRu,
@@ -31,6 +34,7 @@ export const i18n = createI18n({
       sidebarMobile: sidebarMobileRu,
     },
     en: {
+      contactsContent: contactsContentEn,
       desktopHome: desktopHomeEn,
       footer: footerEn,
       onTheMap: onTheMapEn,

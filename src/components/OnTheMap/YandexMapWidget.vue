@@ -10,9 +10,9 @@ const mapSrc = 'https://yandex.ru/map-widget/v1/?ll=30.227283%2C59.944790&mode=p
 </script>
 
 <template>
-  <div class="relative h-full min-h-[420px] overflow-hidden bg-white">
+  <div class="relative h-full min-h-[420px] overflow-hidden bg-white [pointer-events:auto] [touch-action:auto]">
     <iframe
-      class="relative h-full min-h-[420px] w-full border-0"
+      class="relative h-full min-h-[420px] w-full border-0 [pointer-events:auto] [touch-action:auto]"
       :src="mapSrc"
       :title="title"
       allowfullscreen

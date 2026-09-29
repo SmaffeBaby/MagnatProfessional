@@ -9,6 +9,6 @@ export const homeNavLinks = [
   },
   {
     labelKey: 'desktopHome.navigation.contacts',
-    href: '/#contacts',
+    href: '/contacts',
   },
 ]

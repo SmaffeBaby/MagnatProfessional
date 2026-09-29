@@ -22,7 +22,7 @@ const menuLinks = [
   },
   {
     labelKey: 'sidebarMobile.navigation.contacts',
-    href: '/#contacts',
+    href: '/contacts',
   },
 ]
 

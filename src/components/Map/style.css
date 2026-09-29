@@ -30,7 +30,8 @@
   font-weight: 500;
   line-height: 1.08;
   letter-spacing: 0;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 
 .map-section__phone,
@@ -108,12 +109,16 @@
   overflow: hidden;
   border-radius: 30px;
   background: #ffffff;
+  pointer-events: auto;
+  touch-action: auto;
 }
 
 .map-section__map :deep(> div),
 .map-section__map :deep(iframe) {
   min-height: 0;
   height: 100%;
+  pointer-events: auto;
+  touch-action: auto;
 }
 
 @media (min-width: 1040px) {
