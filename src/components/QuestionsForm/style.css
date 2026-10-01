@@ -16,6 +16,48 @@
   background: #e3222a;
 }
 
+.questions-form__close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 5;
+  display: inline-flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.questions-form__close span,
+.questions-form__close span::after {
+  position: absolute;
+  width: 25px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  content: '';
+}
+
+.questions-form__close span {
+  transform: rotate(45deg);
+}
+
+.questions-form__close span::after {
+  inset: 0;
+  transform: rotate(90deg);
+}
+
+.questions-form__close:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+
 .questions-form__header {
   position: static;
   z-index: 2;
@@ -190,6 +232,35 @@
   outline-offset: 4px;
 }
 
+.questions-form--project {
+  height: 100%;
+  margin: 0;
+  color: #ffffff;
+}
+
+.questions-form--project .questions-form__panel {
+  min-height: 100%;
+  padding-top: 80px;
+}
+
+.questions-form--project .questions-form__title {
+  max-width: calc(100% - 72px);
+  font-size: 40px;
+  line-height: 0.88;
+}
+
+.questions-form--project .questions-form__lead {
+  max-width: 100%;
+}
+
+.questions-form--project .questions-form__textarea {
+  min-height: 268px;
+}
+
+.questions-form--project .questions-form__textarea-wrap::after {
+  display: none;
+}
+
 @media (min-width: 1040px) {
   .questions-form {
     margin: 120px 55px 0;
@@ -251,6 +322,84 @@
     padding: 0 25px;
     font-size: 20px;
   }
+
+  .questions-form--project {
+    margin: 0;
+    color: #000000;
+  }
+
+  .questions-form--project .questions-form__panel {
+    min-height: 100%;
+    padding: 29px 33px 34px;
+    border-radius: 30px;
+    background: #ffffff;
+  }
+
+  .questions-form--project .questions-form__close {
+    top: 44px;
+    right: 40px;
+    width: 38px;
+    height: 38px;
+    border-width: 2px;
+  }
+
+  .questions-form--project .questions-form__close span,
+  .questions-form--project .questions-form__close span::after {
+    width: 17px;
+    height: 1.8px;
+  }
+
+  .questions-form--project .questions-form__title {
+    max-width: calc(100% - 80px);
+    font-size: 60px;
+    line-height: 1.04;
+  }
+
+  .questions-form--project .questions-form__lead {
+    max-width: 680px;
+    margin-top: 24px;
+    font-size: 24px;
+    line-height: 1.02;
+  }
+
+  .questions-form--project .questions-form__fields {
+    gap: 21px;
+    margin-top: 31px;
+  }
+
+  .questions-form--project .questions-form__input,
+  .questions-form--project .questions-form__textarea {
+    border-bottom-color: #000000;
+    color: #000000;
+    font-size: 24px;
+  }
+
+  .questions-form--project .questions-form__input::placeholder,
+  .questions-form--project .questions-form__textarea::placeholder {
+    color: #000000;
+  }
+
+  .questions-form--project .questions-form__input {
+    height: 43px;
+  }
+
+  .questions-form--project .questions-form__textarea {
+    min-height: 276px;
+  }
+
+  .questions-form--project .questions-form__agreement {
+    max-width: 680px;
+    margin-top: 18px;
+    color: rgba(0, 0, 0, 0.5);
+  }
+
+  .questions-form--project .questions-form__button {
+    min-width: 170px;
+    height: 52px;
+    margin-top: 24px;
+    background: #e3222a;
+    color: #ffffff;
+  }
 }
 
 @media (min-width: 1301px) {
@@ -289,6 +438,33 @@
   .questions-form__fields {
     gap: 30px;
     margin-top: 30px;
+  }
+
+  .questions-form--project {
+    margin-top: 0;
+  }
+
+  .questions-form--project .questions-form__panel {
+    padding-top: 29px;
+    padding-bottom: 34px;
+  }
+
+  .questions-form--project .questions-form__cat-frame {
+    display: none;
+  }
+
+  .questions-form--project .questions-form__title {
+    max-width: calc(100% - 80px);
+  }
+
+  .questions-form--project .questions-form__lead {
+    max-width: 680px;
+    margin-top: 24px;
+  }
+
+  .questions-form--project .questions-form__fields {
+    gap: 21px;
+    margin-top: 31px;
   }
 }
 

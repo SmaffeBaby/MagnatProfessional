@@ -83,6 +83,7 @@
   line-height: 1;
   letter-spacing: 0;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .portfolio-detail__cat {

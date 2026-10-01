@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Footer from '../Footer/Footer.vue'
 import YandexMapWidget from '../OnTheMap/YandexMapWidget.vue'
@@ -14,6 +14,11 @@ const props = defineProps({
 
 const { t } = useI18n()
 const isDarkTheme = computed(() => props.theme === 'dark')
+const openProjectForm = inject<(() => void) | null>('openProjectForm', null)
+
+function handleProjectClick() {
+  openProjectForm?.()
+}
 </script>
 
 <template>
@@ -37,9 +42,9 @@ const isDarkTheme = computed(() => props.theme === 'dark')
       </address>
 
       <div class="contacts-content__actions">
-        <a class="contacts-content__project-button" href="mailto:office@magnatmedia.com">
+        <button class="contacts-content__project-button" type="button" @click="handleProjectClick">
           {{ t('contactsContent.project') }}
-        </a>
+        </button>
 
         <div class="contacts-content__socials" :aria-label="t('contactsContent.socialsLabel')">
           <a class="contacts-content__social-link" href="#" aria-label="Telegram">TG</a>

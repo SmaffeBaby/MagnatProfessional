@@ -54,6 +54,7 @@
   height: 54px;
   margin-top: 30px;
   overflow: hidden;
+  border: 0;
   border-radius: 999px;
   background: #ffffff;
   color: var(--main-text-button-color);
@@ -62,6 +63,7 @@
   line-height: 1;
   letter-spacing: 0;
   text-decoration: none;
+  cursor: pointer;
   transition: transform 180ms ease;
 }
 

@@ -1,5 +1,9 @@
 {
   "title": "Any questions?",
+  "project": {
+    "title": "Discuss a project",
+    "close": "Close form"
+  },
   "lead": "Fill out the form and we will contact you to answer all your questions",
   "fields": {
     "name": "Name",

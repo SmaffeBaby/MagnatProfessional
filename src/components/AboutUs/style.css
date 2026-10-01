@@ -33,6 +33,7 @@
   align-items: center;
   justify-content: center;
   margin-top: 30px;
+  border: 0;
   border-radius: 999px;
   padding: 15px 20px 17px 21px;
   color: #ef3332;
@@ -43,6 +44,7 @@
   letter-spacing: 0;
   text-align: center;
   text-decoration: none;
+  cursor: pointer;
   transition: transform 180ms ease, opacity 180ms ease;
 }
 

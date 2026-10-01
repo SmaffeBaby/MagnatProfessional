@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, provide, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import AboutContent from '../components/AboutContent/AboutContent.vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
@@ -14,6 +14,7 @@ import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
 import PortfolioCaseContent from '../components/PortfolioCaseContent/PortfolioCaseContent.vue'
 import PortfolioDetailContent from '../components/PortfolioDetailContent/PortfolioDetailContent.vue'
 import PortfolioContent from '../components/PortfolioContent/PortfolioContent.vue'
+import ProjectFormDrawer from '../components/ProjectFormDrawer/ProjectFormDrawer.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
 import MobileHeader from '../components/Sidebar/mobile/MobileHeader.vue'
 import SidebarMobile from '../components/Sidebar/mobile/SidebarMobile.vue'
@@ -33,6 +34,7 @@ const theme = computed({
 })
 
 const isMapOpen = ref(false)
+const isProjectFormOpen = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
 const isPortfolioActive = computed(() => route.name === 'portfolio')
@@ -59,6 +61,16 @@ const {
 function setMobileSidebar(instance) {
   mobileSidebar.value = instance
 }
+
+function openProjectForm() {
+  isProjectFormOpen.value = true
+}
+
+function closeProjectForm() {
+  isProjectFormOpen.value = false
+}
+
+provide('openProjectForm', openProjectForm)
 </script>
 
 <template>
@@ -195,5 +207,6 @@ function setMobileSidebar(instance) {
     </div>
 
     <OnTheMapPanel :is-open="isMapOpen" @close="isMapOpen = false" />
+    <ProjectFormDrawer :open="isProjectFormOpen" @close="closeProjectForm" />
   </main>
 </template>

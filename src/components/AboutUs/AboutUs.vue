@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useAboutUs } from '../../composables/useAboutUs'
 
 const props = defineProps({
@@ -28,6 +28,7 @@ const props = defineProps({
 const { hasContent, localizedButtonText, localizedText } = useAboutUs()
 const isDarkTheme = computed(() => props.theme === 'dark')
 const displayButtonText = computed(() => props.buttonText || localizedButtonText.value)
+const openProjectForm = inject<(() => void) | null>('openProjectForm', null)
 const titleParts = computed(() => {
   const words = localizedText.value.trim().split(/\s+/)
 
@@ -43,6 +44,12 @@ const titleParts = computed(() => {
     rest: localizedText.value.replace(words.slice(0, 2).join(' '), ''),
   }
 })
+
+function handleButtonClick() {
+  if (openProjectForm) {
+    openProjectForm()
+  }
+}
 </script>
 
 <template>
@@ -62,13 +69,14 @@ const titleParts = computed(() => {
       </template>
     </h2>
 
-    <a
+    <button
       v-if="displayButtonText"
       class="about-us__button"
-      :href="buttonHref"
+      type="button"
+      @click="handleButtonClick"
     >
       {{ displayButtonText }}
-    </a>
+    </button>
   </section>
 </template>
 

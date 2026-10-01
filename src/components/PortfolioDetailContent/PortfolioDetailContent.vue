@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -23,6 +23,7 @@ const { locale } = storeToRefs(languageStore)
 const isDarkTheme = computed(() => props.theme === 'dark')
 const panelSlug = computed(() => String(route.params.panelSlug || ''))
 const { panel, cards, isLoading } = usePortfolioDetail(panelSlug)
+const openProjectForm = inject<(() => void) | null>('openProjectForm', null)
 
 const title = computed(() => {
   if (!panel.value) {
@@ -72,6 +73,10 @@ function goBack() {
   router.push('/portfolio')
 }
 
+function handleProjectClick() {
+  openProjectForm?.()
+}
+
 function hexToRgba(hex: string, opacity: number) {
   const normalized = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : 'DA2128'
   const red = parseInt(normalized.slice(0, 2), 16)
@@ -107,9 +112,9 @@ function clamp(value: number, min: number, max: number) {
         </p>
       </div>
 
-      <a class="portfolio-detail__project-button" href="mailto:office@magnatmedia.com">
+      <button class="portfolio-detail__project-button" type="button" @click="handleProjectClick">
         {{ t('portfolioContent.project') }}
-      </a>
+      </button>
 
       <img
         v-if="panel?.mascotUrl"

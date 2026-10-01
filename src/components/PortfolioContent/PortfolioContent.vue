@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useI18n } from 'vue-i18n'
 import Footer from '../Footer/Footer.vue'
 import HomePanels from '../HomePanels/HomePanels.vue'
@@ -14,6 +14,11 @@ const props = defineProps({
 
 const { t } = useI18n()
 const isDarkTheme = computed(() => props.theme === 'dark')
+const openProjectForm = inject<(() => void) | null>('openProjectForm', null)
+
+function handleProjectClick() {
+  openProjectForm?.()
+}
 </script>
 
 <template>
@@ -32,9 +37,9 @@ const isDarkTheme = computed(() => props.theme === 'dark')
         </p>
       </div>
 
-      <a class="portfolio-content__project-button" href="mailto:office@magnatmedia.com">
+      <button class="portfolio-content__project-button" type="button" @click="handleProjectClick">
         {{ t('portfolioContent.project') }}
-      </a>
+      </button>
 
       <img
         class="portfolio-content__cat"

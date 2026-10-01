@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
 import { useMainText } from '../../composables/useMainText'
 
 const props = defineProps({
@@ -11,6 +11,11 @@ const props = defineProps({
 
 const { content } = useMainText()
 const isDarkTheme = computed(() => props.theme === 'dark')
+const openProjectForm = inject('openProjectForm', null)
+
+function handleProjectClick() {
+  openProjectForm?.()
+}
 </script>
 
 <template>
@@ -26,10 +31,11 @@ const isDarkTheme = computed(() => props.theme === 'dark')
 
     <p class="main-text__description">{{ content.descriptionText }}</p>
 
-    <a
+    <button
       class="main-text__button"
-      href="#contacts"
+      type="button"
       :aria-label="content.buttonText"
+      @click="handleProjectClick"
     >
       <span class="main-text__button-label" aria-hidden="true">
         <span class="main-text__button-track">
@@ -41,7 +47,7 @@ const isDarkTheme = computed(() => props.theme === 'dark')
           </span>
         </span>
       </span>
-    </a>
+    </button>
   </section>
 </template>
 
