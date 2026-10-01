@@ -128,6 +128,61 @@ app.get('/api/home-panels', async (_req, res, next) => {
   }
 })
 
+app.get('/api/portfolio/:panelSlug/:cardSlug', async (req, res, next) => {
+  try {
+    const { data: panel, error: panelError } = await supabase
+      .from('home_panels')
+      .select('*')
+      .eq('slug', req.params.panelSlug)
+      .maybeSingle()
+
+    if (panelError) {
+      throw panelError
+    }
+
+    if (!panel) {
+      res.status(404).json({ error: 'Portfolio panel not found' })
+      return
+    }
+
+    const { data: cards, error: cardsError } = await supabase
+      .from('portfolio_cards')
+      .select('*')
+      .eq('panel_id', panel.id)
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (cardsError) {
+      throw cardsError
+    }
+
+    const cardsWithArticleBlocks = await attachArticleBlocksToCards(cards)
+    const currentIndex = cardsWithArticleBlocks.findIndex((card) => card.slug === req.params.cardSlug)
+
+    if (currentIndex === -1) {
+      res.status(404).json({ error: 'Portfolio card not found' })
+      return
+    }
+
+    const mappedCards = cardsWithArticleBlocks.map((card) => portfolioCardFromDatabase(card, panel.slug))
+    const previousCard = mappedCards[(currentIndex - 1 + mappedCards.length) % mappedCards.length] || null
+    const nextCard = mappedCards[(currentIndex + 1) % mappedCards.length] || null
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        panel: panelFromDatabase(panel),
+        card: mappedCards[currentIndex],
+        previousCard: previousCard?.id === mappedCards[currentIndex]?.id ? null : previousCard,
+        nextCard: nextCard?.id === mappedCards[currentIndex]?.id ? null : nextCard,
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.get('/api/portfolio/:panelSlug', async (req, res, next) => {
   try {
     const { data: panel, error: panelError } = await supabase
@@ -162,7 +217,7 @@ app.get('/api/portfolio/:panelSlug', async (req, res, next) => {
       })
       .json({
         panel: panelFromDatabase(panel),
-        cards: cards.map((card) => portfolioCardFromDatabase(card, panel.slug)),
+        cards: (await attachArticleBlocksToCards(cards)).map((card) => portfolioCardFromDatabase(card, panel.slug)),
       })
   } catch (error) {
     next(error)
@@ -375,8 +430,10 @@ app.get('/api/admin/home-panels/:panelId/cards', requireAdminAuth, async (req, r
       throw error
     }
 
+    const cards = await attachArticleBlocksToCards(data)
+
     res.json({
-      cards: data.map((card) => portfolioCardFromDatabase(card, panel.slug)),
+      cards: cards.map((card) => portfolioCardFromDatabase(card, panel.slug)),
     })
   } catch (error) {
     next(error)
@@ -397,7 +454,13 @@ app.post('/api/admin/home-panels/:panelId/cards', requireAdminAuth, async (req, 
       throw error
     }
 
-    res.status(201).json({ card: portfolioCardFromDatabase(data, panel.slug) })
+    const articleBlocks = Array.isArray(req.body.articleBlocks)
+      ? await savePortfolioCardArticleBlocks(data.id, req.body.articleBlocks)
+      : []
+
+    res.status(201).json({
+      card: portfolioCardFromDatabase({ ...data, articleBlocks }, panel.slug),
+    })
   } catch (error) {
     next(error)
   }
@@ -419,7 +482,13 @@ app.put('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, async
       throw error
     }
 
-    res.json({ card: portfolioCardFromDatabase(data, panel.slug) })
+    const articleBlocks = Array.isArray(req.body.articleBlocks)
+      ? await savePortfolioCardArticleBlocks(data.id, req.body.articleBlocks)
+      : (await attachArticleBlocksToCards([data]))[0]?.articleBlocks || []
+
+    res.json({
+      card: portfolioCardFromDatabase({ ...data, articleBlocks }, panel.slug),
+    })
   } catch (error) {
     next(error)
   }
@@ -438,6 +507,8 @@ app.delete('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, as
       throw fetchError
     }
 
+    const cardWithArticleBlocks = (await attachArticleBlocksToCards(card ? [card] : []))[0] || card
+
     const { error } = await supabase
       .from('portfolio_cards')
       .delete()
@@ -448,7 +519,7 @@ app.delete('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, as
       throw error
     }
 
-    await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, collectMediaPaths(card))
+    await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, collectMediaPaths(cardWithArticleBlocks))
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -525,9 +596,11 @@ app.delete('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next
     }
 
     await deleteStorageFiles(SUPABASE_HOME_PANELS_BUCKET, collectMediaPaths(panel))
+    const cardsWithArticleBlocks = await attachArticleBlocksToCards(cards)
+
     await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, [
       ...(panel?.mascot_path ? [panel.mascot_path] : []),
-      ...cards.flatMap(collectMediaPaths),
+      ...cardsWithArticleBlocks.flatMap(collectMediaPaths),
     ])
     res.status(204).end()
   } catch (error) {
@@ -1126,11 +1199,212 @@ function collectMediaPaths(item) {
     return []
   }
 
+  const articleBlocks = Array.isArray(item.articleBlocks)
+    ? item.articleBlocks
+    : Array.isArray(item.article_blocks)
+      ? item.article_blocks
+      : []
+
   return [
     item.image_path,
     item.video_path,
     item.poster_path,
+    item.case_hero_path,
+    ...articleBlocks.flatMap((block) => (
+      Array.isArray(block?.imageGroups)
+        ? block.imageGroups.flatMap((group) => (
+            Array.isArray(group?.images) ? group.images.map((image) => image?.path) : []
+          ))
+        : Array.isArray(block?.images)
+          ? block.images.map((image) => image?.path)
+          : []
+    )),
   ].filter(Boolean)
+}
+
+function normalizeArticleBlocks(blocks) {
+  if (!Array.isArray(blocks)) {
+    return []
+  }
+
+  return blocks.map((block, blockIndex) => {
+    const layout = ['single-wide', 'two-medium', 'three-vertical'].includes(block?.layout)
+      ? block.layout
+      : 'single-wide'
+    const imageGroups = normalizeArticleImageGroups(block, layout)
+    const images = imageGroups.flatMap((group) => group.images)
+
+    return {
+      id: String(block?.id || crypto.randomUUID()),
+      title: String(block?.title || '').trim(),
+      titleEn: normalizeOptionalText(block?.titleEn),
+      text: String(block?.text || '').trim(),
+      textEn: normalizeOptionalText(block?.textEn),
+      layout,
+      images,
+      imageGroups,
+      sortOrder: blockIndex,
+    }
+  })
+}
+
+function normalizeArticleImages(images) {
+  if (!Array.isArray(images)) {
+    return []
+  }
+
+  return images
+    .map((image, imageIndex) => ({
+      id: String(image?.id || crypto.randomUUID()),
+      path: image?.path || null,
+      url: String(image?.url || '').trim(),
+      alt: String(image?.alt || '').trim(),
+      sortOrder: imageIndex,
+    }))
+    .filter((image) => image.url)
+}
+
+function normalizeArticleImageGroups(block, fallbackLayout = 'single-wide') {
+  const groups = Array.isArray(block?.imageGroups) && block.imageGroups.some((item) => Array.isArray(item?.images))
+    ? block.imageGroups
+    : Array.isArray(block?.images) && block.images.some((item) => Array.isArray(item?.images))
+      ? block.images
+      : null
+
+  if (groups) {
+    return groups
+      .map((group, groupIndex) => {
+        const layout = ['single-wide', 'two-medium', 'three-vertical'].includes(group?.layout)
+          ? group.layout
+          : fallbackLayout
+
+        return {
+          id: String(group?.id || crypto.randomUUID()),
+          layout,
+          images: normalizeArticleImages(group?.images),
+          sortOrder: groupIndex,
+        }
+      })
+      .filter((group) => group.images.length > 0 || group.layout)
+  }
+
+  const images = normalizeArticleImages(block?.images)
+
+  return images.length > 0
+    ? [{
+        id: String(block?.imageGroupId || crypto.randomUUID()),
+        layout: fallbackLayout,
+        images,
+        sortOrder: 0,
+      }]
+    : []
+}
+
+function articleBlockFromDatabase(block) {
+  const normalizedBlock = normalizeArticleBlocks([{ layout: block.layout, images: block.images || [] }])[0]
+
+  return {
+    id: block.id,
+    title: block.title || '',
+    titleEn: block.title_en,
+    text: block.text || '',
+    textEn: block.text_en,
+    layout: ['single-wide', 'two-medium', 'three-vertical'].includes(block.layout)
+      ? block.layout
+      : 'single-wide',
+    images: normalizedBlock?.images || [],
+    imageGroups: normalizedBlock?.imageGroups || [],
+    sortOrder: block.sort_order,
+  }
+}
+
+function articleBlockToDatabase(block, cardId, index) {
+  const normalized = normalizeArticleBlocks([block])[0]
+
+  return {
+    id: isUuid(normalized.id) ? normalized.id : crypto.randomUUID(),
+    card_id: cardId,
+    title: normalized.title,
+    title_en: normalized.titleEn,
+    text: normalized.text,
+    text_en: normalized.textEn,
+    layout: normalized.layout,
+    images: normalized.imageGroups,
+    sort_order: index,
+  }
+}
+
+async function attachArticleBlocksToCards(cards) {
+  if (!Array.isArray(cards) || cards.length === 0) {
+    return []
+  }
+
+  const cardIds = cards.map((card) => card.id).filter(Boolean)
+  const { data, error } = await supabase
+    .from('portfolio_card_article_blocks')
+    .select('*')
+    .in('card_id', cardIds)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  const blocksByCardId = new Map()
+
+  for (const block of data || []) {
+    const blocks = blocksByCardId.get(block.card_id) || []
+    blocks.push(articleBlockFromDatabase(block))
+    blocksByCardId.set(block.card_id, blocks)
+  }
+
+  return cards.map((card) => {
+    const tableBlocks = blocksByCardId.get(card.id)
+
+    return {
+      ...card,
+      articleBlocks: tableBlocks && tableBlocks.length > 0
+        ? tableBlocks
+        : normalizeArticleBlocks(card.article_blocks),
+    }
+  })
+}
+
+async function savePortfolioCardArticleBlocks(cardId, blocks) {
+  const normalizedBlocks = normalizeArticleBlocks(blocks)
+
+  const { error: deleteError } = await supabase
+    .from('portfolio_card_article_blocks')
+    .delete()
+    .eq('card_id', cardId)
+
+  if (deleteError) {
+    throw deleteError
+  }
+
+  if (normalizedBlocks.length === 0) {
+    return []
+  }
+
+  const payload = normalizedBlocks.map((block, index) => articleBlockToDatabase(block, cardId, index))
+  const { data, error } = await supabase
+    .from('portfolio_card_article_blocks')
+    .insert(payload)
+    .select('*')
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return data.map(articleBlockFromDatabase)
+}
+
+function isUuid(value) {
+  return typeof value === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 }
 
 function panelFromDatabase(panel) {
@@ -1225,8 +1499,13 @@ function portfolioCardFromDatabase(card, panelSlug) {
     videoUrl: card.video_url,
     posterPath: card.poster_path,
     posterUrl: card.poster_url,
+    caseHeroPath: card.case_hero_path,
+    caseHeroUrl: card.case_hero_url,
     linkPath: `/portfolio/${panelSlug}/${slug}/`,
     tileType: card.tile_type,
+    articleBlocks: Array.isArray(card.articleBlocks)
+      ? normalizeArticleBlocks(card.articleBlocks)
+      : normalizeArticleBlocks(card.article_blocks),
     createdAt: card.created_at,
     updatedAt: card.updated_at,
   }
@@ -1249,7 +1528,7 @@ function portfolioCardToDatabase(card, panel) {
     throw error
   }
 
-  return {
+  const payload = {
     panel_id: panel.id,
     title,
     title_en: normalizeOptionalText(card.titleEn),
@@ -1267,7 +1546,18 @@ function portfolioCardToDatabase(card, panel) {
     poster_path: card.posterPath || null,
     poster_url: card.posterUrl || null,
     tile_type: tileType,
+    article_blocks: normalizeArticleBlocks(card.articleBlocks),
   }
+
+  if (Object.prototype.hasOwnProperty.call(card, 'caseHeroPath')) {
+    payload.case_hero_path = card.caseHeroPath || null
+  }
+
+  if (Object.prototype.hasOwnProperty.call(card, 'caseHeroUrl')) {
+    payload.case_hero_url = card.caseHeroUrl || null
+  }
+
+  return payload
 }
 
 async function getPanelById(panelId) {
@@ -1782,7 +2072,10 @@ async function ensureDatabaseSchema() {
         video_url text,
         poster_path text,
         poster_url text,
+        case_hero_path text,
+        case_hero_url text,
         tile_type text not null default 'vertical',
+        article_blocks jsonb not null default '[]'::jsonb,
         created_at timestamp with time zone not null default now(),
         updated_at timestamp with time zone not null default now(),
         constraint portfolio_cards_tile_type_check check (tile_type in ('wide', 'vertical')),
@@ -1795,6 +2088,68 @@ async function ensureDatabaseSchema() {
 
       create unique index if not exists portfolio_cards_panel_slug_unique
         on public.portfolio_cards (panel_id, slug);
+
+      alter table if exists public.portfolio_cards
+        add column if not exists article_blocks jsonb not null default '[]'::jsonb,
+        add column if not exists case_hero_path text,
+        add column if not exists case_hero_url text;
+
+      create table if not exists public.portfolio_card_article_blocks (
+        id uuid primary key default gen_random_uuid(),
+        card_id uuid not null references public.portfolio_cards(id) on delete cascade,
+        title text not null default '',
+        title_en text,
+        text text not null default '',
+        text_en text,
+        layout text not null default 'single-wide',
+        images jsonb not null default '[]'::jsonb,
+        sort_order integer not null default 0,
+        created_at timestamp with time zone not null default now(),
+        updated_at timestamp with time zone not null default now(),
+        constraint portfolio_card_article_blocks_layout_check
+          check (layout in ('single-wide', 'two-medium', 'three-vertical'))
+      );
+
+      create index if not exists portfolio_card_article_blocks_card_sort_idx
+        on public.portfolio_card_article_blocks (card_id, sort_order, created_at);
+
+      insert into public.portfolio_card_article_blocks (
+        id,
+        card_id,
+        title,
+        title_en,
+        text,
+        text_en,
+        layout,
+        images,
+        sort_order
+      )
+      select
+        case
+          when block.value->>'id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
+            then (block.value->>'id')::uuid
+          else gen_random_uuid()
+        end,
+        card.id,
+        coalesce(block.value->>'title', ''),
+        nullif(block.value->>'titleEn', ''),
+        coalesce(block.value->>'text', ''),
+        nullif(block.value->>'textEn', ''),
+        case
+          when block.value->>'layout' in ('single-wide', 'two-medium', 'three-vertical')
+            then block.value->>'layout'
+          else 'single-wide'
+        end,
+        coalesce(block.value->'images', '[]'::jsonb),
+        coalesce((block.value->>'sortOrder')::integer, block.ordinality - 1)
+      from public.portfolio_cards card
+      cross join lateral jsonb_array_elements(card.article_blocks) with ordinality as block(value, ordinality)
+      where jsonb_array_length(card.article_blocks) > 0
+        and not exists (
+          select 1
+          from public.portfolio_card_article_blocks existing
+          where existing.card_id = card.id
+        );
 
       create or replace function public.set_portfolio_cards_updated_at()
       returns trigger
@@ -1813,11 +2168,34 @@ async function ensureDatabaseSchema() {
       for each row
       execute function public.set_portfolio_cards_updated_at();
 
+      create or replace function public.set_portfolio_card_article_blocks_updated_at()
+      returns trigger
+      language plpgsql
+      as $$
+      begin
+        new.updated_at = now();
+        return new;
+      end;
+      $$;
+
+      drop trigger if exists set_portfolio_card_article_blocks_updated_at on public.portfolio_card_article_blocks;
+
+      create trigger set_portfolio_card_article_blocks_updated_at
+      before update on public.portfolio_card_article_blocks
+      for each row
+      execute function public.set_portfolio_card_article_blocks_updated_at();
+
       alter table public.portfolio_cards enable row level security;
+      alter table public.portfolio_card_article_blocks enable row level security;
 
       drop policy if exists "Portfolio cards are publicly readable." on public.portfolio_cards;
       create policy "Portfolio cards are publicly readable."
         on public.portfolio_cards for select
+        using (true);
+
+      drop policy if exists "Portfolio card article blocks are publicly readable." on public.portfolio_card_article_blocks;
+      create policy "Portfolio card article blocks are publicly readable."
+        on public.portfolio_card_article_blocks for select
         using (true);
     `)
 

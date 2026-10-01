@@ -83,7 +83,10 @@ create table if not exists public.portfolio_cards (
   video_url text,
   poster_path text,
   poster_url text,
+  case_hero_path text,
+  case_hero_url text,
   tile_type text not null default 'vertical',
+  article_blocks jsonb not null default '[]'::jsonb,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   constraint portfolio_cards_tile_type_check check (tile_type in ('wide', 'vertical')),
@@ -96,6 +99,25 @@ create table if not exists public.portfolio_cards (
 
 create unique index if not exists portfolio_cards_panel_slug_unique
   on public.portfolio_cards (panel_id, slug);
+
+create table if not exists public.portfolio_card_article_blocks (
+  id uuid primary key default gen_random_uuid(),
+  card_id uuid not null references public.portfolio_cards(id) on delete cascade,
+  title text not null default '',
+  title_en text,
+  text text not null default '',
+  text_en text,
+  layout text not null default 'single-wide',
+  images jsonb not null default '[]'::jsonb,
+  sort_order integer not null default 0,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint portfolio_card_article_blocks_layout_check
+    check (layout in ('single-wide', 'two-medium', 'three-vertical'))
+);
+
+create index if not exists portfolio_card_article_blocks_card_sort_idx
+  on public.portfolio_card_article_blocks (card_id, sort_order, created_at);
 
 create or replace function public.set_portfolio_cards_updated_at()
 returns trigger
@@ -114,11 +136,34 @@ before update on public.portfolio_cards
 for each row
 execute function public.set_portfolio_cards_updated_at();
 
+create or replace function public.set_portfolio_card_article_blocks_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_portfolio_card_article_blocks_updated_at on public.portfolio_card_article_blocks;
+
+create trigger set_portfolio_card_article_blocks_updated_at
+before update on public.portfolio_card_article_blocks
+for each row
+execute function public.set_portfolio_card_article_blocks_updated_at();
+
 alter table public.portfolio_cards enable row level security;
+alter table public.portfolio_card_article_blocks enable row level security;
 
 drop policy if exists "Portfolio cards are publicly readable." on public.portfolio_cards;
 create policy "Portfolio cards are publicly readable."
   on public.portfolio_cards for select
+  using (true);
+
+drop policy if exists "Portfolio card article blocks are publicly readable." on public.portfolio_card_article_blocks;
+create policy "Portfolio card article blocks are publicly readable."
+  on public.portfolio_card_article_blocks for select
   using (true);
 
 create table if not exists public.about_us_content (

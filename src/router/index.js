@@ -23,7 +23,12 @@ const routes = [
     component: HomeView,
   },
   {
-    path: '/portfolio/:panelSlug/:cardSlug?',
+    path: '/portfolio/:panelSlug/:cardSlug',
+    name: 'portfolio-case',
+    component: HomeView,
+  },
+  {
+    path: '/portfolio/:panelSlug',
     name: 'portfolio-detail',
     component: HomeView,
   },

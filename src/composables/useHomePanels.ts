@@ -1,6 +1,33 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 
 export type HomePanelTileType = 'wide' | 'vertical'
+export type PortfolioArticleImage = {
+  id: string
+  path: string | null
+  url: string
+  alt?: string
+}
+
+export type PortfolioArticleBlockLayout = 'single-wide' | 'two-medium' | 'three-vertical'
+
+export type PortfolioArticleImageGroup = {
+  id: string
+  layout: PortfolioArticleBlockLayout
+  images: PortfolioArticleImage[]
+  sortOrder?: number
+}
+
+export type PortfolioArticleBlock = {
+  id: string
+  title: string
+  titleEn?: string | null
+  text: string
+  textEn?: string | null
+  layout: PortfolioArticleBlockLayout
+  images: PortfolioArticleImage[]
+  imageGroups?: PortfolioArticleImageGroup[]
+  sortOrder?: number
+}
 
 export type HomePanel = {
   id: string
@@ -29,6 +56,9 @@ export type HomePanel = {
 
 export type PortfolioCard = HomePanel & {
   panelId: string
+  caseHeroPath?: string | null
+  caseHeroUrl?: string | null
+  articleBlocks?: PortfolioArticleBlock[]
 }
 
 const HOME_PANELS_REFRESH_MS = 10000

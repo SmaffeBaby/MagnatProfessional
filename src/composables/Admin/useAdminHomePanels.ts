@@ -1,6 +1,13 @@
 import { computed, reactive, ref } from 'vue'
 import { adminRequest, deleteAdminFile, uploadAdminFile } from '../useAdminApi'
-import type { HomePanel, HomePanelTileType, PortfolioCard } from '../useHomePanels'
+import type {
+  HomePanel,
+  HomePanelTileType,
+  PortfolioArticleBlock,
+  PortfolioArticleImageGroup,
+  PortfolioArticleBlockLayout,
+  PortfolioCard,
+} from '../useHomePanels'
 
 export type PanelForm = {
   id: string | null
@@ -26,7 +33,17 @@ export type PanelForm = {
   tileType: HomePanelTileType
 }
 
-export type PortfolioCardForm = Omit<PanelForm, 'detailText' | 'detailTextEn' | 'mascotPath' | 'mascotUrl'>
+export type PortfolioCardForm = Omit<PanelForm, 'detailText' | 'detailTextEn' | 'mascotPath' | 'mascotUrl'> & {
+  articleBlocks: PortfolioArticleBlock[]
+}
+export type PortfolioCaseForm = {
+  cardId: string | null
+  title: string
+  linkPath: string
+  caseHeroPath: string | null
+  caseHeroUrl: string | null
+  articleBlocks: PortfolioArticleBlock[]
+}
 export type PanelUploadTarget = 'image' | 'video' | 'poster' | 'mascot'
 
 function emptyForm(): PanelForm {
@@ -74,15 +91,66 @@ function emptyCardForm(): PortfolioCardForm {
     posterUrl: null,
     linkPath: '/',
     tileType: 'vertical',
+    articleBlocks: [],
   }
+}
+
+function emptyCaseForm(): PortfolioCaseForm {
+  return {
+    cardId: null,
+    title: '',
+    linkPath: '/',
+    caseHeroPath: null,
+    caseHeroUrl: null,
+    articleBlocks: [],
+  }
+}
+
+function cloneArticleBlocks(blocks: PortfolioArticleBlock[] = []): PortfolioArticleBlock[] {
+  return blocks.map((block) => ({
+    id: block.id,
+    title: block.title || '',
+    titleEn: block.titleEn || '',
+    text: block.text || '',
+    textEn: block.textEn || '',
+    layout: block.layout,
+    sortOrder: block.sortOrder,
+    imageGroups: cloneArticleImageGroups(block.imageGroups?.length
+      ? block.imageGroups
+      : block.images?.length
+        ? [{ id: crypto.randomUUID(), layout: block.layout, images: block.images }]
+        : []),
+    images: [],
+  }))
+}
+
+function cloneArticleImageGroups(groups: PortfolioArticleImageGroup[] = []): PortfolioArticleImageGroup[] {
+  return groups.map((group, groupIndex) => ({
+    id: group.id || crypto.randomUUID(),
+    layout: group.layout || 'single-wide',
+    sortOrder: group.sortOrder ?? groupIndex,
+    images: (group.images || []).map((image, imageIndex) => ({
+      id: image.id || crypto.randomUUID(),
+      path: image.path || null,
+      url: image.url || '',
+      alt: image.alt || '',
+      sortOrder: image.sortOrder ?? imageIndex,
+    })),
+  }))
+}
+
+function flattenArticleBlockImages(block: PortfolioArticleBlock) {
+  return (block.imageGroups || []).flatMap((group) => group.images)
 }
 
 export function useAdminHomePanels() {
   const panelForm = reactive<PanelForm>(emptyForm())
   const cardForm = reactive<PortfolioCardForm>(emptyCardForm())
+  const caseForm = reactive<PortfolioCaseForm>(emptyCaseForm())
   const panels = ref<HomePanel[]>([])
   const cards = ref<PortfolioCard[]>([])
   const selectedPanel = ref<HomePanel | null>(null)
+  const selectedCaseCard = ref<PortfolioCard | null>(null)
   const isLoading = ref(false)
   const isSaving = ref(false)
   const isSavingCard = ref(false)
@@ -92,6 +160,7 @@ export function useAdminHomePanels() {
 
   const formTitle = computed(() => panelForm.id ? 'Редактирование панели' : 'Новая панель')
   const cardFormTitle = computed(() => cardForm.id ? 'Редактирование карточки' : 'Новая карточка')
+  const caseFormTitle = computed(() => caseForm.cardId ? `Кейс: ${caseForm.title}` : 'Кейс карточки')
 
   async function loadPanels() {
     isLoading.value = true
@@ -171,6 +240,7 @@ export function useAdminHomePanels() {
       const payload = await adminRequest(`/api/admin/home-panels/${panel.id}/cards`)
       cards.value = payload.cards
       resetCardForm()
+      resetCaseForm()
     } catch (requestError) {
       error.value = (requestError as Error).message
     } finally {
@@ -188,6 +258,7 @@ export function useAdminHomePanels() {
     error.value = ''
 
     try {
+      const { articleBlocks: _articleBlocks, ...cardPayload } = cardForm
       const path = cardForm.id
         ? `/api/admin/home-panels/${selectedPanel.value.id}/cards/${cardForm.id}`
         : `/api/admin/home-panels/${selectedPanel.value.id}/cards`
@@ -195,7 +266,7 @@ export function useAdminHomePanels() {
 
       await adminRequest(path, {
         method,
-        body: JSON.stringify(cardForm),
+        body: JSON.stringify(cardPayload),
       })
 
       resetCardForm()
@@ -222,6 +293,9 @@ export function useAdminHomePanels() {
       await loadCards(selectedPanel.value)
       if (cardForm.id === card.id) {
         resetCardForm()
+      }
+      if (caseForm.cardId === card.id) {
+        resetCaseForm()
       }
     } catch (requestError) {
       error.value = (requestError as Error).message
@@ -298,6 +372,146 @@ export function useAdminHomePanels() {
     cardForm[urlKey] = null
   }
 
+  async function uploadCaseHero(file: File) {
+    uploadField.value = 'case-hero'
+    error.value = ''
+
+    try {
+      const uploaded = await uploadAdminFile(file, 'portfolio')
+      caseForm.caseHeroPath = uploaded.path
+      caseForm.caseHeroUrl = uploaded.publicUrl
+    } catch (requestError) {
+      error.value = (requestError as Error).message
+    } finally {
+      uploadField.value = ''
+    }
+  }
+
+  async function deleteCaseHero() {
+    if (caseForm.caseHeroPath) {
+      await deleteAdminFile('portfolio', caseForm.caseHeroPath)
+    }
+
+    caseForm.caseHeroPath = null
+    caseForm.caseHeroUrl = null
+  }
+
+  async function uploadArticleImage(file: File, blockId: string, groupId: string) {
+    uploadField.value = `article-${groupId}`
+    error.value = ''
+
+    try {
+      const uploaded = await uploadAdminFile(file, 'portfolio')
+      const block = caseForm.articleBlocks.find((item) => item.id === blockId)
+      const group = block?.imageGroups?.find((item) => item.id === groupId)
+
+      if (group) {
+        group.images.push({
+          id: crypto.randomUUID(),
+          path: uploaded.path,
+          url: uploaded.publicUrl,
+          alt: '',
+        })
+      }
+    } catch (requestError) {
+      error.value = (requestError as Error).message
+    } finally {
+      uploadField.value = ''
+    }
+  }
+
+  async function deleteArticleImage(blockId: string, groupId: string, imageId: string) {
+    const block = caseForm.articleBlocks.find((item) => item.id === blockId)
+    const group = block?.imageGroups?.find((item) => item.id === groupId)
+    const image = group?.images.find((item) => item.id === imageId)
+
+    if (image?.path) {
+      await deleteAdminFile('portfolio', image.path)
+    }
+
+    if (group) {
+      group.images = group.images.filter((item) => item.id !== imageId)
+    }
+  }
+
+  function addArticleBlock(layout: PortfolioArticleBlockLayout = 'single-wide') {
+    caseForm.articleBlocks.push({
+      id: crypto.randomUUID(),
+      title: '',
+      titleEn: '',
+      text: '',
+      textEn: '',
+      layout,
+      images: [],
+      imageGroups: [{
+        id: crypto.randomUUID(),
+        layout,
+        images: [],
+      }],
+    })
+  }
+
+  function addArticleImageGroup(blockId: string, layout: PortfolioArticleBlockLayout = 'single-wide') {
+    const block = caseForm.articleBlocks.find((item) => item.id === blockId)
+
+    if (!block) {
+      return
+    }
+
+    if (!block.imageGroups) {
+      block.imageGroups = []
+    }
+
+    block.imageGroups.push({
+      id: crypto.randomUUID(),
+      layout,
+      images: [],
+      sortOrder: block.imageGroups.length,
+    })
+  }
+
+  async function removeArticleImageGroup(blockId: string, groupId: string) {
+    const block = caseForm.articleBlocks.find((item) => item.id === blockId)
+    const group = block?.imageGroups?.find((item) => item.id === groupId)
+
+    if (group) {
+      await Promise.all(group.images.map((image) => (
+        image.path ? deleteAdminFile('portfolio', image.path) : Promise.resolve()
+      )))
+    }
+
+    if (block?.imageGroups) {
+      block.imageGroups = block.imageGroups.filter((item) => item.id !== groupId)
+      block.images = flattenArticleBlockImages(block)
+    }
+  }
+
+  async function removeArticleBlock(blockId: string) {
+    const block = caseForm.articleBlocks.find((item) => item.id === blockId)
+
+    if (block) {
+      await Promise.all(flattenArticleBlockImages(block).map((image) => (
+        image.path ? deleteAdminFile('portfolio', image.path) : Promise.resolve()
+      )))
+    }
+
+    caseForm.articleBlocks = caseForm.articleBlocks.filter((item) => item.id !== blockId)
+  }
+
+  function moveArticleBlock(blockId: string, direction: -1 | 1) {
+    const currentIndex = caseForm.articleBlocks.findIndex((block) => block.id === blockId)
+    const nextIndex = currentIndex + direction
+
+    if (currentIndex < 0 || nextIndex < 0 || nextIndex >= caseForm.articleBlocks.length) {
+      return
+    }
+
+    const nextBlocks = [...caseForm.articleBlocks]
+    const [block] = nextBlocks.splice(currentIndex, 1)
+    nextBlocks.splice(nextIndex, 0, block)
+    caseForm.articleBlocks = nextBlocks
+  }
+
   function editPanel(panel: HomePanel) {
     Object.assign(panelForm, {
       id: panel.id,
@@ -343,7 +557,63 @@ export function useAdminHomePanels() {
       posterUrl: card.posterUrl || null,
       linkPath: card.linkPath || '/',
       tileType: card.tileType,
+      articleBlocks: [],
     })
+  }
+
+  function editCase(card: PortfolioCard) {
+    selectedCaseCard.value = card
+    Object.assign(caseForm, {
+      cardId: card.id,
+      title: card.title,
+      linkPath: card.linkPath || '/',
+      caseHeroPath: card.caseHeroPath || null,
+      caseHeroUrl: card.caseHeroUrl || null,
+      articleBlocks: cloneArticleBlocks(card.articleBlocks || []),
+    })
+  }
+
+  async function saveCase() {
+    const caseCardId = caseForm.cardId
+
+    if (!selectedPanel.value || !caseCardId) {
+      error.value = 'Сначала выберите карточку для кейса'
+      return
+    }
+
+    const card = cards.value.find((item) => item.id === caseCardId)
+    if (!card) {
+      error.value = 'Карточка для кейса не найдена'
+      return
+    }
+
+    isSavingCard.value = true
+    error.value = ''
+
+    try {
+      await adminRequest(`/api/admin/home-panels/${selectedPanel.value.id}/cards/${caseCardId}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          ...card,
+          caseHeroPath: caseForm.caseHeroPath,
+          caseHeroUrl: caseForm.caseHeroUrl,
+          articleBlocks: caseForm.articleBlocks.map((block) => ({
+            ...block,
+            images: flattenArticleBlockImages(block),
+          })),
+        }),
+      })
+
+      await loadCards(selectedPanel.value)
+      const updatedCard = cards.value.find((item) => item.id === caseCardId)
+      if (updatedCard) {
+        editCase(updatedCard)
+      }
+    } catch (requestError) {
+      error.value = (requestError as Error).message
+    } finally {
+      isSavingCard.value = false
+    }
   }
 
   function resetForm() {
@@ -354,20 +624,29 @@ export function useAdminHomePanels() {
     Object.assign(cardForm, emptyCardForm())
   }
 
+  function resetCaseForm() {
+    selectedCaseCard.value = null
+    Object.assign(caseForm, emptyCaseForm())
+  }
+
   function clearPanels() {
     panels.value = []
     cards.value = []
     selectedPanel.value = null
+    selectedCaseCard.value = null
     resetForm()
     resetCardForm()
+    resetCaseForm()
   }
 
   return {
     panelForm,
     cardForm,
+    caseForm,
     panels,
     cards,
     selectedPanel,
+    selectedCaseCard,
     isLoading,
     isSaving,
     isSavingCard,
@@ -376,20 +655,33 @@ export function useAdminHomePanels() {
     error,
     formTitle,
     cardFormTitle,
+    caseFormTitle,
     loadPanels,
     loadCards,
     savePanel,
     saveCard,
+    saveCase,
     deletePanel,
     deleteCard,
     uploadFile,
     uploadCardFile,
+    uploadCaseHero,
     deletePanelFile,
     deleteCardFile,
+    deleteCaseHero,
+    uploadArticleImage,
+    deleteArticleImage,
+    addArticleBlock,
+    addArticleImageGroup,
+    removeArticleImageGroup,
+    removeArticleBlock,
+    moveArticleBlock,
     editPanel,
     editCard,
+    editCase,
     resetForm,
     resetCardForm,
+    resetCaseForm,
     clearPanels,
   }
 }

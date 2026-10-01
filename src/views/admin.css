@@ -58,7 +58,8 @@
 
 .admin-login input,
 .panel-form input,
-.panel-form textarea {
+.panel-form textarea,
+.panel-form select {
   width: 100%;
   border: 1px solid #d6d6d6;
   border-radius: 6px;
@@ -69,7 +70,8 @@
 }
 
 .admin-login input,
-.panel-form input {
+.panel-form input,
+.panel-form select {
   height: 44px;
 }
 
@@ -493,6 +495,134 @@
 
 .portfolio-cards-admin .admin-grid {
   margin-top: 22px;
+}
+
+.portfolio-case-admin {
+  margin-top: 28px;
+  border: 1px solid #e1e1e1;
+  border-radius: 8px;
+  padding: 24px;
+  background: #ffffff;
+}
+
+.portfolio-case-admin__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.portfolio-case-admin__header p,
+.portfolio-case-admin__header small {
+  display: block;
+  margin: 0 0 8px;
+  color: #747474;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.portfolio-case-admin__header h2 {
+  margin: 0;
+  font-size: 22px;
+  line-height: 1.2;
+}
+
+.portfolio-case-admin__form {
+  margin-top: 22px;
+  border-color: #f0b8b8;
+  background: #fffafa;
+}
+
+.portfolio-article-admin {
+  display: grid;
+  gap: 18px;
+  border: 1px solid #ededed;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.portfolio-article-admin__actions,
+.portfolio-article-admin__block-header,
+.portfolio-article-admin__block-header div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.portfolio-article-admin__block {
+  display: grid;
+  gap: 14px;
+  border-top: 1px solid #ededed;
+  padding-top: 18px;
+}
+
+.portfolio-article-admin__block-header {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.portfolio-article-admin__block-header h3 {
+  margin: 0;
+}
+
+.portfolio-article-admin__groups {
+  display: grid;
+  gap: 16px;
+}
+
+.portfolio-article-admin__group {
+  display: grid;
+  gap: 14px;
+  border: 1px solid #ededed;
+  border-radius: 10px;
+  padding: 14px;
+  background: #ffffff;
+}
+
+.portfolio-article-admin__group-header,
+.portfolio-article-admin__group-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.portfolio-article-admin__group-header {
+  justify-content: space-between;
+}
+
+.portfolio-article-admin__group-header h4 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.portfolio-article-admin__group-controls label {
+  flex: 1;
+  margin-top: 0;
+}
+
+.portfolio-article-admin__group-controls button {
+  width: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  font-size: 24px;
+}
+
+.portfolio-article-admin__images {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+.portfolio-article-admin__image {
+  display: grid;
+  gap: 8px;
+}
+
+.portfolio-article-admin__image img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  object-fit: cover;
 }
 
 @media (max-width: 980px) {

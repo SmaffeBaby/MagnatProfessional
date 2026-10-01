@@ -5,6 +5,7 @@ import { useLanguageStore } from '../../composables/useLanguageStore'
 import AboutContent from '../AboutContent/AboutContent.vue'
 import ContactsContent from '../ContactsContent/ContactsContent.vue'
 import HomeContent from '../HomeContent/HomeContent.vue'
+import PortfolioCaseContent from '../PortfolioCaseContent/PortfolioCaseContent.vue'
 import PortfolioDetailContent from '../PortfolioDetailContent/PortfolioDetailContent.vue'
 import PortfolioContent from '../PortfolioContent/PortfolioContent.vue'
 
@@ -29,12 +30,16 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  isPortfolioCaseActive: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
-const isLightPage = computed(() => props.isAboutActive || props.isContactsActive)
+const isLightPage = computed(() => props.isAboutActive || props.isContactsActive || props.isPortfolioCaseActive)
 const isContentPage = computed(() => (
-  props.isAboutActive || props.isContactsActive || props.isPortfolioActive || props.isPortfolioDetailActive
+  props.isAboutActive || props.isContactsActive || props.isPortfolioActive || props.isPortfolioDetailActive || props.isPortfolioCaseActive
 ))
 const isAboutLight = computed(() => isLightPage.value && !isDarkTheme.value)
 const { t } = useI18n()
@@ -73,7 +78,7 @@ function handleContentScroll(event) {
 }
 
 watch(
-  () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive, props.isPortfolioDetailActive],
+  () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive, props.isPortfolioDetailActive, props.isPortfolioCaseActive],
   () => {
     isHeaderRevealed.value = true
     isHeaderScrolled.value = false
@@ -166,6 +171,12 @@ watch(
       <PortfolioDetailContent
         v-else-if="props.isPortfolioDetailActive"
         key="portfolio-detail-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
+      <PortfolioCaseContent
+        v-else-if="props.isPortfolioCaseActive"
+        key="portfolio-case-content"
         :theme="theme"
         @scroll.passive="handleContentScroll"
       />
