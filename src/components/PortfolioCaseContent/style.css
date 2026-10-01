@@ -14,9 +14,11 @@
 }
 
 .portfolio-case__progress {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 40;
+  right: 0;
+  left: 0;
+  z-index: 520;
   height: 3px;
   background: transparent;
 }
@@ -35,7 +37,7 @@
 }
 
 .portfolio-case__breadcrumbs {
-  display: flex;
+  display: none;
   flex-wrap: wrap;
   gap: 8px;
   margin-bottom: 18px;
@@ -328,6 +330,14 @@
 }
 
 @media (min-width: 1040px) {
+  .portfolio-case__breadcrumbs {
+    display: flex;
+  }
+
+  .portfolio-case__back {
+    display: none;
+  }
+
   .portfolio-case__inner {
     padding: 100px 55px 0;
   }
@@ -398,6 +408,13 @@
     background: transparent;
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.24) transparent;
+  }
+
+  .portfolio-case__progress {
+    position: sticky;
+    right: auto;
+    left: auto;
+    z-index: 40;
   }
 
   .portfolio-case--dark {
