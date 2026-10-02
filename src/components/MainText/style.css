@@ -1,7 +1,7 @@
 .main-text {
   position: relative;
   z-index: 1;
-  margin: 357px 0 0;
+  margin: auto 0 0;
   width: auto;
   max-width: none;
   color: #ffffff;
@@ -121,6 +121,7 @@
 @media (min-width: 768px) and (max-width: 1040px) {
   .main-text {
     margin-top: clamp(210px, 24vw, 250px);
+    margin-bottom: 0;
     width: 100%;
     max-width: none;
   }
@@ -162,6 +163,7 @@
 @media (min-width: 1041px) {
   .main-text {
     margin-top: 150px;
+    margin-bottom: 0;
     margin-left: 55px;
     width: min(960px, calc(100% - 110px));
     max-width: none;
@@ -206,6 +208,7 @@
 @media (min-width: 1200px) {
   .main-text {
     margin-top: 135px;
+    margin-bottom: 0;
     margin-left: 54px;
     width: min(1120px, calc(100% - 108px));
     max-width: none;
