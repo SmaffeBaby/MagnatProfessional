@@ -8,6 +8,8 @@
 
 .map-section__line {
   height: 1px;
+  margin-right: -20px;
+  margin-left: -20px;
   background: rgba(255, 255, 255, 0.16);
 }
 
@@ -124,6 +126,11 @@
 @media (min-width: 768px) {
   .map-section {
     margin: 200px 55px 0;
+  }
+
+  .map-section__line {
+    margin-right: -55px;
+    margin-left: -55px;
   }
 
   .map-section__content {

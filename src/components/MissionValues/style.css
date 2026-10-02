@@ -8,7 +8,7 @@
 .mission-values::after {
   display: block;
   height: 1px;
-  margin: 40px 20px 0;
+  margin: 40px 0 0;
   background: rgba(0, 0, 0, 0.12);
   content: '';
 }
@@ -102,7 +102,7 @@
   }
 
   .mission-values::after {
-    margin: 100px 55px 0;
+    margin: 100px 0 0;
   }
 
   .mission-values__title {
