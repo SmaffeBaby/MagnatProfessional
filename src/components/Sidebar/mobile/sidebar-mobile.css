@@ -171,6 +171,10 @@
     padding-bottom: 0;
   }
 
+  .mobile-sidebar-home.relative {
+    padding-bottom: 0;
+  }
+
   .mobile-sidebar-menu {
     padding: 30px 55px 0;
   }
