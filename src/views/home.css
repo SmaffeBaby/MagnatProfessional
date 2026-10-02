@@ -29,7 +29,7 @@
 }
 
 .desktop-sidebar-frame {
-  width: clamp(400px, calc(400px + (100vw - 1301px) * 0.1185), 471px);
+  width: clamp(400px, calc(400px + (100vw - 1200px) * 0.1185), 471px);
 }
 
 .home-main,

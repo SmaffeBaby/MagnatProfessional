@@ -121,7 +121,7 @@
   touch-action: auto;
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .map-section {
     margin: 200px 55px 0;
   }
@@ -172,15 +172,15 @@
   }
 }
 
-@media (min-width: 1040px) and (max-width: 1300px) {
+@media (min-width: 768px) and (max-width: 1199px) {
   .map-section__contacts {
     max-width: calc(100% - 170px);
   }
 
   .map-section__cat {
-    right: -118px;
-    top: -230px;
-    width: 360px;
+    right: clamp(-118px, -11.3vw, -86px);
+    top: clamp(-230px, -22.1vw, -172px);
+    width: clamp(300px, 34.6vw, 360px);
   }
 }
 

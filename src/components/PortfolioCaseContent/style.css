@@ -329,7 +329,7 @@
   }
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .portfolio-case__breadcrumbs {
     display: flex;
   }
@@ -399,7 +399,7 @@
 
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .portfolio-case {
     height: 100vh;
     overflow-x: hidden;

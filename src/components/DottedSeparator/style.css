@@ -16,7 +16,7 @@
     );
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .dotted-separator {
     margin: 80px 55px 0;
   }

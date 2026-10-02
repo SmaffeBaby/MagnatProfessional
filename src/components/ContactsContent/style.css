@@ -175,7 +175,7 @@
   outline-color: #ffffff;
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .contacts-content__main {
     padding-top: 100px;
   }
@@ -249,7 +249,7 @@
   }
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .contacts-content {
     height: 100vh;
     overflow-x: hidden;

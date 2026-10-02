@@ -26,12 +26,12 @@ const isDarkTheme = computed(() => props.theme === 'dark')
       <picture v-if="content.desktopPlaqueUrl || content.tabletPlaqueUrl || content.mobilePlaqueUrl">
         <source
           v-if="content.desktopPlaqueUrl"
-          media="(min-width: 1301px)"
+          media="(min-width: 1200px)"
           :srcset="content.desktopPlaqueUrl"
         >
         <source
           v-if="content.tabletPlaqueUrl"
-          media="(min-width: 1040px)"
+          media="(min-width: 768px)"
           :srcset="content.tabletPlaqueUrl"
         >
         <img

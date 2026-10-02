@@ -180,7 +180,7 @@
     );
 }
 
-@media (max-width: 1300px) {
+@media (max-width: 1199px) {
   .about-content {
     height: auto;
     min-height: calc(100vh - 100px);
@@ -189,13 +189,13 @@
   }
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .about-content .site-footer {
     margin-top: 55px;
   }
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .about-content .site-footer {
     margin-top: 200px;
   }

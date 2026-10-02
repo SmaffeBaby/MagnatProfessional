@@ -150,7 +150,7 @@
   color: rgba(255, 255, 255, 0.5);
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .hystory-company {
     margin: 200px 55px 0;
   }
@@ -189,7 +189,7 @@
   }
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .hystory-company {
     margin-top: 205px;
   }

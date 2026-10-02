@@ -65,7 +65,21 @@
   outline-offset: 4px;
 }
 
-@media (min-width: 1040px) and (max-width: 1300px) {
+@media (min-width: 768px) and (max-width: 1040px) {
+  .about-us {
+    margin: clamp(96px, 11.6vw, 121px) 55px 0;
+  }
+
+  .about-us__title {
+    font-size: clamp(42px, 4.8vw, 50px);
+  }
+
+  .about-us__button {
+    margin-top: 40px;
+  }
+}
+
+@media (min-width: 1041px) and (max-width: 1199px) {
   .about-us {
     margin: 121px 55px 0;
   }
@@ -79,7 +93,7 @@
   }
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .about-us {
     margin: 122px 55px 0;
   }

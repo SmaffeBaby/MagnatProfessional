@@ -207,7 +207,7 @@ watch(
 
 .desktop-home__header {
   right: 0;
-  left: clamp(400px, calc(400px + (100vw - 1301px) * 0.1185), 471px);
+  left: clamp(400px, calc(400px + (100vw - 1200px) * 0.1185), 471px);
   min-height: 100px;
   background: transparent;
   transform: translateY(0);

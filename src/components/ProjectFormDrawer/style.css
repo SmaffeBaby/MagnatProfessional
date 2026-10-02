@@ -39,7 +39,7 @@ body.project-form-drawer-open {
   overflow: hidden;
 }
 
-@media (min-width: 1040px) and (max-width: 1300px) {
+@media (min-width: 768px) and (max-width: 1199px) {
   .project-form-drawer {
     padding: 27px 31px 27px 0;
   }
@@ -49,7 +49,7 @@ body.project-form-drawer-open {
   }
 }
 
-@media (max-width: 1039px) {
+@media (max-width: 767px) {
   .project-form-drawer {
     padding: 0;
   }

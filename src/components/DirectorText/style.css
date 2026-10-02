@@ -95,7 +95,7 @@
   color: rgba(255, 255, 255, 0.62);
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) {
   .director-text {
     min-height: 599px;
     margin: 80px 55px 0;
@@ -154,7 +154,7 @@
   }
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .director-text {
     min-height: 483px;
   }
