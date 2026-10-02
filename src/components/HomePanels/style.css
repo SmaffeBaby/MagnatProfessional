@@ -3,7 +3,7 @@
   z-index: 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 20px;
   margin: 60px 20px 0;
   padding-bottom: 55px;
@@ -12,8 +12,9 @@
 .home-panels__item {
   position: relative;
   display: block;
-  width: min(335px, 100%);
-  height: 235px;
+  width: 100%;
+  aspect-ratio: 335 / 235;
+  min-height: 220px;
   overflow: hidden;
   border: 0;
   border-radius: 30px;
@@ -67,6 +68,19 @@
   font-weight: 500;
   line-height: 1.15;
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .home-panels {
+    margin-top: 60px;
+  }
+
+  .home-panels__title {
+    right: clamp(20px, 7.1vw, 28px);
+    top: clamp(20px, 6.6vw, 26px);
+    left: clamp(20px, 7.1vw, 28px);
+    font-size: clamp(18px, 5.1vw, 20px);
+  }
 }
 
 .home-panels__item:hover .home-panels__media,

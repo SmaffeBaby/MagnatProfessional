@@ -53,6 +53,22 @@
   overflow-wrap: anywhere;
 }
 
+@media (max-width: 767px) {
+  .description__card picture {
+    top: auto;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: 335px;
+    height: 440px;
+  }
+
+  .description__card-image {
+    width: 335px;
+    height: 440px;
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1040px) {
   .description {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 452px);

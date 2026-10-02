@@ -134,6 +134,10 @@ const languageStore = useLanguageStore()
 </template>
 
 <style scoped>
+.mobile-header--backed .mobile-header__language-button {
+  color: #000000;
+}
+
 .mobile-header__menu-icon--about:hover,
 button:hover .mobile-header__menu-icon--about,
 button:active .mobile-header__menu-icon--about {
