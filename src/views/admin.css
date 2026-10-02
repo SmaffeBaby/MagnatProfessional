@@ -436,6 +436,29 @@
   margin-top: 22px;
 }
 
+.panel-form__rows {
+  display: grid;
+  gap: 12px;
+  margin: 20px 0 0;
+  border: 1px solid #ececec;
+  border-radius: 8px;
+  padding: 16px;
+  background: #fafafa;
+}
+
+.panel-form__rows legend {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.panel-form__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
 .button-secondary {
   color: #171717;
   background: #e8e8e8;
@@ -647,5 +670,9 @@
 
   .panel-list__actions {
     margin-top: 16px;
+  }
+
+  .panel-form__row {
+    grid-template-columns: 1fr;
   }
 }

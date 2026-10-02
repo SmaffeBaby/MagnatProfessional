@@ -1,0 +1,322 @@
+.privacy-content {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: #000000;
+  background: #ffffff;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.24) transparent;
+  transition:
+    background-color 500ms ease,
+    color 500ms ease,
+    scrollbar-color 500ms ease;
+}
+
+.privacy-content--dark {
+  color: #ffffff;
+  background: #222222;
+  scrollbar-color: rgba(255, 255, 255, 0.42) transparent;
+}
+
+.privacy-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.privacy-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.privacy-content::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.privacy-content--dark::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.privacy-content__inner {
+  padding: 144px 55px 0;
+}
+
+.privacy-content__page-title {
+  max-width: 1040px;
+  margin: 0;
+  color: currentColor;
+  font-size: 60px;
+  font-weight: 500;
+  line-height: 0.96;
+  letter-spacing: 0;
+}
+
+.privacy-content__state {
+  margin: 60px 0 0;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.privacy-content__state--error {
+  color: #ef3332;
+}
+
+.privacy-content__blocks {
+  display: grid;
+  gap: 100px;
+  margin-top: 60px;
+}
+
+.privacy-content__block-title {
+  display: flex;
+  width: 100%;
+  max-width: 1180px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  border: 0;
+  padding: 0;
+  color: currentColor;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.privacy-content__block-title span {
+  color: currentColor;
+  font-size: 40px;
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: 0;
+}
+
+.privacy-content__block-title::after {
+  content: "";
+  width: 22px;
+  height: 22px;
+  margin-top: 10px;
+  flex: 0 0 auto;
+  border-right: 3px solid currentColor;
+  border-bottom: 3px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 280ms ease;
+}
+
+.privacy-content__block--collapsed .privacy-content__block-title::after {
+  transform: translateY(8px) rotate(-135deg);
+}
+
+.privacy-content__block-body {
+  display: grid;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  opacity: 1;
+  transition:
+    grid-template-rows 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 240ms ease;
+}
+
+.privacy-content__block--collapsed .privacy-content__block-body {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+.privacy-content__block-body-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.privacy-content__text {
+  max-width: 1180px;
+  margin: 30px 0 0;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+  text-align: left;
+  white-space: pre-line;
+}
+
+.privacy-content__table-scroll {
+  max-width: 1180px;
+  margin-top: 30px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 22px;
+  overflow: hidden;
+}
+
+.privacy-content--dark .privacy-content__table-scroll {
+  border-color: rgba(255, 255, 255, 0.26);
+}
+
+.privacy-content__table {
+  width: 100%;
+  min-width: 620px;
+  border-collapse: collapse;
+  color: currentColor;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+  text-align: left;
+}
+
+.privacy-content__table td {
+  width: 50%;
+  padding: 24px;
+  border-right: 1px solid rgba(0, 0, 0, 0.16);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+  vertical-align: top;
+}
+
+.privacy-content--dark .privacy-content__table td {
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.privacy-content__table td:last-child {
+  border-right: 0;
+}
+
+.privacy-content__table tr:last-child td {
+  border-bottom: 0;
+}
+
+.privacy-content .site-footer {
+  margin-top: 120px;
+  color: currentColor;
+}
+
+.privacy-content .site-footer__line {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.privacy-content--dark .site-footer__line {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.privacy-content .site-footer__content {
+  padding-top: 30px;
+}
+
+.privacy-content .site-footer__privacy:focus-visible {
+  outline-color: currentColor;
+}
+
+@media (max-width: 1199px) {
+  .privacy-content {
+    height: auto;
+    min-height: calc(100vh - 100px);
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+
+  .privacy-content__inner {
+    padding: 132px 55px 0;
+  }
+
+  .privacy-content__page-title {
+    max-width: 860px;
+    font-size: 50px;
+    line-height: 1;
+  }
+
+  .privacy-content__blocks {
+    gap: 80px;
+  }
+
+  .privacy-content__block-title span {
+    font-size: 34px;
+    line-height: 1.04;
+  }
+}
+
+@media (max-width: 767px) {
+  .privacy-content {
+    min-height: calc(100vh - 76px);
+  }
+
+  .privacy-content__inner {
+    padding: 96px 10px 0;
+  }
+
+  .privacy-content__page-title {
+    font-size: 30px;
+    line-height: 1.05;
+  }
+
+  .privacy-content__state,
+  .privacy-content__blocks {
+    margin-top: 36px;
+  }
+
+  .privacy-content__blocks {
+    gap: 50px;
+  }
+
+  .privacy-content__block-title {
+    gap: 16px;
+  }
+
+  .privacy-content__block-title span {
+    font-size: 22px;
+    line-height: 1.12;
+  }
+
+  .privacy-content__block-title::after {
+    content: none;
+    display: none;
+  }
+
+  .privacy-content__text,
+  .privacy-content__table-scroll {
+    margin-top: 20px;
+  }
+
+  .privacy-content__text {
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .privacy-content__table-scroll {
+    border-radius: 16px;
+  }
+
+  .privacy-content__table {
+    min-width: 0;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .privacy-content__table tr,
+  .privacy-content__table td {
+    display: block;
+    width: 100%;
+  }
+
+  .privacy-content__table td {
+    padding: 14px;
+    border-right: 0;
+  }
+
+  .privacy-content__table td:first-child {
+    font-weight: 500;
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .privacy-content--dark .privacy-content__table td:first-child {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .privacy-content__table tr:last-child td:first-child {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.16);
+  }
+
+  .privacy-content--dark .privacy-content__table tr:last-child td:first-child {
+    border-bottom-color: rgba(255, 255, 255, 0.22);
+  }
+
+  .privacy-content .site-footer {
+    margin: 70px 10px 0;
+  }
+}

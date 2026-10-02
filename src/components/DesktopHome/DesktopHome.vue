@@ -8,6 +8,7 @@ import HomeContent from '../HomeContent/HomeContent.vue'
 import PortfolioCaseContent from '../PortfolioCaseContent/PortfolioCaseContent.vue'
 import PortfolioDetailContent from '../PortfolioDetailContent/PortfolioDetailContent.vue'
 import PortfolioContent from '../PortfolioContent/PortfolioContent.vue'
+import PrivacyContent from '../PrivacyContent/PrivacyContent.vue'
 
 const props = defineProps({
   theme: {
@@ -19,6 +20,10 @@ const props = defineProps({
     default: false,
   },
   isContactsActive: {
+    type: Boolean,
+    default: false,
+  },
+  isPrivacyActive: {
     type: Boolean,
     default: false,
   },
@@ -37,9 +42,11 @@ const props = defineProps({
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
-const isLightPage = computed(() => props.isAboutActive || props.isContactsActive || props.isPortfolioCaseActive)
+const isLightPage = computed(() => (
+  props.isAboutActive || props.isContactsActive || props.isPrivacyActive || props.isPortfolioCaseActive
+))
 const isContentPage = computed(() => (
-  props.isAboutActive || props.isContactsActive || props.isPortfolioActive || props.isPortfolioDetailActive || props.isPortfolioCaseActive
+  props.isAboutActive || props.isContactsActive || props.isPrivacyActive || props.isPortfolioActive || props.isPortfolioDetailActive || props.isPortfolioCaseActive
 ))
 const isAboutLight = computed(() => isLightPage.value && !isDarkTheme.value)
 const { t } = useI18n()
@@ -78,7 +85,7 @@ function handleContentScroll(event) {
 }
 
 watch(
-  () => [props.isAboutActive, props.isContactsActive, props.isPortfolioActive, props.isPortfolioDetailActive, props.isPortfolioCaseActive],
+  () => [props.isAboutActive, props.isContactsActive, props.isPrivacyActive, props.isPortfolioActive, props.isPortfolioDetailActive, props.isPortfolioCaseActive],
   () => {
     isHeaderRevealed.value = true
     isHeaderScrolled.value = false
@@ -165,6 +172,12 @@ watch(
       <ContactsContent
         v-else-if="props.isContactsActive"
         key="contacts-content"
+        :theme="theme"
+        @scroll.passive="handleContentScroll"
+      />
+      <PrivacyContent
+        v-else-if="props.isPrivacyActive"
+        key="privacy-content"
         :theme="theme"
         @scroll.passive="handleContentScroll"
       />

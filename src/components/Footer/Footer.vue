@@ -14,9 +14,9 @@ const { t } = useI18n()
         {{ t('footer.copyright', { year: currentYear }) }}
       </p>
 
-      <a class="site-footer__privacy" href="/privacy">
+      <RouterLink class="site-footer__privacy" to="/privacy">
         {{ t('footer.privacy') }}
-      </a>
+      </RouterLink>
 
       <p class="site-footer__made">
         {{ t('footer.made') }}

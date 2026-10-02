@@ -14,6 +14,7 @@ import OnTheMapPanel from '../components/OnTheMap/OnTheMapPanel.vue'
 import PortfolioCaseContent from '../components/PortfolioCaseContent/PortfolioCaseContent.vue'
 import PortfolioDetailContent from '../components/PortfolioDetailContent/PortfolioDetailContent.vue'
 import PortfolioContent from '../components/PortfolioContent/PortfolioContent.vue'
+import PrivacyContent from '../components/PrivacyContent/PrivacyContent.vue'
 import ProjectFormDrawer from '../components/ProjectFormDrawer/ProjectFormDrawer.vue'
 import Sidebar from '../components/Sidebar/Sidebar.vue'
 import MobileHeader from '../components/Sidebar/mobile/MobileHeader.vue'
@@ -37,13 +38,14 @@ const isMapOpen = ref(false)
 const isProjectFormOpen = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
+const isPrivacyActive = computed(() => route.name === 'privacy')
 const isPortfolioActive = computed(() => route.name === 'portfolio')
 const isPortfolioDetailActive = computed(() => route.name === 'portfolio-detail')
 const isPortfolioCaseActive = computed(() => route.name === 'portfolio-case')
 const isPortfolioPageActive = computed(() => isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value)
-const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value || isPortfolioCaseActive.value)
+const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value || isPrivacyActive.value || isPortfolioCaseActive.value)
 const isContentPageActive = computed(() => (
-  isAboutActive.value || isContactsActive.value || isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value
+  isAboutActive.value || isContactsActive.value || isPrivacyActive.value || isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value
 ))
 const {
   inactiveThemeIcon,
@@ -89,6 +91,7 @@ provide('openProjectForm', openProjectForm)
       />
       <AboutContent v-if="isAboutActive" :key="`mobile-about-${route.fullPath}`" :theme="theme" />
       <ContactsContent v-else-if="isContactsActive" :key="`mobile-contacts-${route.fullPath}`" :theme="theme" />
+      <PrivacyContent v-else-if="isPrivacyActive" :key="`mobile-privacy-${route.fullPath}`" :theme="theme" />
       <PortfolioCaseContent v-else-if="isPortfolioCaseActive" :key="`mobile-portfolio-case-${route.fullPath}`" :theme="theme" />
       <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="`mobile-portfolio-detail-${route.fullPath}`" :theme="theme" />
       <PortfolioContent v-else-if="isPortfolioActive" :key="`mobile-portfolio-${route.fullPath}`" :theme="theme" />
@@ -112,6 +115,7 @@ provide('openProjectForm', openProjectForm)
       />
       <AboutContent v-if="isAboutActive" :key="`tablet-about-${route.fullPath}`" :theme="theme" />
       <ContactsContent v-else-if="isContactsActive" :key="`tablet-contacts-${route.fullPath}`" :theme="theme" />
+      <PrivacyContent v-else-if="isPrivacyActive" :key="`tablet-privacy-${route.fullPath}`" :theme="theme" />
       <PortfolioCaseContent v-else-if="isPortfolioCaseActive" :key="`tablet-portfolio-case-${route.fullPath}`" :theme="theme" />
       <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="`tablet-portfolio-detail-${route.fullPath}`" :theme="theme" />
       <PortfolioContent v-else-if="isPortfolioActive" :key="`tablet-portfolio-${route.fullPath}`" :theme="theme" />
@@ -200,6 +204,7 @@ provide('openProjectForm', openProjectForm)
         :theme="theme"
         :is-about-active="isAboutActive"
         :is-contacts-active="isContactsActive"
+        :is-privacy-active="isPrivacyActive"
         :is-portfolio-active="isPortfolioActive"
         :is-portfolio-detail-active="isPortfolioDetailActive"
         :is-portfolio-case-active="isPortfolioCaseActive"

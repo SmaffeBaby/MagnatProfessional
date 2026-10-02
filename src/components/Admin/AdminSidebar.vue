@@ -78,6 +78,14 @@ defineEmits<{
     >
       Клиенты
     </button>
+    <button
+      class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'privacy' }"
+      type="button"
+      @click="$emit('update:activeSection', 'privacy')"
+    >
+      Политика
+    </button>
     <button class="admin-sidebar__logout" type="button" @click="$emit('logout')">Выйти</button>
   </aside>
 </template>

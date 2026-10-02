@@ -314,6 +314,30 @@ app.get('/api/hystory-company', async (_req, res, next) => {
   }
 })
 
+app.get('/api/privacy', async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('privacy_blocks')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json({
+        blocks: data.map(privacyBlockFromDatabase),
+      })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.get('/api/mission-values', async (_req, res, next) => {
   try {
     const content = await getMissionValuesContent()
@@ -831,6 +855,82 @@ app.delete('/api/admin/hystory-company/:id', requireAdminAuth, async (req, res, 
   try {
     const { error } = await supabase
       .from('hystory_company_items')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/privacy', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('privacy_blocks')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      blocks: data.map(privacyBlockFromDatabase),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/privacy', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = privacyBlockToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('privacy_blocks')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ block: privacyBlockFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/privacy/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = privacyBlockToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('privacy_blocks')
+      .update(payload)
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ block: privacyBlockFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/privacy/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('privacy_blocks')
       .delete()
       .eq('id', req.params.id)
 
@@ -1782,6 +1882,72 @@ function hystoryCompanyItemToDatabase(item) {
   }
 }
 
+function normalizePrivacyTableRows(rows) {
+  if (!Array.isArray(rows)) {
+    return []
+  }
+
+  return rows
+    .map((row) => ({
+      left: String(row?.left || '').trim(),
+      right: String(row?.right || '').trim(),
+    }))
+    .filter((row) => row.left || row.right)
+}
+
+function privacyBlockFromDatabase(block) {
+  return {
+    id: block.id,
+    type: block.block_type,
+    sortOrder: block.sort_order,
+    title: block.title,
+    titleEn: block.title_en,
+    text: block.text,
+    textEn: block.text_en,
+    tableRows: Array.isArray(block.table_rows) ? block.table_rows : [],
+    tableRowsEn: Array.isArray(block.table_rows_en) ? block.table_rows_en : [],
+    createdAt: block.created_at,
+    updatedAt: block.updated_at,
+  }
+}
+
+function privacyBlockToDatabase(block) {
+  const type = block.type === 'table' ? 'table' : 'text'
+  const title = String(block.title || '').trim()
+  const text = String(block.text || '').trim()
+  const tableRows = normalizePrivacyTableRows(block.tableRows)
+  const sortOrder = Number.isFinite(Number(block.sortOrder)) ? Number(block.sortOrder) : 0
+
+  if (!title) {
+    const error = new Error('Title is required')
+    error.status = 400
+    throw error
+  }
+
+  if (type === 'text' && !text) {
+    const error = new Error('Text is required')
+    error.status = 400
+    throw error
+  }
+
+  if (type === 'table' && tableRows.length === 0) {
+    const error = new Error('Table rows are required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    block_type: type,
+    sort_order: sortOrder,
+    title,
+    title_en: normalizeOptionalText(block.titleEn),
+    text,
+    text_en: normalizeOptionalText(block.textEn),
+    table_rows: tableRows,
+    table_rows_en: normalizePrivacyTableRows(block.tableRowsEn),
+  }
+}
+
 async function getMissionValuesContent() {
   const { data, error } = await supabase
     .from('mission_values_content')
@@ -2196,6 +2362,45 @@ async function ensureDatabaseSchema() {
       drop policy if exists "Portfolio card article blocks are publicly readable." on public.portfolio_card_article_blocks;
       create policy "Portfolio card article blocks are publicly readable."
         on public.portfolio_card_article_blocks for select
+        using (true);
+
+      create table if not exists public.privacy_blocks (
+        id uuid primary key default gen_random_uuid(),
+        block_type text not null default 'text',
+        sort_order integer not null default 0,
+        title text not null,
+        title_en text,
+        text text not null default '',
+        text_en text,
+        table_rows jsonb not null default '[]'::jsonb,
+        table_rows_en jsonb not null default '[]'::jsonb,
+        created_at timestamp with time zone not null default now(),
+        updated_at timestamp with time zone not null default now(),
+        constraint privacy_blocks_type_check check (block_type in ('text', 'table'))
+      );
+
+      create or replace function public.set_privacy_blocks_updated_at()
+      returns trigger
+      language plpgsql
+      as $$
+      begin
+        new.updated_at = now();
+        return new;
+      end;
+      $$;
+
+      drop trigger if exists set_privacy_blocks_updated_at on public.privacy_blocks;
+
+      create trigger set_privacy_blocks_updated_at
+      before update on public.privacy_blocks
+      for each row
+      execute function public.set_privacy_blocks_updated_at();
+
+      alter table public.privacy_blocks enable row level security;
+
+      drop policy if exists "Privacy blocks are publicly readable." on public.privacy_blocks;
+      create policy "Privacy blocks are publicly readable."
+        on public.privacy_blocks for select
         using (true);
     `)
 

@@ -9,6 +9,7 @@ import DirectorTextAdminSection from '../components/Admin/DirectorTextAdminSecti
 import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
 import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminSection.vue'
 import MissionValuesAdminSection from '../components/Admin/MissionValuesAdminSection.vue'
+import PrivacyAdminSection from '../components/Admin/PrivacyAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminClients } from '../composables/Admin/useAdminClients'
@@ -18,6 +19,7 @@ import { useAdminAuth } from '../composables/Admin/useAdminAuth'
 import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
 import { useAdminHystoryCompany } from '../composables/Admin/useAdminHystoryCompany'
 import { useAdminMissionValues } from '../composables/Admin/useAdminMissionValues'
+import { useAdminPrivacy } from '../composables/Admin/useAdminPrivacy'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
 
 const activeSection = ref('home-panels')
@@ -29,6 +31,7 @@ const directorText = useAdminDirectorText()
 const homePanels = useAdminHomePanels()
 const hystoryCompany = useAdminHystoryCompany()
 const missionValues = useAdminMissionValues()
+const privacy = useAdminPrivacy()
 const stats = useAdminStats()
 
 onMounted(async () => {
@@ -41,6 +44,7 @@ onMounted(async () => {
       directorText.loadContent(),
       hystoryCompany.loadItems(),
       missionValues.loadContent(),
+      privacy.loadBlocks(),
       stats.loadItems(),
     ])
   }
@@ -56,6 +60,7 @@ async function login() {
       directorText.loadContent(),
       hystoryCompany.loadItems(),
       missionValues.loadContent(),
+      privacy.loadBlocks(),
       stats.loadItems(),
     ])
   })
@@ -70,6 +75,7 @@ function logout() {
   directorText.clearContent()
   hystoryCompany.clearItems()
   missionValues.clearContent()
+  privacy.clearBlocks()
   stats.clearItems()
 }
 </script>
@@ -237,6 +243,23 @@ function logout() {
         @delete-file="clients.deleteImage"
         @edit="clients.editItem"
         @delete="clients.deleteItem"
+      />
+
+      <PrivacyAdminSection
+        v-if="activeSection === 'privacy'"
+        :error="privacy.error.value"
+        :form="privacy.form"
+        :form-title="privacy.formTitle.value"
+        :blocks="privacy.blocks.value"
+        :is-loading="privacy.isLoading.value"
+        :is-saving="privacy.isSaving.value"
+        @new-block="privacy.resetForm"
+        @save="privacy.saveBlock"
+        @reset="privacy.resetForm"
+        @edit="privacy.editBlock"
+        @delete="privacy.deleteBlock"
+        @add-table-row="privacy.addTableRow"
+        @remove-table-row="privacy.removeTableRow"
       />
     </section>
   </main>

@@ -18,6 +18,11 @@ const routes = [
     component: HomeView,
   },
   {
+    path: '/privacy',
+    name: 'privacy',
+    component: HomeView,
+  },
+  {
     path: '/portfolio',
     name: 'portfolio',
     component: HomeView,

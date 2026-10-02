@@ -389,6 +389,45 @@ create policy "Hystory company items are publicly readable."
   on public.hystory_company_items for select
   using (true);
 
+create table if not exists public.privacy_blocks (
+  id uuid primary key default gen_random_uuid(),
+  block_type text not null default 'text',
+  sort_order integer not null default 0,
+  title text not null,
+  title_en text,
+  text text not null default '',
+  text_en text,
+  table_rows jsonb not null default '[]'::jsonb,
+  table_rows_en jsonb not null default '[]'::jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint privacy_blocks_type_check check (block_type in ('text', 'table'))
+);
+
+create or replace function public.set_privacy_blocks_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_privacy_blocks_updated_at on public.privacy_blocks;
+
+create trigger set_privacy_blocks_updated_at
+before update on public.privacy_blocks
+for each row
+execute function public.set_privacy_blocks_updated_at();
+
+alter table public.privacy_blocks enable row level security;
+
+drop policy if exists "Privacy blocks are publicly readable." on public.privacy_blocks;
+create policy "Privacy blocks are publicly readable."
+  on public.privacy_blocks for select
+  using (true);
+
 create table if not exists public.mission_values_content (
   id boolean primary key default true,
   main_text text not null default '',
