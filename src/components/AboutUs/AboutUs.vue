@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAboutUs } from '../../composables/useAboutUs'
 
 const props = defineProps({
@@ -21,7 +22,7 @@ const props = defineProps({
   },
   buttonHref: {
     type: String,
-    default: '#contacts',
+    default: '/about',
   },
 })
 
@@ -29,6 +30,7 @@ const { hasContent, localizedButtonText, localizedText } = useAboutUs()
 const isDarkTheme = computed(() => props.theme === 'dark')
 const displayButtonText = computed(() => props.buttonText || localizedButtonText.value)
 const openProjectForm = inject<(() => void) | null>('openProjectForm', null)
+const router = useRouter()
 const titleParts = computed(() => {
   const words = localizedText.value.trim().split(/\s+/)
 
@@ -46,9 +48,22 @@ const titleParts = computed(() => {
 })
 
 function handleButtonClick() {
+  if (props.buttonHref === '/about') {
+    router.push('/about')
+    return
+  }
+
   if (openProjectForm) {
     openProjectForm()
+    return
   }
+
+  if (props.buttonHref.startsWith('/')) {
+    router.push(props.buttonHref)
+    return
+  }
+
+  window.location.href = props.buttonHref
 }
 </script>
 
