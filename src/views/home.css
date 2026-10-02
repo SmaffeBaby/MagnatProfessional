@@ -8,11 +8,9 @@
   gap: 32px;
   background: #ffffff;
   color: #000000;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   transition:
     background-color 500ms ease,
     color 500ms ease,
-    box-shadow 500ms ease,
     opacity 300ms ease-out,
     transform 300ms ease-out;
 }
@@ -25,7 +23,6 @@
 .responsive-header-backing--dark {
   background: #222222;
   color: #ffffff;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
 }
 
 .desktop-sidebar-frame {

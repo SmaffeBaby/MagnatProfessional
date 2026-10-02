@@ -54,10 +54,10 @@ const languageStore = useLanguageStore()
 
 <template>
   <header
-    class="mobile-header flex items-center justify-between gap-2 transition-[background-color,box-shadow] duration-300 ease-out"
+    class="mobile-header flex items-center justify-between gap-2 transition-[background-color] duration-300 ease-out"
     :class="[
       isFixed ? 'fixed left-0 right-0 top-0 z-[220] px-5 pb-4 pt-5' : 'relative z-10',
-      showBacking && !isMenuOpen ? 'mobile-header--backed bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08)]' : 'bg-transparent',
+      showBacking && !isMenuOpen ? 'mobile-header--backed bg-white' : 'bg-transparent',
     ]"
   >
     <a href="/" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
