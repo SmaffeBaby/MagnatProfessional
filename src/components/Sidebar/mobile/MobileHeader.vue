@@ -146,7 +146,8 @@ button:active .mobile-header__menu-icon--about {
   }
 
   .mobile-header.fixed {
-    padding: 30px 55px;
+    min-height: 84px;
+    padding: 12px 55px;
   }
 
   .mobile-header__logo {
