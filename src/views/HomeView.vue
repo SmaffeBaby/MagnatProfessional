@@ -78,7 +78,7 @@ provide('openProjectForm', openProjectForm)
     class="home-main min-h-screen text-white transition-colors duration-500"
     :class="theme === 'dark' ? 'bg-[#222222]' : isLightPageActive ? 'bg-white' : isPortfolioPageActive ? 'bg-[#bd0f1c]' : 'bg-magnat-red'"
   >
-    <div class="tablet:hidden desktop:hidden">
+    <div class="home-compact-page">
       <SidebarMobile
         :ref="setMobileSidebar"
         v-model:theme="theme"
@@ -103,7 +103,7 @@ provide('openProjectForm', openProjectForm)
       </template>
     </div>
 
-    <div class="home-tablet-page hidden tablet:block desktop:hidden">
+    <div class="home-wide-tablet-page">
       <TabletHome
         v-model:theme="theme"
         :is-about-active="isLightPageActive"
@@ -129,7 +129,7 @@ provide('openProjectForm', openProjectForm)
     <Transition name="header-backing">
       <MobileHeader
         v-if="isHeaderBackingVisible && !isMobileMenuOpen"
-        class="tablet:hidden desktop:hidden"
+        class="home-compact-floating-header"
         is-fixed
         show-backing
         :is-dark-theme="isDarkTheme"

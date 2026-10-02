@@ -142,6 +142,82 @@
   opacity: 0;
 }
 
+@media (min-width: 768px) and (max-width: 1040px) {
+  .mobile-sidebar-shell {
+    overflow: visible;
+    background-color: transparent;
+    min-height: auto;
+  }
+
+  .mobile-sidebar-shell::before {
+    bottom: -360px;
+  }
+
+  .mobile-sidebar-shell.fixed {
+    overflow: hidden;
+    min-height: 100vh;
+    min-height: 100svh;
+  }
+
+  .mobile-sidebar-home {
+    position: relative;
+    inset: auto;
+    min-height: 0;
+    padding: 30px 55px 84px;
+    overflow: visible;
+  }
+
+  .mobile-sidebar-home.absolute {
+    padding-bottom: 0;
+  }
+
+  .mobile-sidebar-menu {
+    padding: 30px 55px 0;
+  }
+
+  .mobile-theme-image {
+    bottom: -360px;
+    background-position: clamp(18rem, 38vw, 34rem) -19rem;
+    background-size: clamp(72rem, 124vw, 92rem) auto;
+  }
+
+  .mobile-menu-link {
+    font-size: clamp(3rem, 5.8vw, 4.4rem);
+  }
+
+  .mobile-sidebar-menu nav {
+    max-width: 620px;
+    margin-top: clamp(86px, 10svh, 124px);
+    gap: clamp(2rem, 4.2svh, 3.25rem);
+  }
+
+  .mobile-sidebar-menu > div {
+    width: calc(100% + 110px);
+    margin-top: clamp(92px, 12svh, 130px);
+    margin-right: -55px;
+    margin-left: -55px;
+  }
+
+  .mobile-menu-card {
+    padding-right: 55px;
+    padding-left: 55px;
+    border-radius: 40px;
+  }
+
+  .mobile-menu-card h2 {
+    max-width: 720px;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  }
+
+  .mobile-menu-card a[href^='tel'] {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+
+  .mobile-menu-card a[href^='mailto'] {
+    font-size: clamp(1.08rem, 2vw, 1.35rem);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .mobile-sidebar-panel-enter-active,
   .mobile-sidebar-panel-leave-active,

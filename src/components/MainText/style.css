@@ -118,7 +118,48 @@
   }
 }
 
-@media (min-width: 1040px) {
+@media (min-width: 768px) and (max-width: 1040px) {
+  .main-text {
+    margin-top: clamp(210px, 24vw, 250px);
+    width: 100%;
+    max-width: none;
+  }
+
+  .main-text__heading {
+    min-height: 0;
+    max-width: 960px;
+  }
+
+  .main-text__title,
+  .main-text__right-title {
+    font-size: clamp(48px, 7.8vw, 72px);
+    line-height: 1.12;
+  }
+
+  .main-text__right-title {
+    margin-top: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+    text-wrap: balance;
+  }
+
+  .main-text__description {
+    margin-top: 24px;
+    max-width: 820px;
+    font-size: clamp(18px, 2.4vw, 24px);
+    line-height: 1.32;
+  }
+
+  .main-text__button {
+    width: auto;
+    min-width: 244px;
+    margin-top: 46px;
+    padding: 0 36px;
+    font-size: 22px;
+  }
+}
+
+@media (min-width: 1041px) {
   .main-text {
     margin-top: 150px;
     margin-left: 55px;
@@ -162,7 +203,7 @@
   }
 }
 
-@media (min-width: 1301px) {
+@media (min-width: 1200px) {
   .main-text {
     margin-top: 135px;
     margin-left: 54px;
