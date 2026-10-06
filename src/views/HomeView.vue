@@ -97,6 +97,15 @@ let themeColorMeta = null
 let previousRootBackground = ''
 let previousBodyBackground = ''
 let previousThemeColor = ''
+let previousRootOverflow = ''
+let previousRootOverscrollBehavior = ''
+let previousBodyOverflow = ''
+let previousBodyPosition = ''
+let previousBodyTop = ''
+let previousBodyWidth = ''
+let previousBodyOverscrollBehavior = ''
+let lockedScrollY = 0
+let isPageScrollLocked = false
 
 function applyPageBackground(color) {
   document.documentElement.style.backgroundColor = color
@@ -105,6 +114,46 @@ function applyPageBackground(color) {
   if (themeColorMeta) {
     themeColorMeta.setAttribute('content', color)
   }
+}
+
+function lockPageScroll() {
+  if (isPageScrollLocked) {
+    return
+  }
+
+  lockedScrollY = window.scrollY || document.documentElement.scrollTop || 0
+  previousRootOverflow = document.documentElement.style.overflow
+  previousRootOverscrollBehavior = document.documentElement.style.overscrollBehavior
+  previousBodyOverflow = document.body.style.overflow
+  previousBodyPosition = document.body.style.position
+  previousBodyTop = document.body.style.top
+  previousBodyWidth = document.body.style.width
+  previousBodyOverscrollBehavior = document.body.style.overscrollBehavior
+
+  document.documentElement.style.overflow = 'hidden'
+  document.documentElement.style.overscrollBehavior = 'none'
+  document.body.style.overflow = 'hidden'
+  document.body.style.position = 'fixed'
+  document.body.style.top = `-${lockedScrollY}px`
+  document.body.style.width = '100%'
+  document.body.style.overscrollBehavior = 'none'
+  isPageScrollLocked = true
+}
+
+function unlockPageScroll() {
+  if (!isPageScrollLocked) {
+    return
+  }
+
+  document.documentElement.style.overflow = previousRootOverflow
+  document.documentElement.style.overscrollBehavior = previousRootOverscrollBehavior
+  document.body.style.overflow = previousBodyOverflow
+  document.body.style.position = previousBodyPosition
+  document.body.style.top = previousBodyTop
+  document.body.style.width = previousBodyWidth
+  document.body.style.overscrollBehavior = previousBodyOverscrollBehavior
+  window.scrollTo({ top: lockedScrollY })
+  isPageScrollLocked = false
 }
 
 onMounted(() => {
@@ -126,7 +175,19 @@ watch(pageBackgroundColor, (color) => {
   applyPageBackground(color)
 })
 
+watch(isMobileMenuOpen, (isOpen) => {
+  if (isOpen) {
+    lockPageScroll()
+    applyPageBackground(pageBackgroundColor.value)
+    return
+  }
+
+  unlockPageScroll()
+  applyPageBackground(pageBackgroundColor.value)
+})
+
 onUnmounted(() => {
+  unlockPageScroll()
   document.documentElement.style.backgroundColor = previousRootBackground
   document.body.style.backgroundColor = previousBodyBackground
 

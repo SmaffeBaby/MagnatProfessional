@@ -31,6 +31,22 @@
   opacity: 1;
 }
 
+.mobile-sidebar-shell.is-menu-open::after {
+  position: fixed;
+  top: -50svh;
+  right: 0;
+  bottom: -50svh;
+  left: 0;
+  z-index: 0;
+  background: #c40f1c;
+  content: '';
+  pointer-events: none;
+}
+
+.mobile-sidebar-shell.is-menu-open.is-dark-theme::after {
+  background: #222222;
+}
+
 .mobile-sidebar-home {
   isolation: isolate;
 }
