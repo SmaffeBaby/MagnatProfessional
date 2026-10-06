@@ -107,6 +107,23 @@
   }
 }
 
+@media (min-width: 1800px) {
+  .about-us {
+    margin: clamp(122px, calc(5.6vw + 21.2px), 150px) clamp(55px, calc(5vw - 35px), 76px) 0;
+  }
+
+  .about-us__title {
+    font-size: clamp(60px, calc(4.6vw - 22.8px), 78px);
+  }
+
+  .about-us__button {
+    height: clamp(54px, calc(2.3vw + 12.6px), 64px);
+    margin-top: clamp(38px, calc(2.4vw - 5.2px), 48px);
+    padding: 0 clamp(22px, calc(2.2vw - 17.6px), 32px);
+    font-size: clamp(18px, calc(0.5vw + 9px), 20px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .about-us__button {
     transition: none;

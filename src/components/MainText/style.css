@@ -207,19 +207,36 @@
 
 @media (min-width: 1200px) {
   .main-text {
+    --main-text-edge: clamp(54px, calc(5vw - 36px), 76px);
+
     margin-top: 135px;
     margin-bottom: 0;
-    margin-left: 54px;
-    width: min(1120px, calc(100% - 108px));
+    margin-left: var(--main-text-edge);
+    width: min(clamp(1120px, calc(42vw + 364px), 1320px), calc(100% - var(--main-text-edge) - var(--main-text-edge)));
     max-width: none;
   }
 
   .main-text__heading {
-    max-width: 1120px;
+    max-width: 100%;
+  }
+
+  .main-text__title,
+  .main-text__right-title {
+    font-size: clamp(60px, calc(5.5vw - 39px), 84px);
   }
 
   .main-text__description {
-    margin-top: 12px;
+    margin-top: clamp(12px, calc(1.8vw - 20.4px), 20px);
+    max-width: clamp(820px, calc(32vw + 244px), 960px);
+    font-size: clamp(16px, calc(0.9vw - 0.2px), 20px);
+  }
+
+  .main-text__button {
+    min-width: clamp(244px, calc(8vw + 100px), 280px);
+    height: clamp(54px, calc(2.3vw + 12.6px), 64px);
+    margin-top: clamp(30px, calc(2.5vw - 15px), 42px);
+    padding: 0 clamp(24px, calc(3.6vw - 40.8px), 40px);
+    font-size: clamp(18px, calc(0.5vw + 9px), 20px);
   }
 
   .main-text__button-label {

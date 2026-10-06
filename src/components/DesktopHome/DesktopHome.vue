@@ -133,7 +133,7 @@ watch(
         <RouterLink
           v-for="navLink in navLinks"
           :key="navLink.href"
-          class="inline-flex h-11 items-center justify-center rounded-full border-2 px-5 text-base font-normal leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:border-magnat-light active:bg-magnat-light active:text-white"
+          class="desktop-home__nav-link inline-flex h-11 items-center justify-center rounded-full border-2 px-5 text-base font-normal leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:border-magnat-light active:bg-magnat-light active:text-white"
           :class="isAboutLight
             ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white focus-visible:ring-magnat-light focus-visible:ring-offset-white'
             : isDarkTheme
@@ -147,7 +147,7 @@ watch(
 
       <div class="flex shrink-0 items-center gap-3">
         <button
-          class="h-11 w-[62px] rounded-full border-2 px-0 text-base font-semibold uppercase leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 active:border-magnat-light active:bg-magnat-light active:text-white"
+          class="desktop-home__language-button h-11 w-[62px] rounded-full border-2 px-0 text-base font-semibold uppercase leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:scale-95 active:border-magnat-light active:bg-magnat-light active:text-white"
           :class="isAboutLight
             ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white focus-visible:ring-magnat-light focus-visible:ring-offset-white'
             : isDarkTheme
@@ -220,7 +220,7 @@ watch(
 
 .desktop-home__header {
   right: 0;
-  left: clamp(400px, calc(400px + (100vw - 1200px) * 0.1185), 471px);
+  left: clamp(400px, calc(11.85vw + 257.8px), 471px);
   min-height: 100px;
   background: transparent;
   transform: translateY(0);
@@ -297,6 +297,37 @@ watch(
   .desktop-content-enter-active,
   .desktop-content-leave-active {
     transition: none;
+  }
+}
+
+@media (min-width: 1800px) {
+  .desktop-home__header {
+    left: clamp(471px, calc(10vw + 291px), 560px);
+    min-height: clamp(100px, calc(3.6vw + 35.2px), 116px);
+    gap: clamp(32px, calc(2.7vw - 16.6px), 44px);
+    padding: clamp(28px, calc(2.7vw - 20.6px), 40px) clamp(56px, calc(5vw - 34px), 76px);
+  }
+
+  .desktop-home__header nav {
+    gap: clamp(10px, calc(1.1vw - 9.8px), 15px);
+  }
+
+  .desktop-home__nav-link {
+    height: clamp(44px, calc(1.8vw + 11.6px), 52px);
+    padding-right: clamp(20px, calc(2vw - 16px), 28px);
+    padding-left: clamp(20px, calc(2vw - 16px), 28px);
+    font-size: clamp(16px, calc(0.7vw + 3.4px), 19px);
+  }
+
+  .desktop-home__language-button {
+    width: clamp(62px, calc(2.1vw + 24.2px), 72px);
+    height: clamp(44px, calc(1.8vw + 11.6px), 52px);
+    font-size: clamp(16px, calc(0.7vw + 3.4px), 19px);
+  }
+
+  .desktop-theme-image {
+    background-position: clamp(45rem, calc(22vw + 20.25rem), 56rem) clamp(-38.5rem, calc(10vw - 49.75rem), -33rem);
+    background-size: clamp(85rem, calc(30vw + 31rem), 100rem) auto;
   }
 }
 </style>

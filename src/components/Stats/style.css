@@ -73,3 +73,23 @@
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   }
 }
+
+@media (min-width: 1800px) {
+  .stats {
+    gap: clamp(80px, calc(6vw - 28px), 108px) clamp(64px, calc(5.5vw - 35px), 90px);
+    margin: clamp(80px, calc(4vw + 8px), 100px) clamp(55px, calc(5vw - 35px), 76px) 0;
+  }
+
+  .stats__item {
+    max-width: clamp(440px, calc(12vw + 224px), 500px);
+  }
+
+  .stats__number {
+    font-size: clamp(100px, calc(6vw - 8px), 128px);
+  }
+
+  .stats__text {
+    margin-top: clamp(38px, calc(2.4vw - 5.2px), 48px);
+    font-size: clamp(24px, calc(1vw + 6px), 28px);
+  }
+}

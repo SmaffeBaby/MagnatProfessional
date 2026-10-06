@@ -21,3 +21,20 @@
     margin: 80px 55px 0;
   }
 }
+
+@media (min-width: 1800px) {
+  .dotted-separator {
+    height: clamp(75px, calc(4vw + 3px), 94px);
+    margin: clamp(80px, calc(4vw + 8px), 100px) clamp(55px, calc(5vw - 35px), 76px) 0;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        transparent 0,
+        transparent clamp(18px, calc(1.1vw - 1.8px), 23px),
+        rgba(255, 255, 255, 0.2) clamp(18px, calc(1.1vw - 1.8px), 23px),
+        rgba(255, 255, 255, 0.2) clamp(20px, calc(1.2vw - 1.6px), 25px),
+        transparent clamp(20px, calc(1.2vw - 1.6px), 25px),
+        transparent clamp(32px, calc(1.7vw + 1.4px), 40px)
+      );
+  }
+}

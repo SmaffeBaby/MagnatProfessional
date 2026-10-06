@@ -204,3 +204,28 @@
     margin-top: 80px;
   }
 }
+
+@media (min-width: 1800px) {
+  .description {
+    grid-template-columns: minmax(520px, 1fr) clamp(664px, calc(20vw + 304px), 760px);
+    gap: clamp(80px, calc(12vw - 136px), 180px);
+    margin: clamp(120px, calc(6vw + 12px), 150px) clamp(55px, calc(5vw - 35px), 76px) 0;
+  }
+
+  .description__text {
+    height: clamp(440px, calc(22vw + 44px), 545px);
+    max-height: clamp(440px, calc(22vw + 44px), 545px);
+    font-size: clamp(38px, calc(2.5vw - 7px), 48px);
+  }
+
+  .description__card {
+    width: clamp(664px, calc(20vw + 304px), 760px);
+    height: clamp(440px, calc(22vw + 44px), 545px);
+    border-radius: clamp(30px, calc(1.8vw - 2.4px), 38px);
+  }
+
+  .description__card-text {
+    padding: clamp(50px, calc(4vw - 22px), 68px) clamp(50px, calc(4vw - 22px), 68px) 0;
+    font-size: clamp(24px, calc(1vw + 6px), 28px);
+  }
+}

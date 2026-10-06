@@ -26,7 +26,7 @@
 }
 
 .desktop-sidebar-frame {
-  width: clamp(400px, calc(400px + (100vw - 1200px) * 0.1185), 471px);
+  width: clamp(400px, calc(11.85vw + 257.8px), 471px);
 }
 
 .home-main,
@@ -208,5 +208,11 @@
   .home-wide-tablet-page,
   .responsive-header-backing--tablet {
     display: none;
+  }
+}
+
+@media (min-width: 1800px) {
+  .desktop-sidebar-frame {
+    width: clamp(471px, calc(10vw + 291px), 560px);
   }
 }
