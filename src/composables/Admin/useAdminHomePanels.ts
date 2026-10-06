@@ -46,6 +46,14 @@ export type PortfolioCaseForm = {
 }
 export type PanelUploadTarget = 'image' | 'video' | 'poster' | 'mascot'
 
+function createClientId() {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID()
+  }
+
+  return `client-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`
+}
+
 function emptyForm(): PanelForm {
   return {
     id: null,
@@ -118,7 +126,7 @@ function cloneArticleBlocks(blocks: PortfolioArticleBlock[] = []): PortfolioArti
     imageGroups: cloneArticleImageGroups(block.imageGroups?.length
       ? block.imageGroups
       : block.images?.length
-        ? [{ id: crypto.randomUUID(), layout: block.layout, images: block.images }]
+        ? [{ id: createClientId(), layout: block.layout, images: block.images }]
         : []),
     images: [],
   }))
@@ -126,11 +134,11 @@ function cloneArticleBlocks(blocks: PortfolioArticleBlock[] = []): PortfolioArti
 
 function cloneArticleImageGroups(groups: PortfolioArticleImageGroup[] = []): PortfolioArticleImageGroup[] {
   return groups.map((group, groupIndex) => ({
-    id: group.id || crypto.randomUUID(),
+    id: group.id || createClientId(),
     layout: group.layout || 'single-wide',
     sortOrder: group.sortOrder ?? groupIndex,
     images: (group.images || []).map((image, imageIndex) => ({
-      id: image.id || crypto.randomUUID(),
+      id: image.id || createClientId(),
       path: image.path || null,
       url: image.url || '',
       alt: image.alt || '',
@@ -141,6 +149,73 @@ function cloneArticleImageGroups(groups: PortfolioArticleImageGroup[] = []): Por
 
 function flattenArticleBlockImages(block: PortfolioArticleBlock) {
   return (block.imageGroups || []).flatMap((group) => group.images)
+}
+
+function getPanelFile(form: PanelForm, target: PanelUploadTarget) {
+  switch (target) {
+    case 'image':
+      return form.imagePath
+    case 'video':
+      return form.videoPath
+    case 'poster':
+      return form.posterPath
+    case 'mascot':
+      return form.mascotPath
+  }
+}
+
+function setPanelFile(form: PanelForm, target: PanelUploadTarget, path: string | null, url: string | null) {
+  switch (target) {
+    case 'image':
+      form.imagePath = path
+      form.imageUrl = url
+      break
+    case 'video':
+      form.videoPath = path
+      form.videoUrl = url
+      break
+    case 'poster':
+      form.posterPath = path
+      form.posterUrl = url
+      break
+    case 'mascot':
+      form.mascotPath = path
+      form.mascotUrl = url
+      break
+  }
+}
+
+function getCardFile(form: PortfolioCardForm, target: Exclude<PanelUploadTarget, 'mascot'>) {
+  switch (target) {
+    case 'image':
+      return form.imagePath
+    case 'video':
+      return form.videoPath
+    case 'poster':
+      return form.posterPath
+  }
+}
+
+function setCardFile(
+  form: PortfolioCardForm,
+  target: Exclude<PanelUploadTarget, 'mascot'>,
+  path: string | null,
+  url: string | null,
+) {
+  switch (target) {
+    case 'image':
+      form.imagePath = path
+      form.imageUrl = url
+      break
+    case 'video':
+      form.videoPath = path
+      form.videoUrl = url
+      break
+    case 'poster':
+      form.posterPath = path
+      form.posterUrl = url
+      break
+  }
 }
 
 export function useAdminHomePanels() {
@@ -311,16 +386,7 @@ export function useAdminHomePanels() {
     try {
       const bucket = target === 'mascot' ? 'portfolio' : 'home-panels'
       const uploaded = await uploadAdminFile(file, bucket)
-      if (target === 'mascot') {
-        panelForm.mascotPath = uploaded.path
-        panelForm.mascotUrl = uploaded.publicUrl
-        return
-      }
-
-      const pathKey = `${target}Path` as keyof PanelForm
-      const urlKey = `${target}Url` as keyof PanelForm
-      panelForm[pathKey] = uploaded.path
-      panelForm[urlKey] = uploaded.publicUrl
+      setPanelFile(panelForm, target, uploaded.path, uploaded.publicUrl)
     } catch (requestError) {
       error.value = (requestError as Error).message
     } finally {
@@ -334,10 +400,7 @@ export function useAdminHomePanels() {
 
     try {
       const uploaded = await uploadAdminFile(file, 'portfolio')
-      const pathKey = `${target}Path` as keyof PortfolioCardForm
-      const urlKey = `${target}Url` as keyof PortfolioCardForm
-      cardForm[pathKey] = uploaded.path
-      cardForm[urlKey] = uploaded.publicUrl
+      setCardFile(cardForm, target, uploaded.path, uploaded.publicUrl)
     } catch (requestError) {
       error.value = (requestError as Error).message
     } finally {
@@ -347,29 +410,23 @@ export function useAdminHomePanels() {
 
   async function deletePanelFile(target: PanelUploadTarget) {
     const bucket = target === 'mascot' ? 'portfolio' : 'home-panels'
-    const pathKey = `${target}Path` as keyof PanelForm
-    const urlKey = `${target}Url` as keyof PanelForm
-    const path = panelForm[pathKey]
+    const path = getPanelFile(panelForm, target)
 
     if (typeof path === 'string' && path) {
       await deleteAdminFile(bucket, path)
     }
 
-    panelForm[pathKey] = null
-    panelForm[urlKey] = null
+    setPanelFile(panelForm, target, null, null)
   }
 
   async function deleteCardFile(target: Exclude<PanelUploadTarget, 'mascot'>) {
-    const pathKey = `${target}Path` as keyof PortfolioCardForm
-    const urlKey = `${target}Url` as keyof PortfolioCardForm
-    const path = cardForm[pathKey]
+    const path = getCardFile(cardForm, target)
 
     if (typeof path === 'string' && path) {
       await deleteAdminFile('portfolio', path)
     }
 
-    cardForm[pathKey] = null
-    cardForm[urlKey] = null
+    setCardFile(cardForm, target, null, null)
   }
 
   async function uploadCaseHero(file: File) {
@@ -407,7 +464,7 @@ export function useAdminHomePanels() {
 
       if (group) {
         group.images.push({
-          id: crypto.randomUUID(),
+          id: createClientId(),
           path: uploaded.path,
           url: uploaded.publicUrl,
           alt: '',
@@ -436,7 +493,7 @@ export function useAdminHomePanels() {
 
   function addArticleBlock(layout: PortfolioArticleBlockLayout = 'single-wide') {
     caseForm.articleBlocks.push({
-      id: crypto.randomUUID(),
+      id: createClientId(),
       title: '',
       titleEn: '',
       text: '',
@@ -444,7 +501,7 @@ export function useAdminHomePanels() {
       layout,
       images: [],
       imageGroups: [{
-        id: crypto.randomUUID(),
+        id: createClientId(),
         layout,
         images: [],
       }],
@@ -463,7 +520,7 @@ export function useAdminHomePanels() {
     }
 
     block.imageGroups.push({
-      id: crypto.randomUUID(),
+      id: createClientId(),
       layout,
       images: [],
       sortOrder: block.imageGroups.length,

@@ -6,6 +6,7 @@ export type PortfolioArticleImage = {
   path: string | null
   url: string
   alt?: string
+  sortOrder?: number
 }
 
 export type PortfolioArticleBlockLayout = 'single-wide' | 'two-medium' | 'three-vertical'
