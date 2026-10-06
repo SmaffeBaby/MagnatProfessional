@@ -118,6 +118,12 @@
   }
 }
 
+@media (max-width: 767px) {
+  .main-text {
+    margin-bottom: clamp(28px, 6svh, 52px);
+  }
+}
+
 @media (min-width: 768px) and (max-width: 1040px) {
   .main-text {
     margin-top: clamp(210px, 24vw, 250px);

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, provide, ref } from 'vue'
+import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import AboutContent from '../components/AboutContent/AboutContent.vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
@@ -47,6 +47,21 @@ const isLightPageActive = computed(() => isAboutActive.value || isContactsActive
 const isContentPageActive = computed(() => (
   isAboutActive.value || isContactsActive.value || isPrivacyActive.value || isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value
 ))
+const pageBackgroundColor = computed(() => {
+  if (theme.value === 'dark') {
+    return '#222222'
+  }
+
+  if (isLightPageActive.value) {
+    return '#ffffff'
+  }
+
+  if (isPortfolioPageActive.value) {
+    return '#bd0f1c'
+  }
+
+  return '#bd0e1c'
+})
 const {
   inactiveThemeIcon,
   isDarkTheme,
@@ -73,12 +88,60 @@ function closeProjectForm() {
 }
 
 provide('openProjectForm', openProjectForm)
+
+let themeColorMeta = null
+let previousRootBackground = ''
+let previousBodyBackground = ''
+let previousThemeColor = ''
+
+function applyPageBackground(color) {
+  document.documentElement.style.backgroundColor = color
+  document.body.style.backgroundColor = color
+
+  if (themeColorMeta) {
+    themeColorMeta.setAttribute('content', color)
+  }
+}
+
+onMounted(() => {
+  previousRootBackground = document.documentElement.style.backgroundColor
+  previousBodyBackground = document.body.style.backgroundColor
+  themeColorMeta = document.querySelector('meta[name="theme-color"]')
+
+  if (!themeColorMeta) {
+    themeColorMeta = document.createElement('meta')
+    themeColorMeta.setAttribute('name', 'theme-color')
+    document.head.appendChild(themeColorMeta)
+  }
+
+  previousThemeColor = themeColorMeta.getAttribute('content') || ''
+  applyPageBackground(pageBackgroundColor.value)
+})
+
+watch(pageBackgroundColor, (color) => {
+  applyPageBackground(color)
+})
+
+onUnmounted(() => {
+  document.documentElement.style.backgroundColor = previousRootBackground
+  document.body.style.backgroundColor = previousBodyBackground
+
+  if (themeColorMeta) {
+    if (previousThemeColor) {
+      themeColorMeta.setAttribute('content', previousThemeColor)
+    }
+    else {
+      themeColorMeta.removeAttribute('content')
+    }
+  }
+})
 </script>
 
 <template>
   <main
     class="home-main min-h-screen text-white transition-colors duration-500"
     :class="theme === 'dark' ? 'bg-[#222222]' : isLightPageActive ? 'bg-white' : isPortfolioPageActive ? 'bg-[#bd0f1c]' : 'bg-magnat-red'"
+    :style="{ backgroundColor: pageBackgroundColor }"
   >
     <div class="home-compact-page">
       <SidebarMobile
