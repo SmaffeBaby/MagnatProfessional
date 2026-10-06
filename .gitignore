@@ -37,3 +37,6 @@ backend/.env.*
 # Supabase
 supabase/.env
 supabase/.env.*
+/.deploy-backup/postgres.dump
+/.deploy-backup/postgres.sql
+/.deploy-backup/storage-data.tgz

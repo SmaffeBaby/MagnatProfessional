@@ -7,3 +7,4 @@ backend/node_modules
 supabase/volumes/db/data
 supabase/volumes/storage
 supabase/backups
+.deploy-backup
