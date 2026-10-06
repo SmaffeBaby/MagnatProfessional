@@ -1,0 +1,99 @@
+name: Deploy production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Sync main and rebuild containers
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+
+      - name: Prepare SSH key
+        shell: bash
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_PORT: ${{ secrets.PRODUCTION_PORT }}
+          PRODUCTION_SSH_KEY: ${{ secrets.PRODUCTION_SSH_KEY }}
+        run: |
+          : "${PRODUCTION_HOST:?Set repository secret PRODUCTION_HOST}"
+          : "${PRODUCTION_SSH_KEY:?Set repository secret PRODUCTION_SSH_KEY}"
+          PRODUCTION_PORT="${PRODUCTION_PORT:-22}"
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$PRODUCTION_SSH_KEY" > ~/.ssh/production_key
+          chmod 600 ~/.ssh/production_key
+          ssh-keyscan -p "$PRODUCTION_PORT" "$PRODUCTION_HOST" >> ~/.ssh/known_hosts
+
+      - name: Ensure rsync is available on production
+        shell: bash
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+          PRODUCTION_PORT: ${{ secrets.PRODUCTION_PORT }}
+        run: |
+          : "${PRODUCTION_HOST:?Set repository secret PRODUCTION_HOST}"
+          PRODUCTION_USER="${PRODUCTION_USER:-root}"
+          PRODUCTION_PORT="${PRODUCTION_PORT:-22}"
+          SSH_TARGET="${PRODUCTION_USER}@${PRODUCTION_HOST}"
+
+          ssh -i ~/.ssh/production_key -p "$PRODUCTION_PORT" "$SSH_TARGET" \
+            'command -v rsync >/dev/null 2>&1 || (apt-get update && apt-get install -y rsync)'
+
+      - name: Sync source to production
+        shell: bash
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+          PRODUCTION_PORT: ${{ secrets.PRODUCTION_PORT }}
+          PRODUCTION_APP_DIR: ${{ secrets.PRODUCTION_APP_DIR }}
+        run: |
+          : "${PRODUCTION_HOST:?Set repository secret PRODUCTION_HOST}"
+          PRODUCTION_USER="${PRODUCTION_USER:-root}"
+          PRODUCTION_PORT="${PRODUCTION_PORT:-22}"
+          PRODUCTION_APP_DIR="${PRODUCTION_APP_DIR:-/opt/magnat-professional}"
+          SSH_TARGET="${PRODUCTION_USER}@${PRODUCTION_HOST}"
+
+          rsync -az --delete \
+            --exclude='.git/' \
+            --exclude='.github/' \
+            --exclude='node_modules/' \
+            --exclude='backend/node_modules/' \
+            --exclude='dist/' \
+            --exclude='.env' \
+            --exclude='backend/.env' \
+            --exclude='supabase/.env' \
+            --exclude='supabase/backups/' \
+            --exclude='supabase/volumes/db/data/***' \
+            --exclude='supabase/volumes/storage/***' \
+            --exclude='.deploy-backup/***' \
+            -e "ssh -i ~/.ssh/production_key -p $PRODUCTION_PORT" \
+            ./ "$SSH_TARGET:$PRODUCTION_APP_DIR/"
+
+      - name: Rebuild production containers
+        shell: bash
+        env:
+          PRODUCTION_HOST: ${{ secrets.PRODUCTION_HOST }}
+          PRODUCTION_USER: ${{ secrets.PRODUCTION_USER }}
+          PRODUCTION_PORT: ${{ secrets.PRODUCTION_PORT }}
+          PRODUCTION_APP_DIR: ${{ secrets.PRODUCTION_APP_DIR }}
+        run: |
+          : "${PRODUCTION_HOST:?Set repository secret PRODUCTION_HOST}"
+          PRODUCTION_USER="${PRODUCTION_USER:-root}"
+          PRODUCTION_PORT="${PRODUCTION_PORT:-22}"
+          PRODUCTION_APP_DIR="${PRODUCTION_APP_DIR:-/opt/magnat-professional}"
+          SSH_TARGET="${PRODUCTION_USER}@${PRODUCTION_HOST}"
+
+          ssh -i ~/.ssh/production_key -p "$PRODUCTION_PORT" "$SSH_TARGET" \
+            "APP_DIR='$PRODUCTION_APP_DIR' /bin/bash '$PRODUCTION_APP_DIR/scripts/deploy-production.sh'"
