@@ -1,4 +1,5 @@
 <script setup>
+import { onUnmounted, ref, watch } from 'vue'
 import { useSidebarMobile } from '../../../composables/Sidebar/useSidebarMobile'
 import MainText from '../../MainText/MainText.vue'
 import MobileContactCards from './MobileContactCards.vue'
@@ -40,6 +41,27 @@ const {
   toggleTheme,
 } = useSidebarMobile(props, emit)
 
+const isMenuFrameActive = ref(false)
+let menuFrameTimer = 0
+const MENU_FRAME_RELEASE_DELAY_MS = 360
+
+watch(isMenuOpen, (isOpen) => {
+  window.clearTimeout(menuFrameTimer)
+
+  if (isOpen) {
+    isMenuFrameActive.value = true
+    return
+  }
+
+  menuFrameTimer = window.setTimeout(() => {
+    isMenuFrameActive.value = false
+  }, MENU_FRAME_RELEASE_DELAY_MS)
+})
+
+onUnmounted(() => {
+  window.clearTimeout(menuFrameTimer)
+})
+
 defineExpose({
   openMenu,
 })
@@ -50,10 +72,10 @@ defineExpose({
     class="mobile-sidebar-shell overflow-hidden text-white"
     :class="[
       isDarkTheme ? 'is-dark-theme' : '',
-      isAboutActive && !isDarkTheme && !isMenuOpen ? 'is-about-light' : '',
-      isMenuOpen && !isDarkTheme ? 'is-menu-open' : '',
-      isContentPageActive && !isMenuOpen ? 'relative' : 'min-h-screen min-h-[100svh]',
-      isMenuOpen ? 'fixed inset-0 z-[600]' : 'relative',
+      isAboutActive && !isDarkTheme && !isMenuFrameActive ? 'is-about-light' : '',
+      isMenuFrameActive && !isDarkTheme ? 'is-menu-open' : '',
+      isContentPageActive && !isMenuFrameActive ? 'relative' : 'min-h-screen min-h-[100svh]',
+      isMenuFrameActive ? 'fixed inset-0 z-[600]' : 'relative',
     ]"
   >
     <Transition name="mobile-sidebar-panel">

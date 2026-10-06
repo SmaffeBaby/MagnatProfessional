@@ -36,6 +36,7 @@ const theme = computed({
 
 const isMapOpen = ref(false)
 const isProjectFormOpen = ref(false)
+const isMobileMenuBackdropActive = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
 const isPrivacyActive = computed(() => route.name === 'privacy')
@@ -52,7 +53,7 @@ const pageBackgroundColor = computed(() => {
     return '#222222'
   }
 
-  if (isMobileMenuOpen.value) {
+  if (isMobileMenuBackdropActive.value) {
     return '#c40f1c'
   }
 
@@ -106,6 +107,8 @@ let previousBodyWidth = ''
 let previousBodyOverscrollBehavior = ''
 let lockedScrollY = 0
 let isPageScrollLocked = false
+let mobileMenuUnlockTimer = 0
+const MOBILE_MENU_UNLOCK_DELAY_MS = 360
 
 function applyPageBackground(color) {
   document.documentElement.style.backgroundColor = color
@@ -176,17 +179,23 @@ watch(pageBackgroundColor, (color) => {
 })
 
 watch(isMobileMenuOpen, (isOpen) => {
+  window.clearTimeout(mobileMenuUnlockTimer)
+
   if (isOpen) {
+    isMobileMenuBackdropActive.value = true
     lockPageScroll()
     applyPageBackground(pageBackgroundColor.value)
     return
   }
 
-  unlockPageScroll()
-  applyPageBackground(pageBackgroundColor.value)
+  mobileMenuUnlockTimer = window.setTimeout(() => {
+    unlockPageScroll()
+    isMobileMenuBackdropActive.value = false
+  }, MOBILE_MENU_UNLOCK_DELAY_MS)
 })
 
 onUnmounted(() => {
+  window.clearTimeout(mobileMenuUnlockTimer)
   unlockPageScroll()
   document.documentElement.style.backgroundColor = previousRootBackground
   document.body.style.backgroundColor = previousBodyBackground
@@ -276,13 +285,13 @@ onUnmounted(() => {
         class="responsive-header-backing responsive-header-backing--tablet"
         :class="isDarkTheme ? 'responsive-header-backing--dark' : 'responsive-header-backing--light'"
       >
-        <a class="responsive-header-backing__logo-link" href="/" :aria-label="t('sidebar.logo')">
+        <RouterLink class="responsive-header-backing__logo-link" to="/" :aria-label="t('sidebar.logo')">
           <img
             class="responsive-header-backing__logo"
             :src="isDarkTheme ? '/ico/MagnatProfessionalLogo.svg' : '/ico/MagnatProfessionalLogo_color.svg'"
             :alt="t('sidebar.logo')"
           />
-        </a>
+        </RouterLink>
 
         <button
           class="responsive-header-backing__theme-button"

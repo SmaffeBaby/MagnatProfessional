@@ -65,13 +65,13 @@ const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
       class="relative z-10 flex items-center gap-8 px-[55px] pt-[30px] transition-colors duration-500"
       :class="isAboutLight ? 'text-black' : 'text-white'"
     >
-      <a class="shrink-0" href="/" :aria-label="t('sidebar.logo')">
+      <RouterLink class="shrink-0" to="/" :aria-label="t('sidebar.logo')">
         <img
           class="h-auto w-[244px]"
           :src="isAboutLight ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
           :alt="t('sidebar.logo')"
         />
-      </a>
+      </RouterLink>
 
       <button
         class="relative h-11 w-11 shrink-0 transition duration-300 ease-out hover:scale-[1.04] focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95"

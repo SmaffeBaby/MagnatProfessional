@@ -60,13 +60,13 @@ const languageStore = useLanguageStore()
       showBacking && !isMenuOpen ? 'mobile-header--backed bg-white' : 'bg-transparent',
     ]"
   >
-    <a href="/" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
+    <RouterLink to="/" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
       <img
         class="mobile-header__logo h-11 w-[178.98px] max-w-[44vw] transition duration-300 ease-out"
         :src="(showBacking || isAboutLight) && !isMenuOpen ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
         :alt="t('sidebar.logo')"
       />
-    </a>
+    </RouterLink>
 
     <div class="mobile-header__actions flex shrink-0 items-center gap-1.5 mobile:gap-2.5">
       <button
