@@ -52,6 +52,10 @@ const pageBackgroundColor = computed(() => {
     return '#222222'
   }
 
+  if (isMobileMenuOpen.value) {
+    return '#c40f1c'
+  }
+
   if (isLightPageActive.value) {
     return '#ffffff'
   }

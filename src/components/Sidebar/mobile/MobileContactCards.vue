@@ -6,7 +6,7 @@ const emit = defineEmits(['open-map'])
 </script>
 
 <template>
-  <div class="-mx-5 mt-[110px] space-y-0 text-black">
+  <div class="mobile-menu-contacts -mx-5 mt-[110px] space-y-0 text-black">
     <section class="mobile-menu-card mb-[1px] rounded-[32px] bg-white px-5 pb-9 pt-11">
       <h2 class="max-w-[430px] text-[clamp(1.45rem,6.4vw,1.9rem)] font-normal leading-[1.18] tracking-normal">
         {{ t('sidebarMobile.contacts.officeText') }}

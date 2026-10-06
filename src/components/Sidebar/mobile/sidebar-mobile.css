@@ -11,6 +11,10 @@
   color: #000000;
 }
 
+.mobile-sidebar-shell.is-menu-open {
+  background-color: #c40f1c;
+}
+
 .mobile-sidebar-shell::before {
   position: absolute;
   inset: 0;
@@ -63,6 +67,10 @@
 
 .mobile-sidebar-shell.is-dark-theme .mobile-sidebar-menu::before {
   opacity: 1;
+}
+
+.mobile-menu-contacts {
+  padding-bottom: max(96px, calc(env(safe-area-inset-bottom) + 96px));
 }
 
 .mobile-theme-image {
@@ -204,6 +212,10 @@
     margin-top: clamp(92px, 12svh, 130px);
     margin-right: -55px;
     margin-left: -55px;
+  }
+
+  .mobile-menu-contacts {
+    padding-bottom: max(120px, calc(env(safe-area-inset-bottom) + 120px));
   }
 
   .mobile-menu-card {

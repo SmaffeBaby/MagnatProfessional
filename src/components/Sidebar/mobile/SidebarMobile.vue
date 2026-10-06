@@ -50,7 +50,8 @@ defineExpose({
     class="mobile-sidebar-shell overflow-hidden text-white"
     :class="[
       isDarkTheme ? 'is-dark-theme' : '',
-      isAboutActive && !isDarkTheme ? 'is-about-light' : '',
+      isAboutActive && !isDarkTheme && !isMenuOpen ? 'is-about-light' : '',
+      isMenuOpen && !isDarkTheme ? 'is-menu-open' : '',
       isContentPageActive && !isMenuOpen ? 'relative' : 'min-h-screen min-h-[100svh]',
       isMenuOpen ? 'fixed inset-0 z-[600]' : 'relative',
     ]"
