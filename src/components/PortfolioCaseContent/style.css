@@ -29,6 +29,7 @@
   height: 100%;
   transform-origin: left center;
   background: #e3222a;
+  transition: transform 120ms linear;
 }
 
 .portfolio-case__inner {
@@ -415,6 +416,7 @@
     right: auto;
     left: auto;
     z-index: 40;
+    height: 4px;
   }
 
   .portfolio-case--dark {
@@ -468,9 +470,78 @@
   }
 }
 
+@media (min-width: 1800px) {
+  .portfolio-case__progress {
+    height: 5px;
+  }
+
+  .portfolio-case__inner {
+    padding: clamp(144px, calc(6vw + 36px), 174px) clamp(55px, calc(5vw - 35px), 76px) 0;
+  }
+
+  .portfolio-case__breadcrumbs {
+    gap: clamp(8px, calc(0.8vw - 6.4px), 12px);
+    margin-bottom: clamp(18px, calc(1.5vw - 9px), 24px);
+    font-size: clamp(14px, calc(0.45vw + 5.9px), 16px);
+  }
+
+  .portfolio-case__title,
+  .portfolio-case__block-title {
+    font-size: clamp(60px, calc(4.6vw - 22.8px), 78px);
+  }
+
+  .portfolio-case__hero-image,
+  .portfolio-case__images--single-wide .portfolio-case__image-button {
+    height: clamp(800px, calc(22vw + 404px), 905px);
+  }
+
+  .portfolio-case__hero-image,
+  .portfolio-case__image-button {
+    border-radius: clamp(50px, calc(2.6vw + 3.2px), 62px);
+  }
+
+  .portfolio-case__project-nav {
+    top: 5px;
+  }
+
+  .portfolio-case__project-link {
+    font-size: clamp(16px, calc(0.7vw + 3.4px), 19px);
+  }
+
+  .portfolio-case__article {
+    margin-top: clamp(126px, calc(7vw), 156px);
+  }
+
+  .portfolio-case__block + .portfolio-case__block {
+    margin-top: clamp(140px, calc(8vw - 4px), 175px);
+  }
+
+  .portfolio-case__block-copy {
+    margin-bottom: clamp(30px, calc(2.5vw - 15px), 42px);
+  }
+
+  .portfolio-case__block-text {
+    font-size: clamp(18px, calc(0.75vw + 4.5px), 21px);
+  }
+
+  .portfolio-case__images,
+  .portfolio-case__image-groups {
+    gap: clamp(10px, calc(1.6vw - 18.8px), 17px);
+  }
+
+  .portfolio-case__images--two-medium .portfolio-case__image-button {
+    height: clamp(665px, calc(18vw + 341px), 750px);
+  }
+
+  .portfolio-case__images--three-vertical .portfolio-case__image-button {
+    height: clamp(550px, calc(15vw + 280px), 620px);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .portfolio-case-fade-enter-active,
   .portfolio-case-fade-leave-active,
+  .portfolio-case__progress span,
   .portfolio-case__block,
   .portfolio-case__hero-image img,
   .portfolio-case__image-button img {
