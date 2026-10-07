@@ -1,6 +1,7 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from './useLanguageStore'
+import { useApiQuery } from './useApiQuery'
 
 const fallbackContent = {
   ru: {
@@ -17,78 +18,21 @@ const fallbackContent = {
   },
 }
 
-const MAIN_TEXT_REFRESH_MS = 10000
-
 export function useMainText() {
   const languageStore = useLanguageStore()
   const { locale } = storeToRefs(languageStore)
-  const content = ref(fallbackContent)
-  const etag = ref(null)
-  const isLoading = ref(false)
-  const error = ref(null)
-  let refreshTimer = null
+  const query = useApiQuery(['main-text'], '/api/main-text')
+  const content = computed(() => ({
+    ru: query.data.value?.ru || fallbackContent.ru,
+    en: query.data.value?.en || fallbackContent.en,
+  }))
 
   const localizedContent = computed(() => content.value[locale.value] || content.value.ru)
 
-  async function loadMainText({ silent = false } = {}) {
-    if (!silent) {
-      isLoading.value = true
-    }
-
-    error.value = null
-
-    try {
-      const headers = {
-        Accept: 'application/json',
-      }
-
-      if (etag.value) {
-        headers['If-None-Match'] = etag.value
-      }
-
-      const response = await fetch('/api/main-text', {
-        headers,
-      })
-
-      if (response.status === 304) {
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error(`Failed to load main text: ${response.status}`)
-      }
-
-      const payload = await response.json()
-      etag.value = response.headers.get('ETag')
-      content.value = {
-        ru: payload.ru || fallbackContent.ru,
-        en: payload.en || fallbackContent.en,
-      }
-    } catch (requestError) {
-      error.value = requestError
-      content.value = fallbackContent
-    } finally {
-      if (!silent) {
-        isLoading.value = false
-      }
-    }
-  }
-
-  onMounted(() => {
-    loadMainText()
-    refreshTimer = window.setInterval(() => loadMainText({ silent: true }), MAIN_TEXT_REFRESH_MS)
-  })
-
-  onUnmounted(() => {
-    if (refreshTimer) {
-      window.clearInterval(refreshTimer)
-    }
-  })
-
   return {
     content: localizedContent,
-    error,
-    isLoading,
-    loadMainText,
+    error: query.error,
+    isLoading: query.isLoading,
+    loadMainText: query.refetch,
   }
 }

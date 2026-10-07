@@ -1,6 +1,7 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from './useLanguageStore'
+import { useApiQuery } from './useApiQuery'
 
 export type PrivacyTableRow = {
   left: string
@@ -21,15 +22,11 @@ export type PrivacyBlock = {
   updatedAt?: string
 }
 
-const PRIVACY_REFRESH_MS = 10000
-
 export function usePrivacy() {
-  const blocks = ref<PrivacyBlock[]>([])
-  const isLoading = ref(false)
-  const error = ref<Error | null>(null)
+  const query = useApiQuery<{ blocks: PrivacyBlock[] }>(['privacy'], '/api/privacy')
+  const blocks = computed(() => Array.isArray(query.data.value?.blocks) ? query.data.value.blocks : [])
   const languageStore = useLanguageStore()
   const { locale } = storeToRefs(languageStore)
-  let refreshTimer: number | null = null
 
   const localizedTitle = computed(() => (
     locale.value === 'en'
@@ -46,52 +43,12 @@ export function usePrivacy() {
       : block.tableRows,
   })))
 
-  async function loadPrivacy({ silent = false } = {}) {
-    if (!silent) {
-      isLoading.value = true
-    }
-
-    error.value = null
-
-    try {
-      const response = await fetch('/api/privacy', {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load privacy content: ${response.status}`)
-      }
-
-      const payload = await response.json()
-      blocks.value = Array.isArray(payload.blocks) ? payload.blocks : []
-    } catch (requestError) {
-      error.value = requestError as Error
-    } finally {
-      if (!silent) {
-        isLoading.value = false
-      }
-    }
-  }
-
-  onMounted(() => {
-    loadPrivacy()
-    refreshTimer = window.setInterval(() => loadPrivacy({ silent: true }), PRIVACY_REFRESH_MS)
-  })
-
-  onUnmounted(() => {
-    if (refreshTimer) {
-      window.clearInterval(refreshTimer)
-    }
-  })
-
   return {
     blocks,
     localizedBlocks,
     localizedTitle,
-    isLoading,
-    error,
-    loadPrivacy,
+    isLoading: query.isLoading,
+    error: query.error,
+    loadPrivacy: query.refetch,
   }
 }

@@ -1,59 +1,57 @@
-import { onMounted, ref, watch, type Ref } from 'vue'
+import { computed, watch, type Ref } from 'vue'
 import type { HomePanel, PortfolioCard } from './useHomePanels'
+import { useApiQuery, prefetchApiQuery } from './useApiQuery'
+import { collectPanelMediaUrls, collectPortfolioCardMediaUrls, warmMediaUrls } from './useMediaPreload'
+
+export type PortfolioCasePayload = {
+  panel: HomePanel | null
+  card: PortfolioCard | null
+  previousCard: PortfolioCard | null
+  nextCard: PortfolioCard | null
+}
 
 export function usePortfolioCase(panelSlug: Ref<string>, cardSlug: Ref<string>) {
-  const panel = ref<HomePanel | null>(null)
-  const card = ref<PortfolioCard | null>(null)
-  const previousCard = ref<PortfolioCard | null>(null)
-  const nextCard = ref<PortfolioCard | null>(null)
-  const isLoading = ref(false)
-  const error = ref<Error | null>(null)
+  const query = useApiQuery<PortfolioCasePayload>(
+    computed(() => ['portfolio-case', panelSlug.value, cardSlug.value]),
+    computed(() => `/api/portfolio/${encodeURIComponent(panelSlug.value)}/${encodeURIComponent(cardSlug.value)}`),
+    { enabled: computed(() => Boolean(panelSlug.value && cardSlug.value)) },
+  )
+  const panel = computed(() => query.data.value?.panel || null)
+  const card = computed(() => query.data.value?.card || null)
+  const previousCard = computed(() => query.data.value?.previousCard || null)
+  const nextCard = computed(() => query.data.value?.nextCard || null)
 
-  async function loadPortfolioCase() {
-    if (!panelSlug.value || !cardSlug.value) {
+  watch([panel, card, previousCard, nextCard], ([currentPanel, currentCard, currentPreviousCard, currentNextCard]) => {
+    if (!currentCard) {
       return
     }
 
-    isLoading.value = true
-    error.value = null
+    warmMediaUrls([
+      ...collectPanelMediaUrls(currentPanel),
+      ...collectPortfolioCardMediaUrls(currentCard),
+      ...collectPortfolioCardMediaUrls(currentPreviousCard),
+      ...collectPortfolioCardMediaUrls(currentNextCard),
+    ])
 
-    try {
-      const response = await fetch(`/api/portfolio/${encodeURIComponent(panelSlug.value)}/${encodeURIComponent(cardSlug.value)}`, {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load portfolio case: ${response.status}`)
+    for (const relatedCard of [currentPreviousCard, currentNextCard]) {
+      if (!relatedCard?.slug) {
+        continue
       }
 
-      const payload = await response.json()
-      panel.value = payload.panel || null
-      card.value = payload.card || null
-      previousCard.value = payload.previousCard || null
-      nextCard.value = payload.nextCard || null
-    } catch (requestError) {
-      error.value = requestError as Error
-      panel.value = null
-      card.value = null
-      previousCard.value = null
-      nextCard.value = null
-    } finally {
-      isLoading.value = false
+      prefetchApiQuery<PortfolioCasePayload>(
+        ['portfolio-case', panelSlug.value, relatedCard.slug],
+        `/api/portfolio/${encodeURIComponent(panelSlug.value)}/${encodeURIComponent(relatedCard.slug)}`,
+      )
     }
-  }
-
-  onMounted(loadPortfolioCase)
-  watch([panelSlug, cardSlug], loadPortfolioCase)
+  }, { immediate: true })
 
   return {
     panel,
     card,
     previousCard,
     nextCard,
-    isLoading,
-    error,
-    loadPortfolioCase,
+    isLoading: query.isLoading,
+    error: query.error,
+    loadPortfolioCase: query.refetch,
   }
 }

@@ -1,6 +1,8 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from './useLanguageStore'
+import { useApiQuery } from './useApiQuery'
+import { warmMediaUrls } from './useMediaPreload'
 
 export type DirectorTextContent = {
   text: string
@@ -15,8 +17,6 @@ export type DirectorTextContent = {
   positionEn?: string | null
   updatedAt?: string | null
 }
-
-const DIRECTOR_TEXT_REFRESH_MS = 10000
 
 function emptyContent(): DirectorTextContent {
   return {
@@ -35,12 +35,10 @@ function emptyContent(): DirectorTextContent {
 }
 
 export function useDirectorText() {
-  const content = ref<DirectorTextContent>(emptyContent())
-  const isLoading = ref(false)
-  const error = ref<Error | null>(null)
+  const query = useApiQuery<{ content: DirectorTextContent }>(['director-text'], '/api/director-text')
+  const content = computed(() => query.data.value?.content || emptyContent())
   const languageStore = useLanguageStore()
   const { locale } = storeToRefs(languageStore)
-  let refreshTimer: number | null = null
 
   const localizedText = computed(() => (
     locale.value === 'en' && content.value.textEn ? content.value.textEn : content.value.text
@@ -63,43 +61,9 @@ export function useDirectorText() {
     displayPhotoUrl.value,
   ))
 
-  async function loadDirectorText({ silent = false } = {}) {
-    if (!silent) {
-      isLoading.value = true
-    }
-
-    error.value = null
-
-    try {
-      const response = await fetch('/api/director-text', {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load director text content: ${response.status}`)
-      }
-
-      const payload = await response.json()
-      content.value = payload.content || emptyContent()
-    } catch (requestError) {
-      error.value = requestError as Error
-    } finally {
-      if (!silent) {
-        isLoading.value = false
-      }
-    }
-  }
-
-  onMounted(() => {
-    loadDirectorText()
-    refreshTimer = window.setInterval(() => loadDirectorText({ silent: true }), DIRECTOR_TEXT_REFRESH_MS)
-  })
-
-  onUnmounted(() => {
-    if (refreshTimer) {
-      window.clearInterval(refreshTimer)
+  watch(displayPhotoUrl, (url) => {
+    if (url) {
+      warmMediaUrls([url])
     }
   })
 
@@ -110,8 +74,8 @@ export function useDirectorText() {
     localizedPosition,
     displayPhotoUrl,
     hasContent,
-    isLoading,
-    error,
-    loadDirectorText,
+    isLoading: query.isLoading,
+    error: query.error,
+    loadDirectorText: query.refetch,
   }
 }

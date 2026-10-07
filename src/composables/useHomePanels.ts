@@ -1,4 +1,6 @@
-import { onMounted, onUnmounted, ref } from 'vue'
+import { computed, watch } from 'vue'
+import { useApiQuery } from './useApiQuery'
+import { collectPanelMediaUrls, warmMediaUrls } from './useMediaPreload'
 
 export type HomePanelTileType = 'wide' | 'vertical'
 export type PortfolioArticleImage = {
@@ -62,58 +64,18 @@ export type PortfolioCard = HomePanel & {
   articleBlocks?: PortfolioArticleBlock[]
 }
 
-const HOME_PANELS_REFRESH_MS = 10000
-
 export function useHomePanels() {
-  const panels = ref<HomePanel[]>([])
-  const isLoading = ref(false)
-  const error = ref<Error | null>(null)
-  let refreshTimer: number | null = null
+  const query = useApiQuery<{ panels: HomePanel[] }>(['home-panels'], '/api/home-panels')
+  const panels = computed(() => Array.isArray(query.data.value?.panels) ? query.data.value.panels : [])
 
-  async function loadHomePanels({ silent = false } = {}) {
-    if (!silent) {
-      isLoading.value = true
-    }
-
-    error.value = null
-
-    try {
-      const response = await fetch('/api/home-panels', {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load home panels: ${response.status}`)
-      }
-
-      const payload = await response.json()
-      panels.value = Array.isArray(payload.panels) ? payload.panels : []
-    } catch (requestError) {
-      error.value = requestError as Error
-    } finally {
-      if (!silent) {
-        isLoading.value = false
-      }
-    }
-  }
-
-  onMounted(() => {
-    loadHomePanels()
-    refreshTimer = window.setInterval(() => loadHomePanels({ silent: true }), HOME_PANELS_REFRESH_MS)
-  })
-
-  onUnmounted(() => {
-    if (refreshTimer) {
-      window.clearInterval(refreshTimer)
-    }
+  watch(panels, (items) => {
+    warmMediaUrls(items.flatMap(collectPanelMediaUrls))
   })
 
   return {
     panels,
-    isLoading,
-    error,
-    loadHomePanels,
+    isLoading: query.isLoading,
+    error: query.error,
+    loadHomePanels: query.refetch,
   }
 }

@@ -1,6 +1,8 @@
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from './useLanguageStore'
+import { useApiQuery } from './useApiQuery'
+import { warmMediaUrls } from './useMediaPreload'
 
 export type DescriptionContent = {
   text: string
@@ -15,8 +17,6 @@ export type DescriptionContent = {
   mobilePlaqueUrl?: string | null
   updatedAt?: string | null
 }
-
-const DESCRIPTION_REFRESH_MS = 10000
 
 function emptyContent(): DescriptionContent {
   return {
@@ -35,12 +35,10 @@ function emptyContent(): DescriptionContent {
 }
 
 export function useDescription() {
-  const content = ref<DescriptionContent>(emptyContent())
-  const isLoading = ref(false)
-  const error = ref<Error | null>(null)
+  const query = useApiQuery<{ content: DescriptionContent }>(['description'], '/api/description')
+  const content = computed(() => query.data.value?.content || emptyContent())
   const languageStore = useLanguageStore()
   const { locale } = storeToRefs(languageStore)
-  let refreshTimer: number | null = null
 
   const localizedText = computed(() => (
     locale.value === 'en' && content.value.textEn ? content.value.textEn : content.value.text
@@ -58,44 +56,12 @@ export function useDescription() {
     content.value.mobilePlaqueUrl,
   ))
 
-  async function loadDescription({ silent = false } = {}) {
-    if (!silent) {
-      isLoading.value = true
-    }
-
-    error.value = null
-
-    try {
-      const response = await fetch('/api/description', {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load description content: ${response.status}`)
-      }
-
-      const payload = await response.json()
-      content.value = payload.content || emptyContent()
-    } catch (requestError) {
-      error.value = requestError as Error
-    } finally {
-      if (!silent) {
-        isLoading.value = false
-      }
-    }
-  }
-
-  onMounted(() => {
-    loadDescription()
-    refreshTimer = window.setInterval(() => loadDescription({ silent: true }), DESCRIPTION_REFRESH_MS)
-  })
-
-  onUnmounted(() => {
-    if (refreshTimer) {
-      window.clearInterval(refreshTimer)
-    }
+  watch(content, (currentContent) => {
+    warmMediaUrls([
+      currentContent.desktopPlaqueUrl,
+      currentContent.tabletPlaqueUrl,
+      currentContent.mobilePlaqueUrl,
+    ].filter((url): url is string => Boolean(url)))
   })
 
   return {
@@ -103,8 +69,8 @@ export function useDescription() {
     localizedText,
     localizedCardText,
     hasContent,
-    isLoading,
-    error,
-    loadDescription,
+    isLoading: query.isLoading,
+    error: query.error,
+    loadDescription: query.refetch,
   }
 }

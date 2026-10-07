@@ -1,51 +1,45 @@
-import { onMounted, ref, watch, type Ref } from 'vue'
+import { computed, watch, type Ref } from 'vue'
 import type { HomePanel, PortfolioCard } from './useHomePanels'
+import { useApiQuery, prefetchApiQuery } from './useApiQuery'
+import { collectPanelMediaUrls, collectPortfolioCardMediaUrls, warmMediaUrls } from './useMediaPreload'
+
+export type PortfolioDetailPayload = {
+  panel: HomePanel | null
+  cards: PortfolioCard[]
+}
 
 export function usePortfolioDetail(panelSlug: Ref<string>) {
-  const panel = ref<HomePanel | null>(null)
-  const cards = ref<PortfolioCard[]>([])
-  const isLoading = ref(false)
-  const error = ref<Error | null>(null)
+  const query = useApiQuery<PortfolioDetailPayload>(
+    computed(() => ['portfolio-detail', panelSlug.value]),
+    computed(() => `/api/portfolio/${encodeURIComponent(panelSlug.value)}`),
+    { enabled: computed(() => Boolean(panelSlug.value)) },
+  )
+  const panel = computed(() => query.data.value?.panel || null)
+  const cards = computed(() => Array.isArray(query.data.value?.cards) ? query.data.value.cards : [])
 
-  async function loadPortfolioDetail() {
-    if (!panelSlug.value) {
-      return
-    }
+  watch([panel, cards], ([currentPanel, currentCards]) => {
+    warmMediaUrls([
+      ...collectPanelMediaUrls(currentPanel),
+      ...currentCards.flatMap(collectPortfolioCardMediaUrls),
+    ])
 
-    isLoading.value = true
-    error.value = null
-
-    try {
-      const response = await fetch(`/api/portfolio/${encodeURIComponent(panelSlug.value)}`, {
-        headers: {
-          Accept: 'application/json',
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error(`Failed to load portfolio detail: ${response.status}`)
+    for (const card of currentCards.slice(0, 4)) {
+      if (!card.slug) {
+        continue
       }
 
-      const payload = await response.json()
-      panel.value = payload.panel || null
-      cards.value = Array.isArray(payload.cards) ? payload.cards : []
-    } catch (requestError) {
-      error.value = requestError as Error
-      panel.value = null
-      cards.value = []
-    } finally {
-      isLoading.value = false
+      prefetchApiQuery(
+        ['portfolio-case', panelSlug.value, card.slug],
+        `/api/portfolio/${encodeURIComponent(panelSlug.value)}/${encodeURIComponent(card.slug)}`,
+      )
     }
-  }
-
-  onMounted(loadPortfolioDetail)
-  watch(panelSlug, loadPortfolioDetail)
+  })
 
   return {
     panel,
     cards,
-    isLoading,
-    error,
-    loadPortfolioDetail,
+    isLoading: query.isLoading,
+    error: query.error,
+    loadPortfolioDetail: query.refetch,
   }
 }

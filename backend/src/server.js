@@ -17,6 +17,9 @@ const {
   SUPABASE_STORAGE_BUCKET = 'photos',
   SUPABASE_HOME_PANELS_BUCKET = 'home-panels',
   SUPABASE_PORTFOLIO_BUCKET = 'portfolio',
+  PUBLIC_API_CACHE_TTL_MS = String(5 * 60 * 1000),
+  MEDIA_CACHE_TTL_MS = String(24 * 60 * 60 * 1000),
+  MEDIA_CACHE_MAX_BYTES = String(256 * 1024 * 1024),
   SUPABASE_BUCKET_FILE_SIZE_LIMIT = String(50 * 1024 * 1024),
   SUPABASE_STORAGE_PUBLIC = 'true',
   POSTGRES_HOST = 'db',
@@ -57,9 +60,31 @@ const supabaseAuth = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 })
 
 const { Client: PgClient } = pg
+const publicApiCache = new Map()
+const mediaCache = new Map()
+let mediaCacheBytes = 0
 
 app.use(cors({ origin: CORS_ORIGIN.split(',').map((origin) => origin.trim()) }))
 app.use(express.json())
+app.use(publicApiCacheMiddleware)
+app.use(clearPublicApiCacheAfterMutations)
+
+app.get('/api/media/:bucket/*', async (req, res, next) => {
+  try {
+    const bucket = req.params.bucket
+    const objectPath = req.params[0]
+
+    if (!bucket || !objectPath) {
+      res.status(400).json({ error: 'Media bucket and path are required' })
+      return
+    }
+
+    const media = await getCachedStorageObject(bucket, objectPath)
+    sendMediaResponse(req, res, media)
+  } catch (error) {
+    next(error)
+  }
+})
 
 app.get('/api/health', (_req, res) => {
   res.json({
@@ -1292,6 +1317,258 @@ async function deleteStorageFiles(bucket, paths) {
   if (error) {
     console.warn(`Failed to delete files from bucket ${bucket}:`, error.message)
   }
+
+  for (const path of uniquePaths) {
+    clearMediaCache(bucket, path)
+  }
+}
+
+function clearMediaCache(bucket, objectPath) {
+  const cacheKey = `${bucket}/${objectPath}`
+  const cached = mediaCache.get(cacheKey)
+
+  if (!cached) {
+    return
+  }
+
+  mediaCache.delete(cacheKey)
+  mediaCacheBytes -= cached.size
+}
+
+function publicApiCacheMiddleware(req, res, next) {
+  if (req.method !== 'GET' || !isCacheablePublicApiPath(req.path)) {
+    next()
+    return
+  }
+
+  const cacheKey = req.originalUrl
+  const now = Date.now()
+  const cached = publicApiCache.get(cacheKey)
+
+  if (cached && now - cached.cachedAt < Number(PUBLIC_API_CACHE_TTL_MS)) {
+    res
+      .status(cached.statusCode)
+      .set(cached.headers)
+      .json(cached.body)
+    return
+  }
+
+  const originalJson = res.json.bind(res)
+
+  res.json = (body) => {
+    if (res.statusCode >= 200 && res.statusCode < 300) {
+      publicApiCache.set(cacheKey, {
+        body,
+        statusCode: res.statusCode,
+        headers: {
+          'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+        },
+        cachedAt: Date.now(),
+      })
+    }
+
+    return originalJson(body)
+  }
+
+  next()
+}
+
+function clearPublicApiCacheAfterMutations(req, res, next) {
+  res.on('finish', () => {
+    const isMutation = ['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)
+
+    if (isMutation && req.path.startsWith('/api/') && res.statusCode < 400) {
+      publicApiCache.clear()
+    }
+  })
+
+  next()
+}
+
+function isCacheablePublicApiPath(path) {
+  if (!path.startsWith('/api/')) {
+    return false
+  }
+
+  return ![
+    '/api/admin',
+    '/api/health',
+    '/api/media',
+    '/api/storage',
+  ].some((prefix) => path.startsWith(prefix))
+}
+
+async function getCachedStorageObject(bucket, objectPath) {
+  const cacheKey = `${bucket}/${objectPath}`
+  const now = Date.now()
+  const cached = mediaCache.get(cacheKey)
+
+  if (cached && now - cached.cachedAt < Number(MEDIA_CACHE_TTL_MS)) {
+    cached.lastAccessedAt = now
+    return cached
+  }
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .download(objectPath)
+
+  if (error) {
+    error.status = error.statusCode || 404
+    throw error
+  }
+
+  const arrayBuffer = await data.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  const contentType = data.type || getContentType(objectPath)
+  const payload = {
+    bucket,
+    objectPath,
+    buffer,
+    contentType,
+    size: buffer.byteLength,
+    cachedAt: now,
+    lastAccessedAt: now,
+  }
+
+  setMediaCache(cacheKey, payload)
+  return payload
+}
+
+function setMediaCache(cacheKey, payload) {
+  const existing = mediaCache.get(cacheKey)
+
+  if (existing) {
+    mediaCacheBytes -= existing.size
+  }
+
+  mediaCache.set(cacheKey, payload)
+  mediaCacheBytes += payload.size
+  pruneMediaCache()
+}
+
+function pruneMediaCache() {
+  const maxBytes = Number(MEDIA_CACHE_MAX_BYTES)
+
+  if (!Number.isFinite(maxBytes) || maxBytes <= 0) {
+    return
+  }
+
+  while (mediaCacheBytes > maxBytes && mediaCache.size > 0) {
+    const [oldestKey, oldestValue] = [...mediaCache.entries()]
+      .sort((first, second) => first[1].lastAccessedAt - second[1].lastAccessedAt)[0]
+
+    mediaCache.delete(oldestKey)
+    mediaCacheBytes -= oldestValue.size
+  }
+}
+
+function sendMediaResponse(req, res, media) {
+  const range = req.headers.range
+  const headers = {
+    'Accept-Ranges': 'bytes',
+    'Cache-Control': 'public, max-age=31536000, immutable',
+    'Content-Type': media.contentType,
+  }
+
+  if (!range) {
+    res
+      .status(200)
+      .set({
+        ...headers,
+        'Content-Length': media.size,
+      })
+      .send(media.buffer)
+    return
+  }
+
+  const match = /^bytes=(\d*)-(\d*)$/.exec(range)
+
+  if (!match) {
+    res.status(416).set('Content-Range', `bytes */${media.size}`).end()
+    return
+  }
+
+  const start = match[1] ? Number(match[1]) : 0
+  const end = match[2] ? Number(match[2]) : media.size - 1
+
+  if (start >= media.size || end >= media.size || start > end) {
+    res.status(416).set('Content-Range', `bytes */${media.size}`).end()
+    return
+  }
+
+  res
+    .status(206)
+    .set({
+      ...headers,
+      'Content-Length': end - start + 1,
+      'Content-Range': `bytes ${start}-${end}/${media.size}`,
+    })
+    .send(media.buffer.subarray(start, end + 1))
+}
+
+function getContentType(objectPath) {
+  const extension = objectPath.split('.').pop()?.toLowerCase()
+
+  return {
+    avif: 'image/avif',
+    gif: 'image/gif',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    mov: 'video/quicktime',
+    mp4: 'video/mp4',
+    png: 'image/png',
+    svg: 'image/svg+xml',
+    webm: 'video/webm',
+    webp: 'image/webp',
+  }[extension] || 'application/octet-stream'
+}
+
+function proxyStorageUrl(url, path, bucket) {
+  if (path && bucket) {
+    return buildMediaUrl(bucket, path)
+  }
+
+  if (!url) {
+    return url || null
+  }
+
+  const parsed = parsePublicStorageUrl(url)
+  return parsed ? buildMediaUrl(parsed.bucket, parsed.path) : url
+}
+
+function buildMediaUrl(bucket, objectPath) {
+  const encodedPath = String(objectPath)
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/')
+
+  return `/api/media/${encodeURIComponent(bucket)}/${encodedPath}`
+}
+
+function parsePublicStorageUrl(url) {
+  try {
+    const parsedUrl = new URL(url)
+    const marker = '/storage/v1/object/public/'
+    const markerIndex = parsedUrl.pathname.indexOf(marker)
+
+    if (markerIndex === -1) {
+      return null
+    }
+
+    const storagePath = parsedUrl.pathname.slice(markerIndex + marker.length)
+    const [bucket, ...pathParts] = storagePath.split('/').map((part) => decodeURIComponent(part))
+
+    if (!bucket || pathParts.length === 0) {
+      return null
+    }
+
+    return {
+      bucket,
+      path: pathParts.join('/'),
+    }
+  } catch (_error) {
+    return null
+  }
 }
 
 function collectMediaPaths(item) {
@@ -1357,7 +1634,7 @@ function normalizeArticleImages(images) {
     .map((image, imageIndex) => ({
       id: String(image?.id || crypto.randomUUID()),
       path: image?.path || null,
-      url: String(image?.url || '').trim(),
+      url: proxyStorageUrl(String(image?.url || '').trim(), image?.path, SUPABASE_PORTFOLIO_BUCKET),
       alt: String(image?.alt || '').trim(),
       sortOrder: imageIndex,
     }))
@@ -1516,7 +1793,7 @@ function panelFromDatabase(panel) {
     detailText: panel.detail_text || '',
     detailTextEn: panel.detail_text_en,
     mascotPath: panel.mascot_path,
-    mascotUrl: panel.mascot_url,
+    mascotUrl: proxyStorageUrl(panel.mascot_url, panel.mascot_path, SUPABASE_PORTFOLIO_BUCKET),
     sortOrder: panel.sort_order,
     gradientFromColor: panel.gradient_from_color,
     gradientFromOpacity: Number(panel.gradient_from_opacity),
@@ -1524,11 +1801,11 @@ function panelFromDatabase(panel) {
     gradientToOpacity: Number(panel.gradient_to_opacity),
     gradientToPosition: panel.gradient_to_position,
     imagePath: panel.image_path,
-    imageUrl: panel.image_url,
+    imageUrl: proxyStorageUrl(panel.image_url, panel.image_path, SUPABASE_HOME_PANELS_BUCKET),
     videoPath: panel.video_path,
-    videoUrl: panel.video_url,
+    videoUrl: proxyStorageUrl(panel.video_url, panel.video_path, SUPABASE_HOME_PANELS_BUCKET),
     posterPath: panel.poster_path,
-    posterUrl: panel.poster_url,
+    posterUrl: proxyStorageUrl(panel.poster_url, panel.poster_path, SUPABASE_HOME_PANELS_BUCKET),
     linkPath: `/portfolio/${panel.slug || slugify(panel.title)}/`,
     tileType: panel.tile_type,
     createdAt: panel.created_at,
@@ -1594,13 +1871,13 @@ function portfolioCardFromDatabase(card, panelSlug) {
     gradientToOpacity: Number(card.gradient_to_opacity),
     gradientToPosition: card.gradient_to_position,
     imagePath: card.image_path,
-    imageUrl: card.image_url,
+    imageUrl: proxyStorageUrl(card.image_url, card.image_path, SUPABASE_PORTFOLIO_BUCKET),
     videoPath: card.video_path,
-    videoUrl: card.video_url,
+    videoUrl: proxyStorageUrl(card.video_url, card.video_path, SUPABASE_PORTFOLIO_BUCKET),
     posterPath: card.poster_path,
-    posterUrl: card.poster_url,
+    posterUrl: proxyStorageUrl(card.poster_url, card.poster_path, SUPABASE_PORTFOLIO_BUCKET),
     caseHeroPath: card.case_hero_path,
-    caseHeroUrl: card.case_hero_url,
+    caseHeroUrl: proxyStorageUrl(card.case_hero_url, card.case_hero_path, SUPABASE_PORTFOLIO_BUCKET),
     linkPath: `/portfolio/${panelSlug}/${slug}/`,
     tileType: card.tile_type,
     articleBlocks: Array.isArray(card.articleBlocks)
@@ -1728,11 +2005,11 @@ function descriptionFromDatabase(content) {
     cardText: content?.card_text || '',
     cardTextEn: content?.card_text_en || null,
     desktopPlaquePath: content?.desktop_plaque_path || null,
-    desktopPlaqueUrl: content?.desktop_plaque_url || null,
+    desktopPlaqueUrl: proxyStorageUrl(content?.desktop_plaque_url, content?.desktop_plaque_path, 'description'),
     tabletPlaquePath: content?.tablet_plaque_path || null,
-    tabletPlaqueUrl: content?.tablet_plaque_url || null,
+    tabletPlaqueUrl: proxyStorageUrl(content?.tablet_plaque_url, content?.tablet_plaque_path, 'description'),
     mobilePlaquePath: content?.mobile_plaque_path || null,
-    mobilePlaqueUrl: content?.mobile_plaque_url || null,
+    mobilePlaqueUrl: proxyStorageUrl(content?.mobile_plaque_url, content?.mobile_plaque_path, 'description'),
     updatedAt: content?.updated_at || null,
   }
 }
@@ -1808,9 +2085,9 @@ function directorTextFromDatabase(content) {
     text: content?.text || '',
     textEn: content?.text_en || null,
     photoPath: content?.photo_path || null,
-    photoUrl: content?.photo_url || null,
+    photoUrl: proxyStorageUrl(content?.photo_url, content?.photo_path, 'director-text'),
     thumbnailPath: content?.thumbnail_path || null,
-    thumbnailUrl: content?.thumbnail_url || null,
+    thumbnailUrl: proxyStorageUrl(content?.thumbnail_url, content?.thumbnail_path, 'director-text'),
     name: content?.name || '',
     nameEn: content?.name_en || null,
     position: content?.position || '',
@@ -2025,7 +2302,7 @@ function clientItemFromDatabase(item) {
     id: item.id,
     sortOrder: item.sort_order,
     imagePath: item.image_path,
-    imageUrl: item.image_url,
+    imageUrl: proxyStorageUrl(item.image_url, item.image_path, 'clients'),
     linkUrl: item.link_url,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
