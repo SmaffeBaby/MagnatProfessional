@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
@@ -24,6 +24,7 @@ const isDarkTheme = computed(() => props.theme === 'dark')
 const panelSlug = computed(() => String(route.params.panelSlug || ''))
 const { panel, cards, isLoading } = usePortfolioDetail(panelSlug)
 const openProjectForm = inject<(() => void) | null>('openProjectForm', null)
+const hasMascotError = ref(false)
 
 const title = computed(() => {
   if (!panel.value) {
@@ -43,6 +44,11 @@ const text = computed(() => {
     ? panel.value.detailTextEn
     : panel.value.detailText || t('portfolioContent.text')
 })
+const mascotImage = computed(() => (
+  !hasMascotError.value && panel.value?.mascotUrl
+    ? panel.value.mascotUrl
+    : '/portfolio_page/Jump_cat.png'
+))
 
 function cardTitle(card: { title: string, titleEn?: string | null }) {
   return locale.value === 'en' && card.titleEn ? card.titleEn : card.title
@@ -76,6 +82,10 @@ function goBack() {
 function handleProjectClick() {
   openProjectForm?.()
 }
+
+watch(panel, () => {
+  hasMascotError.value = false
+})
 
 function hexToRgba(hex: string, opacity: number) {
   const normalized = /^#[0-9a-f]{6}$/i.test(hex) ? hex.slice(1) : 'DA2128'
@@ -117,18 +127,11 @@ function clamp(value: number, min: number, max: number) {
       </button>
 
       <img
-        v-if="panel?.mascotUrl"
         class="portfolio-detail__cat"
-        :src="panel.mascotUrl"
+        :src="mascotImage"
         alt=""
         aria-hidden="true"
-      >
-      <img
-        v-else
-        class="portfolio-detail__cat"
-        src="/portfolio_page/Jump_cat.png"
-        alt=""
-        aria-hidden="true"
+        @error="hasMascotError = true"
       >
     </section>
 

@@ -1,8 +1,9 @@
 <script setup>
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '../../../composables/useLanguageStore'
 
-defineProps({
+const props = defineProps({
   activeThemeIcon: {
     type: String,
     default: '',
@@ -50,6 +51,7 @@ const emit = defineEmits([
 
 const { t } = useI18n()
 const languageStore = useLanguageStore()
+const hasLightHeaderSurface = computed(() => (props.showBacking || props.isAboutLight) && !props.isMenuOpen)
 </script>
 
 <template>
@@ -57,13 +59,13 @@ const languageStore = useLanguageStore()
     class="mobile-header flex items-center justify-between gap-2 transition-[background-color] duration-300 ease-out"
     :class="[
       isFixed ? 'fixed left-0 right-0 top-0 z-[220] px-5 pb-4 pt-5' : 'relative z-10',
-      showBacking && !isMenuOpen ? 'mobile-header--backed bg-white' : 'bg-transparent',
+      hasLightHeaderSurface ? 'mobile-header--backed bg-white' : 'bg-transparent',
     ]"
   >
     <RouterLink to="/" :aria-label="t('sidebar.logo')" @click="isMenuOpen && emit('close-menu')">
       <img
         class="mobile-header__logo h-11 w-[178.98px] max-w-[44vw] transition duration-300 ease-out"
-        :src="(showBacking || isAboutLight) && !isMenuOpen ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
+        :src="hasLightHeaderSurface ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"
         :alt="t('sidebar.logo')"
       />
     </RouterLink>
@@ -101,9 +103,9 @@ const languageStore = useLanguageStore()
         v-if="!isMenuOpen"
         class="mobile-header__language-button h-9 min-w-11 rounded-full border-2 px-2 text-xs font-semibold uppercase leading-none transition duration-300 ease-out hover:bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 active:scale-95 mobile:h-11 mobile:min-w-14 mobile:px-3 mobile:text-sm"
         :class="[
-          showBacking || isAboutLight ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white active:border-magnat-light active:bg-white active:text-magnat-light focus-visible:ring-offset-white' : 'border-white text-white active:border-white active:bg-white active:text-magnat-red',
-          isDarkTheme && !showBacking && !isAboutLight ? 'hover:text-black focus-visible:ring-offset-[#222222]' : '',
-          !isDarkTheme && !showBacking && !isAboutLight ? 'hover:text-magnat-red focus-visible:ring-offset-magnat-red' : '',
+          hasLightHeaderSurface ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white active:border-magnat-light active:bg-white active:text-magnat-light focus-visible:ring-offset-white' : 'border-white text-white active:border-white active:bg-white active:text-magnat-red',
+          isDarkTheme && !hasLightHeaderSurface ? 'hover:text-black focus-visible:ring-offset-[#222222]' : '',
+          !isDarkTheme && !hasLightHeaderSurface ? 'hover:text-magnat-red focus-visible:ring-offset-magnat-red' : '',
         ]"
         type="button"
         :aria-label="t('sidebarMobile.actions.switchLanguage')"
@@ -122,8 +124,8 @@ const languageStore = useLanguageStore()
         <img
           class="mobile-header__menu-icon h-9 w-9 transition duration-300 ease-out mobile:h-11 mobile:w-11"
           :class="[
-            (showBacking || isAboutLight) && !isMenuOpen ? 'brightness-0' : '',
-            isAboutLight && !isMenuOpen ? 'mobile-header__menu-icon--about' : '',
+            hasLightHeaderSurface ? 'brightness-0' : '',
+            hasLightHeaderSurface ? 'mobile-header__menu-icon--about' : '',
           ]"
           :src="isMenuOpen ? '/ico/cancel.svg' : '/ico/burger/burger_inactive.svg'"
           alt=""

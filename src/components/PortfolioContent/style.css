@@ -131,7 +131,7 @@
   .portfolio-content__cat {
     position: absolute;
     right: 36px;
-    bottom: -166px;
+    bottom: -132px;
     z-index: 1;
     display: block;
     width: 292px;
@@ -182,7 +182,7 @@
 
   .portfolio-content__cat {
     right: -43px;
-    bottom: -250px;
+    bottom: -210px;
     width: 512px;
   }
 
@@ -231,7 +231,7 @@
 
   .portfolio-content__cat {
     right: clamp(-43px, calc(-2vw - 7px), -52px);
-    bottom: clamp(-292px, calc(-8vw - 106px), -250px);
+    bottom: clamp(-252px, calc(-8vw - 66px), -210px);
     width: clamp(512px, calc(16vw + 224px), 590px);
   }
 

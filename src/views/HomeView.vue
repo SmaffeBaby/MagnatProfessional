@@ -221,6 +221,7 @@ onUnmounted(() => {
       <SidebarMobile
         :ref="setMobileSidebar"
         v-model:theme="theme"
+        :show-header-backing="isHeaderBackingVisible"
         :is-about-active="isLightPageActive"
         :is-content-page-active="isContentPageActive"
         @menu-open-change="isMobileMenuOpen = $event"

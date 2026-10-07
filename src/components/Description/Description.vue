@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useDescription } from '../../composables/useDescription'
 
 const props = defineProps({
@@ -11,6 +11,16 @@ const props = defineProps({
 
 const { content, hasContent, localizedCardText, localizedText } = useDescription()
 const isDarkTheme = computed(() => props.theme === 'dark')
+const hasPlaqueError = ref(false)
+const plaqueImage = computed(() => (
+  !hasPlaqueError.value
+    ? content.value.mobilePlaqueUrl || content.value.tabletPlaqueUrl || content.value.desktopPlaqueUrl || ''
+    : ''
+))
+
+watch(content, () => {
+  hasPlaqueError.value = false
+})
 </script>
 
 <template>
@@ -23,7 +33,7 @@ const isDarkTheme = computed(() => props.theme === 'dark')
     <h2 id="description-title" class="description__text">{{ localizedText }}</h2>
 
     <article class="description__card">
-      <picture v-if="content.desktopPlaqueUrl || content.tabletPlaqueUrl || content.mobilePlaqueUrl">
+      <picture v-if="plaqueImage">
         <source
           v-if="content.desktopPlaqueUrl"
           media="(min-width: 1200px)"
@@ -36,11 +46,21 @@ const isDarkTheme = computed(() => props.theme === 'dark')
         >
         <img
           class="description__card-image"
-          :src="content.mobilePlaqueUrl || content.tabletPlaqueUrl || content.desktopPlaqueUrl || ''"
+          :src="plaqueImage"
           alt=""
           loading="lazy"
+          @error="hasPlaqueError = true"
         >
       </picture>
+
+      <img
+        v-else
+        class="description__cat"
+        src="/ico/cat.svg"
+        alt=""
+        aria-hidden="true"
+        loading="lazy"
+      >
 
       <p v-if="localizedCardText" class="description__card-text">{{ localizedCardText }}</p>
     </article>

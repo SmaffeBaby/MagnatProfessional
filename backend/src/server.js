@@ -458,7 +458,7 @@ app.get('/api/admin/home-panels', requireAdminAuth, async (_req, res, next) => {
     }
 
     res.json({
-      panels: data.map(panelFromDatabase),
+      panels: data.map((panel) => panelFromDatabase(panel, { proxyMedia: false })),
     })
   } catch (error) {
     next(error)
@@ -479,10 +479,10 @@ app.get('/api/admin/home-panels/:panelId/cards', requireAdminAuth, async (req, r
       throw error
     }
 
-    const cards = await attachArticleBlocksToCards(data)
+    const cards = await attachArticleBlocksToCards(data, { proxyMedia: false })
 
     res.json({
-      cards: cards.map((card) => portfolioCardFromDatabase(card, panel.slug)),
+      cards: cards.map((card) => portfolioCardFromDatabase(card, panel.slug, { proxyMedia: false })),
     })
   } catch (error) {
     next(error)
@@ -504,11 +504,11 @@ app.post('/api/admin/home-panels/:panelId/cards', requireAdminAuth, async (req, 
     }
 
     const articleBlocks = Array.isArray(req.body.articleBlocks)
-      ? await savePortfolioCardArticleBlocks(data.id, req.body.articleBlocks)
+      ? await savePortfolioCardArticleBlocks(data.id, req.body.articleBlocks, { proxyMedia: false })
       : []
 
     res.status(201).json({
-      card: portfolioCardFromDatabase({ ...data, articleBlocks }, panel.slug),
+      card: portfolioCardFromDatabase({ ...data, articleBlocks }, panel.slug, { proxyMedia: false }),
     })
   } catch (error) {
     next(error)
@@ -532,11 +532,11 @@ app.put('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, async
     }
 
     const articleBlocks = Array.isArray(req.body.articleBlocks)
-      ? await savePortfolioCardArticleBlocks(data.id, req.body.articleBlocks)
-      : (await attachArticleBlocksToCards([data]))[0]?.articleBlocks || []
+      ? await savePortfolioCardArticleBlocks(data.id, req.body.articleBlocks, { proxyMedia: false })
+      : (await attachArticleBlocksToCards([data], { proxyMedia: false }))[0]?.articleBlocks || []
 
     res.json({
-      card: portfolioCardFromDatabase({ ...data, articleBlocks }, panel.slug),
+      card: portfolioCardFromDatabase({ ...data, articleBlocks }, panel.slug, { proxyMedia: false }),
     })
   } catch (error) {
     next(error)
@@ -588,7 +588,7 @@ app.post('/api/admin/home-panels', requireAdminAuth, async (req, res, next) => {
       throw error
     }
 
-    res.status(201).json({ panel: panelFromDatabase(data) })
+    res.status(201).json({ panel: panelFromDatabase(data, { proxyMedia: false }) })
   } catch (error) {
     next(error)
   }
@@ -608,7 +608,7 @@ app.put('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next) =
       throw error
     }
 
-    res.json({ panel: panelFromDatabase(data) })
+    res.json({ panel: panelFromDatabase(data, { proxyMedia: false }) })
   } catch (error) {
     next(error)
   }
@@ -687,7 +687,7 @@ app.put('/api/admin/about-us', requireAdminAuth, async (req, res, next) => {
 
 app.get('/api/admin/description', requireAdminAuth, async (_req, res, next) => {
   try {
-    const content = await getDescriptionContent()
+    const content = await getDescriptionContent({ proxyMedia: false })
     res.json({ content })
   } catch (error) {
     next(error)
@@ -707,7 +707,7 @@ app.put('/api/admin/description', requireAdminAuth, async (req, res, next) => {
       throw error
     }
 
-    res.json({ content: descriptionFromDatabase(data) })
+    res.json({ content: descriptionFromDatabase(data, { proxyMedia: false }) })
   } catch (error) {
     next(error)
   }
@@ -791,7 +791,7 @@ app.delete('/api/admin/stats/:id', requireAdminAuth, async (req, res, next) => {
 
 app.get('/api/admin/director-text', requireAdminAuth, async (_req, res, next) => {
   try {
-    const content = await getDirectorTextContent()
+    const content = await getDirectorTextContent({ proxyMedia: false })
     res.json({ content })
   } catch (error) {
     next(error)
@@ -811,7 +811,7 @@ app.put('/api/admin/director-text', requireAdminAuth, async (req, res, next) => 
       throw error
     }
 
-    res.json({ content: directorTextFromDatabase(data) })
+    res.json({ content: directorTextFromDatabase(data, { proxyMedia: false }) })
   } catch (error) {
     next(error)
   }
@@ -1079,7 +1079,7 @@ app.get('/api/admin/clients', requireAdminAuth, async (_req, res, next) => {
     }
 
     res.json({
-      items: data.map(clientItemFromDatabase),
+      items: data.map((item) => clientItemFromDatabase(item, { proxyMedia: false })),
     })
   } catch (error) {
     next(error)
@@ -1099,7 +1099,7 @@ app.post('/api/admin/clients', requireAdminAuth, async (req, res, next) => {
       throw error
     }
 
-    res.status(201).json({ item: clientItemFromDatabase(data) })
+    res.status(201).json({ item: clientItemFromDatabase(data, { proxyMedia: false }) })
   } catch (error) {
     next(error)
   }
@@ -1119,7 +1119,7 @@ app.put('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) => {
       throw error
     }
 
-    res.json({ item: clientItemFromDatabase(data) })
+    res.json({ item: clientItemFromDatabase(data, { proxyMedia: false }) })
   } catch (error) {
     next(error)
   }
@@ -1524,16 +1524,45 @@ function getContentType(objectPath) {
 }
 
 function proxyStorageUrl(url, path, bucket) {
-  if (path && bucket) {
-    return buildMediaUrl(bucket, path)
-  }
-
   if (!url) {
-    return url || null
+    return path && bucket ? buildMediaUrl(bucket, path) : null
   }
 
   const parsed = parsePublicStorageUrl(url)
-  return parsed ? buildMediaUrl(parsed.bucket, parsed.path) : url
+  if (parsed) {
+    return buildMediaUrl(parsed.bucket, parsed.path)
+  }
+
+  return path && bucket ? buildMediaUrl(bucket, path) : url
+}
+
+function storageUrl(url, path, bucket, options = {}) {
+  return options.proxyMedia === false
+    ? publicStorageUrl(url, path, bucket)
+    : proxyStorageUrl(url, path, bucket)
+}
+
+function publicStorageUrl(url, path, bucket) {
+  if (url) {
+    const parsedProxyUrl = parseProxiedMediaUrl(url)
+
+    if (parsedProxyUrl) {
+      return buildPublicStorageUrl(parsedProxyUrl.bucket, parsedProxyUrl.path)
+    }
+
+    return url
+  }
+
+  return path && bucket ? buildPublicStorageUrl(bucket, path) : null
+}
+
+function buildPublicStorageUrl(bucket, objectPath) {
+  const encodedPath = String(objectPath)
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/')
+
+  return `${SUPABASE_PUBLIC_URL.replace(/\/$/, '')}/storage/v1/object/public/${encodeURIComponent(bucket)}/${encodedPath}`
 }
 
 function buildMediaUrl(bucket, objectPath) {
@@ -1549,6 +1578,32 @@ function parsePublicStorageUrl(url) {
   try {
     const parsedUrl = new URL(url)
     const marker = '/storage/v1/object/public/'
+    const markerIndex = parsedUrl.pathname.indexOf(marker)
+
+    if (markerIndex === -1) {
+      return null
+    }
+
+    const storagePath = parsedUrl.pathname.slice(markerIndex + marker.length)
+    const [bucket, ...pathParts] = storagePath.split('/').map((part) => decodeURIComponent(part))
+
+    if (!bucket || pathParts.length === 0) {
+      return null
+    }
+
+    return {
+      bucket,
+      path: pathParts.join('/'),
+    }
+  } catch (_error) {
+    return null
+  }
+}
+
+function parseProxiedMediaUrl(url) {
+  try {
+    const parsedUrl = new URL(url, 'http://localhost')
+    const marker = '/api/media/'
     const markerIndex = parsedUrl.pathname.indexOf(marker)
 
     if (markerIndex === -1) {
@@ -1599,7 +1654,7 @@ function collectMediaPaths(item) {
   ].filter(Boolean)
 }
 
-function normalizeArticleBlocks(blocks) {
+function normalizeArticleBlocks(blocks, options = {}) {
   if (!Array.isArray(blocks)) {
     return []
   }
@@ -1608,7 +1663,7 @@ function normalizeArticleBlocks(blocks) {
     const layout = ['single-wide', 'two-medium', 'three-vertical'].includes(block?.layout)
       ? block.layout
       : 'single-wide'
-    const imageGroups = normalizeArticleImageGroups(block, layout)
+    const imageGroups = normalizeArticleImageGroups(block, layout, options)
     const images = imageGroups.flatMap((group) => group.images)
 
     return {
@@ -1625,7 +1680,7 @@ function normalizeArticleBlocks(blocks) {
   })
 }
 
-function normalizeArticleImages(images) {
+function normalizeArticleImages(images, options = {}) {
   if (!Array.isArray(images)) {
     return []
   }
@@ -1634,14 +1689,14 @@ function normalizeArticleImages(images) {
     .map((image, imageIndex) => ({
       id: String(image?.id || crypto.randomUUID()),
       path: image?.path || null,
-      url: proxyStorageUrl(String(image?.url || '').trim(), image?.path, SUPABASE_PORTFOLIO_BUCKET),
+      url: storageUrl(String(image?.url || '').trim(), image?.path, SUPABASE_PORTFOLIO_BUCKET, options),
       alt: String(image?.alt || '').trim(),
       sortOrder: imageIndex,
     }))
     .filter((image) => image.url)
 }
 
-function normalizeArticleImageGroups(block, fallbackLayout = 'single-wide') {
+function normalizeArticleImageGroups(block, fallbackLayout = 'single-wide', options = {}) {
   const groups = Array.isArray(block?.imageGroups) && block.imageGroups.some((item) => Array.isArray(item?.images))
     ? block.imageGroups
     : Array.isArray(block?.images) && block.images.some((item) => Array.isArray(item?.images))
@@ -1658,14 +1713,14 @@ function normalizeArticleImageGroups(block, fallbackLayout = 'single-wide') {
         return {
           id: String(group?.id || crypto.randomUUID()),
           layout,
-          images: normalizeArticleImages(group?.images),
+          images: normalizeArticleImages(group?.images, options),
           sortOrder: groupIndex,
         }
       })
       .filter((group) => group.images.length > 0 || group.layout)
   }
 
-  const images = normalizeArticleImages(block?.images)
+  const images = normalizeArticleImages(block?.images, options)
 
   return images.length > 0
     ? [{
@@ -1677,8 +1732,8 @@ function normalizeArticleImageGroups(block, fallbackLayout = 'single-wide') {
     : []
 }
 
-function articleBlockFromDatabase(block) {
-  const normalizedBlock = normalizeArticleBlocks([{ layout: block.layout, images: block.images || [] }])[0]
+function articleBlockFromDatabase(block, options = {}) {
+  const normalizedBlock = normalizeArticleBlocks([{ layout: block.layout, images: block.images || [] }], options)[0]
 
   return {
     id: block.id,
@@ -1696,7 +1751,7 @@ function articleBlockFromDatabase(block) {
 }
 
 function articleBlockToDatabase(block, cardId, index) {
-  const normalized = normalizeArticleBlocks([block])[0]
+  const normalized = normalizeArticleBlocks([block], { proxyMedia: false })[0]
 
   return {
     id: isUuid(normalized.id) ? normalized.id : crypto.randomUUID(),
@@ -1711,7 +1766,7 @@ function articleBlockToDatabase(block, cardId, index) {
   }
 }
 
-async function attachArticleBlocksToCards(cards) {
+async function attachArticleBlocksToCards(cards, options = {}) {
   if (!Array.isArray(cards) || cards.length === 0) {
     return []
   }
@@ -1732,7 +1787,7 @@ async function attachArticleBlocksToCards(cards) {
 
   for (const block of data || []) {
     const blocks = blocksByCardId.get(block.card_id) || []
-    blocks.push(articleBlockFromDatabase(block))
+    blocks.push(articleBlockFromDatabase(block, options))
     blocksByCardId.set(block.card_id, blocks)
   }
 
@@ -1743,13 +1798,13 @@ async function attachArticleBlocksToCards(cards) {
       ...card,
       articleBlocks: tableBlocks && tableBlocks.length > 0
         ? tableBlocks
-        : normalizeArticleBlocks(card.article_blocks),
+        : normalizeArticleBlocks(card.article_blocks, options),
     }
   })
 }
 
-async function savePortfolioCardArticleBlocks(cardId, blocks) {
-  const normalizedBlocks = normalizeArticleBlocks(blocks)
+async function savePortfolioCardArticleBlocks(cardId, blocks, options = {}) {
+  const normalizedBlocks = normalizeArticleBlocks(blocks, { proxyMedia: false })
 
   const { error: deleteError } = await supabase
     .from('portfolio_card_article_blocks')
@@ -1776,7 +1831,7 @@ async function savePortfolioCardArticleBlocks(cardId, blocks) {
     throw error
   }
 
-  return data.map(articleBlockFromDatabase)
+  return data.map((block) => articleBlockFromDatabase(block, options))
 }
 
 function isUuid(value) {
@@ -1784,7 +1839,7 @@ function isUuid(value) {
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 }
 
-function panelFromDatabase(panel) {
+function panelFromDatabase(panel, options = {}) {
   return {
     id: panel.id,
     title: panel.title,
@@ -1793,7 +1848,7 @@ function panelFromDatabase(panel) {
     detailText: panel.detail_text || '',
     detailTextEn: panel.detail_text_en,
     mascotPath: panel.mascot_path,
-    mascotUrl: proxyStorageUrl(panel.mascot_url, panel.mascot_path, SUPABASE_PORTFOLIO_BUCKET),
+    mascotUrl: storageUrl(panel.mascot_url, panel.mascot_path, SUPABASE_PORTFOLIO_BUCKET, options),
     sortOrder: panel.sort_order,
     gradientFromColor: panel.gradient_from_color,
     gradientFromOpacity: Number(panel.gradient_from_opacity),
@@ -1801,11 +1856,11 @@ function panelFromDatabase(panel) {
     gradientToOpacity: Number(panel.gradient_to_opacity),
     gradientToPosition: panel.gradient_to_position,
     imagePath: panel.image_path,
-    imageUrl: proxyStorageUrl(panel.image_url, panel.image_path, SUPABASE_HOME_PANELS_BUCKET),
+    imageUrl: storageUrl(panel.image_url, panel.image_path, SUPABASE_HOME_PANELS_BUCKET, options),
     videoPath: panel.video_path,
-    videoUrl: proxyStorageUrl(panel.video_url, panel.video_path, SUPABASE_HOME_PANELS_BUCKET),
+    videoUrl: storageUrl(panel.video_url, panel.video_path, SUPABASE_HOME_PANELS_BUCKET, options),
     posterPath: panel.poster_path,
-    posterUrl: proxyStorageUrl(panel.poster_url, panel.poster_path, SUPABASE_HOME_PANELS_BUCKET),
+    posterUrl: storageUrl(panel.poster_url, panel.poster_path, SUPABASE_HOME_PANELS_BUCKET, options),
     linkPath: `/portfolio/${panel.slug || slugify(panel.title)}/`,
     tileType: panel.tile_type,
     createdAt: panel.created_at,
@@ -1837,7 +1892,7 @@ function panelToDatabase(panel) {
     detail_text: String(panel.detailText || '').trim(),
     detail_text_en: normalizeOptionalText(panel.detailTextEn),
     mascot_path: panel.mascotPath || null,
-    mascot_url: panel.mascotUrl || null,
+    mascot_url: publicStorageUrl(panel.mascotUrl, panel.mascotPath, SUPABASE_PORTFOLIO_BUCKET),
     sort_order: sortOrder,
     gradient_from_color: gradientFromColor,
     gradient_from_opacity: gradientFromOpacity,
@@ -1845,17 +1900,17 @@ function panelToDatabase(panel) {
     gradient_to_opacity: gradientToOpacity,
     gradient_to_position: gradientToPosition,
     image_path: panel.imagePath || null,
-    image_url: panel.imageUrl || null,
+    image_url: publicStorageUrl(panel.imageUrl, panel.imagePath, SUPABASE_HOME_PANELS_BUCKET),
     video_path: panel.videoPath || null,
-    video_url: panel.videoUrl || null,
+    video_url: publicStorageUrl(panel.videoUrl, panel.videoPath, SUPABASE_HOME_PANELS_BUCKET),
     poster_path: panel.posterPath || null,
-    poster_url: panel.posterUrl || null,
+    poster_url: publicStorageUrl(panel.posterUrl, panel.posterPath, SUPABASE_HOME_PANELS_BUCKET),
     link_path: `/portfolio/${slug}/`,
     tile_type: tileType,
   }
 }
 
-function portfolioCardFromDatabase(card, panelSlug) {
+function portfolioCardFromDatabase(card, panelSlug, options = {}) {
   const slug = card.slug || slugify(card.title)
 
   return {
@@ -1871,18 +1926,18 @@ function portfolioCardFromDatabase(card, panelSlug) {
     gradientToOpacity: Number(card.gradient_to_opacity),
     gradientToPosition: card.gradient_to_position,
     imagePath: card.image_path,
-    imageUrl: proxyStorageUrl(card.image_url, card.image_path, SUPABASE_PORTFOLIO_BUCKET),
+    imageUrl: storageUrl(card.image_url, card.image_path, SUPABASE_PORTFOLIO_BUCKET, options),
     videoPath: card.video_path,
-    videoUrl: proxyStorageUrl(card.video_url, card.video_path, SUPABASE_PORTFOLIO_BUCKET),
+    videoUrl: storageUrl(card.video_url, card.video_path, SUPABASE_PORTFOLIO_BUCKET, options),
     posterPath: card.poster_path,
-    posterUrl: proxyStorageUrl(card.poster_url, card.poster_path, SUPABASE_PORTFOLIO_BUCKET),
+    posterUrl: storageUrl(card.poster_url, card.poster_path, SUPABASE_PORTFOLIO_BUCKET, options),
     caseHeroPath: card.case_hero_path,
-    caseHeroUrl: proxyStorageUrl(card.case_hero_url, card.case_hero_path, SUPABASE_PORTFOLIO_BUCKET),
+    caseHeroUrl: storageUrl(card.case_hero_url, card.case_hero_path, SUPABASE_PORTFOLIO_BUCKET, options),
     linkPath: `/portfolio/${panelSlug}/${slug}/`,
     tileType: card.tile_type,
     articleBlocks: Array.isArray(card.articleBlocks)
-      ? normalizeArticleBlocks(card.articleBlocks)
-      : normalizeArticleBlocks(card.article_blocks),
+      ? normalizeArticleBlocks(card.articleBlocks, options)
+      : normalizeArticleBlocks(card.article_blocks, options),
     createdAt: card.created_at,
     updatedAt: card.updated_at,
   }
@@ -1917,13 +1972,13 @@ function portfolioCardToDatabase(card, panel) {
     gradient_to_opacity: gradientToOpacity,
     gradient_to_position: gradientToPosition,
     image_path: card.imagePath || null,
-    image_url: card.imageUrl || null,
+    image_url: publicStorageUrl(card.imageUrl, card.imagePath, SUPABASE_PORTFOLIO_BUCKET),
     video_path: card.videoPath || null,
-    video_url: card.videoUrl || null,
+    video_url: publicStorageUrl(card.videoUrl, card.videoPath, SUPABASE_PORTFOLIO_BUCKET),
     poster_path: card.posterPath || null,
-    poster_url: card.posterUrl || null,
+    poster_url: publicStorageUrl(card.posterUrl, card.posterPath, SUPABASE_PORTFOLIO_BUCKET),
     tile_type: tileType,
-    article_blocks: normalizeArticleBlocks(card.articleBlocks),
+    article_blocks: normalizeArticleBlocks(card.articleBlocks, { proxyMedia: false }),
   }
 
   if (Object.prototype.hasOwnProperty.call(card, 'caseHeroPath')) {
@@ -1931,7 +1986,7 @@ function portfolioCardToDatabase(card, panel) {
   }
 
   if (Object.prototype.hasOwnProperty.call(card, 'caseHeroUrl')) {
-    payload.case_hero_url = card.caseHeroUrl || null
+    payload.case_hero_url = publicStorageUrl(card.caseHeroUrl, card.caseHeroPath, SUPABASE_PORTFOLIO_BUCKET)
   }
 
   return payload
@@ -1984,7 +2039,7 @@ function aboutUsToDatabase(content) {
   }
 }
 
-async function getDescriptionContent() {
+async function getDescriptionContent(options = {}) {
   const { data, error } = await supabase
     .from('description_content')
     .select('*')
@@ -1995,21 +2050,21 @@ async function getDescriptionContent() {
     throw error
   }
 
-  return descriptionFromDatabase(data)
+  return descriptionFromDatabase(data, options)
 }
 
-function descriptionFromDatabase(content) {
+function descriptionFromDatabase(content, options = {}) {
   return {
     text: content?.text || '',
     textEn: content?.text_en || null,
     cardText: content?.card_text || '',
     cardTextEn: content?.card_text_en || null,
     desktopPlaquePath: content?.desktop_plaque_path || null,
-    desktopPlaqueUrl: proxyStorageUrl(content?.desktop_plaque_url, content?.desktop_plaque_path, 'description'),
+    desktopPlaqueUrl: storageUrl(content?.desktop_plaque_url, content?.desktop_plaque_path, 'description', options),
     tabletPlaquePath: content?.tablet_plaque_path || null,
-    tabletPlaqueUrl: proxyStorageUrl(content?.tablet_plaque_url, content?.tablet_plaque_path, 'description'),
+    tabletPlaqueUrl: storageUrl(content?.tablet_plaque_url, content?.tablet_plaque_path, 'description', options),
     mobilePlaquePath: content?.mobile_plaque_path || null,
-    mobilePlaqueUrl: proxyStorageUrl(content?.mobile_plaque_url, content?.mobile_plaque_path, 'description'),
+    mobilePlaqueUrl: storageUrl(content?.mobile_plaque_url, content?.mobile_plaque_path, 'description', options),
     updatedAt: content?.updated_at || null,
   }
 }
@@ -2021,11 +2076,11 @@ function descriptionToDatabase(content) {
     card_text: String(content.cardText || '').trim(),
     card_text_en: normalizeOptionalText(content.cardTextEn),
     desktop_plaque_path: content.desktopPlaquePath || null,
-    desktop_plaque_url: content.desktopPlaqueUrl || null,
+    desktop_plaque_url: publicStorageUrl(content.desktopPlaqueUrl, content.desktopPlaquePath, 'description'),
     tablet_plaque_path: content.tabletPlaquePath || null,
-    tablet_plaque_url: content.tabletPlaqueUrl || null,
+    tablet_plaque_url: publicStorageUrl(content.tabletPlaqueUrl, content.tabletPlaquePath, 'description'),
     mobile_plaque_path: content.mobilePlaquePath || null,
-    mobile_plaque_url: content.mobilePlaqueUrl || null,
+    mobile_plaque_url: publicStorageUrl(content.mobilePlaqueUrl, content.mobilePlaquePath, 'description'),
   }
 }
 
@@ -2066,7 +2121,7 @@ function statsItemToDatabase(item) {
   }
 }
 
-async function getDirectorTextContent() {
+async function getDirectorTextContent(options = {}) {
   const { data, error } = await supabase
     .from('director_text_content')
     .select('*')
@@ -2077,17 +2132,17 @@ async function getDirectorTextContent() {
     throw error
   }
 
-  return directorTextFromDatabase(data)
+  return directorTextFromDatabase(data, options)
 }
 
-function directorTextFromDatabase(content) {
+function directorTextFromDatabase(content, options = {}) {
   return {
     text: content?.text || '',
     textEn: content?.text_en || null,
     photoPath: content?.photo_path || null,
-    photoUrl: proxyStorageUrl(content?.photo_url, content?.photo_path, 'director-text'),
+    photoUrl: storageUrl(content?.photo_url, content?.photo_path, 'director-text', options),
     thumbnailPath: content?.thumbnail_path || null,
-    thumbnailUrl: proxyStorageUrl(content?.thumbnail_url, content?.thumbnail_path, 'director-text'),
+    thumbnailUrl: storageUrl(content?.thumbnail_url, content?.thumbnail_path, 'director-text', options),
     name: content?.name || '',
     nameEn: content?.name_en || null,
     position: content?.position || '',
@@ -2101,9 +2156,9 @@ function directorTextToDatabase(content) {
     text: String(content.text || '').trim(),
     text_en: normalizeOptionalText(content.textEn),
     photo_path: content.photoPath || null,
-    photo_url: content.photoUrl || null,
+    photo_url: publicStorageUrl(content.photoUrl, content.photoPath, 'director-text'),
     thumbnail_path: content.thumbnailPath || null,
-    thumbnail_url: content.thumbnailUrl || null,
+    thumbnail_url: publicStorageUrl(content.thumbnailUrl, content.thumbnailPath, 'director-text'),
     name: String(content.name || '').trim(),
     name_en: normalizeOptionalText(content.nameEn),
     position: String(content.position || '').trim(),
@@ -2297,12 +2352,12 @@ function missionValuesCardToDatabase(card) {
   }
 }
 
-function clientItemFromDatabase(item) {
+function clientItemFromDatabase(item, options = {}) {
   return {
     id: item.id,
     sortOrder: item.sort_order,
     imagePath: item.image_path,
-    imageUrl: proxyStorageUrl(item.image_url, item.image_path, 'clients'),
+    imageUrl: storageUrl(item.image_url, item.image_path, 'clients', options),
     linkUrl: item.link_url,
     createdAt: item.created_at,
     updatedAt: item.updated_at,
@@ -2322,7 +2377,7 @@ function clientItemToDatabase(item) {
   return {
     sort_order: sortOrder,
     image_path: item.imagePath || null,
-    image_url: imageUrl,
+    image_url: publicStorageUrl(imageUrl, item.imagePath, 'clients'),
     link_url: normalizeOptionalUrl(item.linkUrl),
   }
 }

@@ -13,6 +13,7 @@
 
 .mobile-sidebar-shell.is-menu-open {
   background-color: #c40f1c;
+  transition-duration: 180ms;
 }
 
 .mobile-sidebar-shell::before {
@@ -60,8 +61,8 @@
   background-color: #c40f1c;
   color: #ffffff;
   transition:
-    background-color 500ms ease,
-    color 500ms ease;
+    background-color 180ms ease,
+    color 180ms ease;
 }
 
 .mobile-sidebar-menu::before {
@@ -115,7 +116,7 @@
 
 .mobile-menu-link,
 .mobile-menu-card {
-  animation: mobile-menu-item-in 620ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: mobile-menu-item-in 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .mobile-menu-link {
@@ -129,23 +130,23 @@
 }
 
 .mobile-menu-link:nth-child(1) {
-  animation-delay: 90ms;
+  animation-delay: 40ms;
 }
 
 .mobile-menu-link:nth-child(2) {
-  animation-delay: 170ms;
+  animation-delay: 90ms;
 }
 
 .mobile-menu-link:nth-child(3) {
-  animation-delay: 250ms;
+  animation-delay: 140ms;
 }
 
 .mobile-menu-card:nth-child(1) {
-  animation-delay: 360ms;
+  animation-delay: 210ms;
 }
 
 .mobile-menu-card:nth-child(2) {
-  animation-delay: 460ms;
+  animation-delay: 270ms;
 }
 
 @keyframes mobile-menu-item-in {
@@ -162,7 +163,7 @@
 
 .mobile-sidebar-panel-enter-active,
 .mobile-sidebar-panel-leave-active {
-  transition: opacity 320ms ease;
+  transition: opacity 180ms ease;
 }
 
 .mobile-sidebar-panel-enter-from,

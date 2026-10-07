@@ -17,6 +17,15 @@ export type DescriptionForm = {
   mobilePlaqueUrl: string | null
 }
 
+function bucketFromStorageUrl(url: string | null, fallback = 'description') {
+  if (!url) {
+    return fallback
+  }
+
+  const match = url.match(/\/(?:storage\/v1\/object\/public|api\/media)\/([^/]+)\//)
+  return match?.[1] ? decodeURIComponent(match[1]) : fallback
+}
+
 function emptyForm(): DescriptionForm {
   return {
     text: '',
@@ -112,9 +121,10 @@ export function useAdminDescription() {
     const pathKey = `${target}Path` as keyof DescriptionForm
     const urlKey = `${target}Url` as keyof DescriptionForm
     const path = form[pathKey]
+    const bucket = bucketFromStorageUrl(typeof form[urlKey] === 'string' ? form[urlKey] : null)
 
     if (typeof path === 'string' && path) {
-      await deleteAdminFile('description', path)
+      await deleteAdminFile(bucket, path)
     }
 
     form[pathKey] = null
