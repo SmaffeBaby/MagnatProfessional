@@ -144,20 +144,10 @@ function clamp(value: number, min: number, max: number) {
         :to="card.linkPath"
         :style="cardGradient(card)"
       >
-        <video
-          v-if="card.videoUrl"
-          class="portfolio-detail__media"
-          :src="card.videoUrl"
-          :poster="card.posterUrl || card.imageUrl || undefined"
-          autoplay
-          muted
-          loop
-          playsinline
-        />
         <img
-          v-else-if="card.imageUrl || card.posterUrl"
+          v-if="card.posterUrl || card.imageUrl"
           class="portfolio-detail__media"
-          :src="card.imageUrl || card.posterUrl || ''"
+          :src="card.posterUrl || card.imageUrl || ''"
           :alt="cardTitle(card)"
           loading="lazy"
         >

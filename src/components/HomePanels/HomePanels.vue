@@ -19,6 +19,7 @@ const { panels } = useHomePanels()
 const languageStore = useLanguageStore()
 const { locale } = storeToRefs(languageStore)
 const isDarkTheme = computed(() => props.theme === 'dark')
+const shouldUseVideo = computed(() => props.variant === 'home')
 
 function panelTitle(panel: { title: string, titleEn?: string | null }) {
   return locale.value === 'en' && panel.titleEn ? panel.titleEn : panel.title
@@ -73,7 +74,7 @@ function clamp(value: number, min: number, max: number) {
       :style="panelGradient(panel)"
     >
       <video
-        v-if="panel.videoUrl"
+        v-if="shouldUseVideo && panel.videoUrl"
         class="home-panels__media"
         :src="panel.videoUrl"
         :poster="panel.posterUrl || panel.imageUrl || undefined"

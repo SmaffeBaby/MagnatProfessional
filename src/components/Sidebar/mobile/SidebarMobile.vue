@@ -13,10 +13,6 @@ const props = defineProps({
     type: String,
     default: 'light',
   },
-  showHeaderBacking: {
-    type: Boolean,
-    default: false,
-  },
   isAboutActive: {
     type: Boolean,
     default: false,
@@ -87,7 +83,6 @@ defineExpose({
       >
         <MobileThemeImage v-if="!isContentPageActive" :theme="theme" />
         <MobileHeader
-          :show-backing="showHeaderBacking"
           :is-dark-theme="isDarkTheme"
           :is-about-light="isAboutActive && !isDarkTheme"
           @open-menu="openMenu"
