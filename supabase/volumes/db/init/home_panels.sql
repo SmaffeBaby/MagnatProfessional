@@ -166,6 +166,97 @@ create policy "Portfolio card article blocks are publicly readable."
   on public.portfolio_card_article_blocks for select
   using (true);
 
+create table if not exists public.seo_entries (
+  id uuid primary key default gen_random_uuid(),
+  scope text not null default 'page',
+  path text not null,
+  title text not null,
+  title_en text,
+  description text,
+  description_en text,
+  keywords text,
+  keywords_en text,
+  hashtags text,
+  hashtags_en text,
+  og_title text,
+  og_title_en text,
+  og_description text,
+  og_description_en text,
+  og_image_url text,
+  canonical_path text,
+  robots text not null default 'index,follow',
+  priority numeric(2, 1) not null default 0.5,
+  change_frequency text not null default 'weekly',
+  structured_data jsonb,
+  metrics jsonb,
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint seo_entries_scope_check check (scope in ('page', 'group', 'case', 'element', 'custom')),
+  constraint seo_entries_path_check check (
+    path ~ '^/' and
+    path !~ '^//' and
+    path !~ '://'
+  ),
+  constraint seo_entries_canonical_path_check check (
+    canonical_path is null or (
+      canonical_path ~ '^/' and
+      canonical_path !~ '^//' and
+      canonical_path !~ '://'
+    )
+  ),
+  constraint seo_entries_priority_check check (priority >= 0 and priority <= 1),
+  constraint seo_entries_change_frequency_check check (
+    change_frequency in ('always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never')
+  )
+);
+
+create unique index if not exists seo_entries_path_unique
+  on public.seo_entries (path);
+
+create or replace function public.set_seo_entries_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_seo_entries_updated_at on public.seo_entries;
+
+create trigger set_seo_entries_updated_at
+before update on public.seo_entries
+for each row
+execute function public.set_seo_entries_updated_at();
+
+alter table public.seo_entries enable row level security;
+
+drop policy if exists "SEO entries are publicly readable." on public.seo_entries;
+create policy "SEO entries are publicly readable."
+  on public.seo_entries for select
+  using (true);
+
+insert into public.seo_entries (
+  scope,
+  path,
+  title,
+  title_en,
+  description,
+  description_en,
+  canonical_path,
+  robots,
+  priority,
+  change_frequency
+)
+values
+  ('page', '/', 'Magnat Professional', 'Magnat Professional', 'Magnat Professional', 'Magnat Professional', '/', 'index,follow', 1, 'weekly'),
+  ('page', '/portfolio', 'Портфолио | Magnat Professional', 'Portfolio | Magnat Professional', 'Портфолио Magnat Professional', 'Magnat Professional portfolio', '/portfolio', 'index,follow', 0.9, 'weekly'),
+  ('page', '/about', 'О нас | Magnat Professional', 'About us | Magnat Professional', 'О компании Magnat Professional', 'About Magnat Professional', '/about', 'index,follow', 0.8, 'monthly'),
+  ('page', '/contacts', 'Контакты | Magnat Professional', 'Contacts | Magnat Professional', 'Контакты Magnat Professional', 'Magnat Professional contacts', '/contacts', 'index,follow', 0.8, 'monthly'),
+  ('page', '/privacy', 'Политика обработки персональных данных | Magnat Professional', 'Privacy policy | Magnat Professional', 'Политика обработки персональных данных Magnat Professional', 'Magnat Professional privacy policy', '/privacy', 'index,follow', 0.3, 'yearly')
+on conflict (path) do nothing;
+
 create table if not exists public.about_us_content (
   id boolean primary key default true,
   text text not null default '',

@@ -103,6 +103,47 @@ app.get('/api/health', (_req, res) => {
   })
 })
 
+app.get('/robots.txt', (req, res) => {
+  const origin = requestOrigin(req)
+
+  res
+    .type('text/plain')
+    .send([
+      'User-agent: *',
+      'Allow: /',
+      `Sitemap: ${origin}/sitemap.xml`,
+      '',
+    ].join('\n'))
+})
+
+app.get('/sitemap.xml', async (req, res, next) => {
+  try {
+    const origin = requestOrigin(req)
+    const entries = await buildSitemapEntries()
+    const urls = entries
+      .map((entry) => [
+        '  <url>',
+        `    <loc>${escapeXml(`${origin}${entry.path}`)}</loc>`,
+        entry.updatedAt ? `    <lastmod>${escapeXml(new Date(entry.updatedAt).toISOString())}</lastmod>` : '',
+        entry.changeFrequency ? `    <changefreq>${escapeXml(entry.changeFrequency)}</changefreq>` : '',
+        entry.priority !== null && entry.priority !== undefined ? `    <priority>${Number(entry.priority).toFixed(1)}</priority>` : '',
+        '  </url>',
+      ].filter(Boolean).join('\n'))
+      .join('\n')
+
+    res
+      .type('application/xml')
+      .send([
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+        urls,
+        '</urlset>',
+      ].join('\n'))
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.get('/api/storage/buckets', async (_req, res, next) => {
   try {
     const { data, error } = await supabase.storage.listBuckets()
@@ -157,6 +198,21 @@ app.get('/api/home-panels', async (_req, res, next) => {
       .json({
         panels: data.map(panelFromDatabase),
       })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/seo', async (req, res, next) => {
+  try {
+    const path = normalizeSeoPath(req.query.path || '/')
+    const entry = await getSeoEntryForPath(path)
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
+      })
+      .json(entry)
   } catch (error) {
     next(error)
   }
@@ -476,6 +532,82 @@ app.post('/api/admin/auth/login', async (req, res, next) => {
 
 app.get('/api/admin/auth/me', requireAdminAuth, (req, res) => {
   res.json({ user: req.user })
+})
+
+app.get('/api/admin/seo', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const { data, error } = await supabase
+      .from('seo_entries')
+      .select('*')
+      .order('path', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) {
+      throw error
+    }
+
+    res.json({
+      entries: data.map(seoEntryFromDatabase),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/seo', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = seoEntryToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('seo_entries')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ entry: seoEntryFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/seo/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const payload = seoEntryToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('seo_entries')
+      .update(payload)
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ entry: seoEntryFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/seo/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('seo_entries')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
 })
 
 app.get('/api/admin/home-panels', requireAdminAuth, async (_req, res, next) => {
@@ -1953,6 +2085,396 @@ function isUuid(value) {
     && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)
 }
 
+async function getSeoEntryForPath(path) {
+  const normalizedPath = normalizeSeoPath(path)
+  const { data, error } = await supabase
+    .from('seo_entries')
+    .select('*')
+    .eq('path', normalizedPath)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  if (data) {
+    return {
+      entry: seoEntryFromDatabase(data),
+      fallback: false,
+    }
+  }
+
+  return {
+    entry: await buildFallbackSeoEntry(normalizedPath),
+    fallback: true,
+  }
+}
+
+async function buildSitemapEntries() {
+  const entriesByPath = new Map()
+  const addEntry = (entry) => {
+    const path = normalizeSeoPath(entry.path)
+
+    entriesByPath.set(path, {
+      path,
+      priority: entry.priority ?? 0.5,
+      changeFrequency: entry.changeFrequency || entry.change_frequency || 'weekly',
+      updatedAt: entry.updatedAt || entry.updated_at || null,
+    })
+  }
+
+  const { data: seoEntries, error: seoError } = await supabase
+    .from('seo_entries')
+    .select('*')
+
+  if (seoError) {
+    throw seoError
+  }
+
+  for (const entry of seoEntries || []) {
+    if (!String(entry.robots || '').includes('noindex')) {
+      addEntry(seoEntryFromDatabase(entry))
+    }
+  }
+
+  const { data: panels, error: panelsError } = await supabase
+    .from('home_panels')
+    .select('slug, updated_at')
+
+  if (panelsError) {
+    throw panelsError
+  }
+
+  for (const panel of panels || []) {
+    addEntry({
+      path: `/portfolio/${panel.slug}`,
+      priority: 0.7,
+      changeFrequency: 'monthly',
+      updatedAt: panel.updated_at,
+    })
+  }
+
+  const { data: cards, error: cardsError } = await supabase
+    .from('portfolio_cards')
+    .select('slug, panel_id, updated_at, home_panels(slug)')
+
+  if (cardsError) {
+    throw cardsError
+  }
+
+  for (const card of cards || []) {
+    const panelSlug = card.home_panels?.slug
+
+    if (!panelSlug) {
+      continue
+    }
+
+    addEntry({
+      path: `/portfolio/${panelSlug}/${card.slug}`,
+      priority: 0.6,
+      changeFrequency: 'monthly',
+      updatedAt: card.updated_at,
+    })
+  }
+
+  return [...entriesByPath.values()]
+    .sort((first, second) => first.path.localeCompare(second.path))
+}
+
+async function buildFallbackSeoEntry(path) {
+  const [panelSlug, cardSlug] = portfolioSlugsFromPath(path)
+
+  if (panelSlug && cardSlug) {
+    const cardSeo = await buildPortfolioCardSeoEntry(path, panelSlug, cardSlug)
+
+    if (cardSeo) {
+      return cardSeo
+    }
+  }
+
+  if (panelSlug) {
+    const panelSeo = await buildPortfolioPanelSeoEntry(path, panelSlug)
+
+    if (panelSeo) {
+      return panelSeo
+    }
+  }
+
+  return fallbackSeoByPath(path)
+}
+
+async function buildPortfolioPanelSeoEntry(path, panelSlug) {
+  const { data: panel, error } = await supabase
+    .from('home_panels')
+    .select('*')
+    .eq('slug', panelSlug)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  if (!panel) {
+    return null
+  }
+
+  return {
+    ...fallbackSeoByPath('/portfolio'),
+    id: `fallback-panel-${panel.slug}`,
+    scope: 'group',
+    path,
+    title: panel.title,
+    titleEn: panel.title_en || null,
+    description: panel.detail_text || null,
+    descriptionEn: panel.detail_text_en || null,
+    canonicalPath: path,
+    ogImageUrl: publicStorageUrl(panel.poster_url || panel.image_url, panel.poster_path || panel.image_path, SUPABASE_HOME_PANELS_BUCKET),
+  }
+}
+
+async function buildPortfolioCardSeoEntry(path, panelSlug, cardSlug) {
+  const { data: panel, error: panelError } = await supabase
+    .from('home_panels')
+    .select('*')
+    .eq('slug', panelSlug)
+    .maybeSingle()
+
+  if (panelError) {
+    throw panelError
+  }
+
+  if (!panel) {
+    return null
+  }
+
+  const { data: card, error: cardError } = await supabase
+    .from('portfolio_cards')
+    .select('*')
+    .eq('panel_id', panel.id)
+    .eq('slug', cardSlug)
+    .maybeSingle()
+
+  if (cardError) {
+    throw cardError
+  }
+
+  if (!card) {
+    return null
+  }
+
+  return {
+    ...fallbackSeoByPath('/portfolio'),
+    id: `fallback-case-${card.slug}`,
+    scope: 'case',
+    path,
+    title: card.title,
+    titleEn: card.title_en || null,
+    description: panel.detail_text || null,
+    descriptionEn: panel.detail_text_en || null,
+    canonicalPath: path,
+    ogImageUrl: publicStorageUrl(card.case_hero_url || card.poster_url || card.image_url, card.case_hero_path || card.poster_path || card.image_path, SUPABASE_PORTFOLIO_BUCKET),
+  }
+}
+
+function fallbackSeoByPath(path) {
+  const entries = {
+    '/': {
+      title: 'Magnat Professional',
+      titleEn: 'Magnat Professional',
+      description: 'Magnat Professional',
+      descriptionEn: 'Magnat Professional',
+      priority: 1,
+    },
+    '/portfolio': {
+      title: 'Портфолио | Magnat Professional',
+      titleEn: 'Portfolio | Magnat Professional',
+      description: 'Портфолио Magnat Professional',
+      descriptionEn: 'Magnat Professional portfolio',
+      priority: 0.9,
+    },
+    '/about': {
+      title: 'О нас | Magnat Professional',
+      titleEn: 'About us | Magnat Professional',
+      description: 'О компании Magnat Professional',
+      descriptionEn: 'About Magnat Professional',
+      priority: 0.8,
+    },
+    '/contacts': {
+      title: 'Контакты | Magnat Professional',
+      titleEn: 'Contacts | Magnat Professional',
+      description: 'Контакты Magnat Professional',
+      descriptionEn: 'Magnat Professional contacts',
+      priority: 0.8,
+    },
+    '/privacy': {
+      title: 'Политика обработки персональных данных | Magnat Professional',
+      titleEn: 'Privacy policy | Magnat Professional',
+      description: 'Политика обработки персональных данных Magnat Professional',
+      descriptionEn: 'Magnat Professional privacy policy',
+      priority: 0.3,
+    },
+  }
+  const entry = entries[path] || entries['/']
+
+  return {
+    id: `fallback-${path}`,
+    scope: 'page',
+    path,
+    title: entry.title,
+    titleEn: entry.titleEn,
+    description: entry.description,
+    descriptionEn: entry.descriptionEn,
+    keywords: null,
+    keywordsEn: null,
+    hashtags: null,
+    hashtagsEn: null,
+    ogTitle: null,
+    ogTitleEn: null,
+    ogDescription: null,
+    ogDescriptionEn: null,
+    ogImageUrl: null,
+    canonicalPath: path,
+    robots: 'index,follow',
+    priority: entry.priority,
+    changeFrequency: path === '/' ? 'weekly' : 'monthly',
+    structuredData: null,
+    metrics: null,
+    createdAt: null,
+    updatedAt: null,
+  }
+}
+
+function seoEntryFromDatabase(entry) {
+  return {
+    id: entry.id,
+    scope: entry.scope,
+    path: entry.path,
+    title: entry.title,
+    titleEn: entry.title_en,
+    description: entry.description,
+    descriptionEn: entry.description_en,
+    keywords: entry.keywords,
+    keywordsEn: entry.keywords_en,
+    hashtags: entry.hashtags,
+    hashtagsEn: entry.hashtags_en,
+    ogTitle: entry.og_title,
+    ogTitleEn: entry.og_title_en,
+    ogDescription: entry.og_description,
+    ogDescriptionEn: entry.og_description_en,
+    ogImageUrl: entry.og_image_url,
+    canonicalPath: entry.canonical_path,
+    robots: entry.robots,
+    priority: entry.priority === null || entry.priority === undefined ? null : Number(entry.priority),
+    changeFrequency: entry.change_frequency,
+    structuredData: entry.structured_data ? JSON.stringify(entry.structured_data, null, 2) : null,
+    metrics: entry.metrics ? JSON.stringify(entry.metrics, null, 2) : null,
+    createdAt: entry.created_at,
+    updatedAt: entry.updated_at,
+  }
+}
+
+function seoEntryToDatabase(entry) {
+  const path = normalizeSeoPath(entry.path || '/')
+  const title = String(entry.title || '').trim()
+  const allowedScopes = new Set(['page', 'group', 'case', 'element', 'custom'])
+  const allowedChangeFrequency = new Set(['always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never'])
+  const scope = allowedScopes.has(entry.scope) ? entry.scope : 'page'
+  const changeFrequency = allowedChangeFrequency.has(entry.changeFrequency) ? entry.changeFrequency : 'weekly'
+
+  if (!title) {
+    const error = new Error('Title is required')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    scope,
+    path,
+    title,
+    title_en: normalizeOptionalText(entry.titleEn),
+    description: normalizeOptionalText(entry.description),
+    description_en: normalizeOptionalText(entry.descriptionEn),
+    keywords: normalizeOptionalText(entry.keywords),
+    keywords_en: normalizeOptionalText(entry.keywordsEn),
+    hashtags: normalizeOptionalText(entry.hashtags),
+    hashtags_en: normalizeOptionalText(entry.hashtagsEn),
+    og_title: normalizeOptionalText(entry.ogTitle),
+    og_title_en: normalizeOptionalText(entry.ogTitleEn),
+    og_description: normalizeOptionalText(entry.ogDescription),
+    og_description_en: normalizeOptionalText(entry.ogDescriptionEn),
+    og_image_url: normalizeOptionalSeoUrl(entry.ogImageUrl),
+    canonical_path: entry.canonicalPath ? normalizeSeoPath(entry.canonicalPath) : path,
+    robots: normalizeOptionalText(entry.robots) || 'index,follow',
+    priority: clampNumber(entry.priority, 0, 1, 0.5),
+    change_frequency: changeFrequency,
+    structured_data: parseOptionalJson(entry.structuredData, 'Structured data JSON-LD'),
+    metrics: parseOptionalJson(entry.metrics, 'Metrics JSON'),
+  }
+}
+
+function portfolioSlugsFromPath(path) {
+  const parts = normalizeSeoPath(path).split('/').filter(Boolean)
+
+  if (parts[0] !== 'portfolio') {
+    return []
+  }
+
+  return [parts[1], parts[2]]
+}
+
+function normalizeSeoPath(path) {
+  const rawPath = String(path || '/').trim().split('?')[0].split('#')[0] || '/'
+  const normalized = rawPath.startsWith('/') ? rawPath : `/${rawPath}`
+
+  return normalized.length > 1 ? normalized.replace(/\/+$/, '') : '/'
+}
+
+function parseOptionalJson(value, label) {
+  const normalized = String(value || '').trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  try {
+    return JSON.parse(normalized)
+  } catch (_error) {
+    const error = new Error(`${label} must be valid JSON`)
+    error.status = 400
+    throw error
+  }
+}
+
+function requestOrigin(req) {
+  const protocol = req.get('x-forwarded-proto') || req.protocol || 'http'
+  const host = req.get('x-forwarded-host') || req.get('host') || `localhost:${PORT}`
+
+  return `${protocol}://${host}`
+}
+
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;')
+}
+
+function normalizeOptionalSeoUrl(value) {
+  const normalized = String(value || '').trim()
+
+  if (!normalized) {
+    return null
+  }
+
+  if (normalized.startsWith('/') || /^https?:\/\//i.test(normalized)) {
+    return normalized
+  }
+
+  return `https://${normalized}`
+}
+
 function panelFromDatabase(panel, options = {}) {
   return {
     id: panel.id,
@@ -2996,6 +3518,97 @@ async function ensureDatabaseSchema() {
       create policy "Portfolio card article blocks are publicly readable."
         on public.portfolio_card_article_blocks for select
         using (true);
+
+      create table if not exists public.seo_entries (
+        id uuid primary key default gen_random_uuid(),
+        scope text not null default 'page',
+        path text not null,
+        title text not null,
+        title_en text,
+        description text,
+        description_en text,
+        keywords text,
+        keywords_en text,
+        hashtags text,
+        hashtags_en text,
+        og_title text,
+        og_title_en text,
+        og_description text,
+        og_description_en text,
+        og_image_url text,
+        canonical_path text,
+        robots text not null default 'index,follow',
+        priority numeric(2, 1) not null default 0.5,
+        change_frequency text not null default 'weekly',
+        structured_data jsonb,
+        metrics jsonb,
+        created_at timestamp with time zone not null default now(),
+        updated_at timestamp with time zone not null default now(),
+        constraint seo_entries_scope_check check (scope in ('page', 'group', 'case', 'element', 'custom')),
+        constraint seo_entries_path_check check (
+          path ~ '^/' and
+          path !~ '^//' and
+          path !~ '://'
+        ),
+        constraint seo_entries_canonical_path_check check (
+          canonical_path is null or (
+            canonical_path ~ '^/' and
+            canonical_path !~ '^//' and
+            canonical_path !~ '://'
+          )
+        ),
+        constraint seo_entries_priority_check check (priority >= 0 and priority <= 1),
+        constraint seo_entries_change_frequency_check check (
+          change_frequency in ('always', 'hourly', 'daily', 'weekly', 'monthly', 'yearly', 'never')
+        )
+      );
+
+      create unique index if not exists seo_entries_path_unique
+        on public.seo_entries (path);
+
+      create or replace function public.set_seo_entries_updated_at()
+      returns trigger
+      language plpgsql
+      as $$
+      begin
+        new.updated_at = now();
+        return new;
+      end;
+      $$;
+
+      drop trigger if exists set_seo_entries_updated_at on public.seo_entries;
+
+      create trigger set_seo_entries_updated_at
+      before update on public.seo_entries
+      for each row
+      execute function public.set_seo_entries_updated_at();
+
+      alter table public.seo_entries enable row level security;
+
+      drop policy if exists "SEO entries are publicly readable." on public.seo_entries;
+      create policy "SEO entries are publicly readable."
+        on public.seo_entries for select
+        using (true);
+
+      insert into public.seo_entries (
+        scope,
+        path,
+        title,
+        title_en,
+        description,
+        description_en,
+        canonical_path,
+        robots,
+        priority,
+        change_frequency
+      )
+      values
+        ('page', '/', 'Magnat Professional', 'Magnat Professional', 'Magnat Professional', 'Magnat Professional', '/', 'index,follow', 1, 'weekly'),
+        ('page', '/portfolio', 'Портфолио | Magnat Professional', 'Portfolio | Magnat Professional', 'Портфолио Magnat Professional', 'Magnat Professional portfolio', '/portfolio', 'index,follow', 0.9, 'weekly'),
+        ('page', '/about', 'О нас | Magnat Professional', 'About us | Magnat Professional', 'О компании Magnat Professional', 'About Magnat Professional', '/about', 'index,follow', 0.8, 'monthly'),
+        ('page', '/contacts', 'Контакты | Magnat Professional', 'Contacts | Magnat Professional', 'Контакты Magnat Professional', 'Magnat Professional contacts', '/contacts', 'index,follow', 0.8, 'monthly'),
+        ('page', '/privacy', 'Политика обработки персональных данных | Magnat Professional', 'Privacy policy | Magnat Professional', 'Политика обработки персональных данных Magnat Professional', 'Magnat Professional privacy policy', '/privacy', 'index,follow', 0.3, 'yearly')
+      on conflict (path) do nothing;
 
       create table if not exists public.privacy_blocks (
         id uuid primary key default gen_random_uuid(),

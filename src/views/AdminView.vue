@@ -11,6 +11,7 @@ import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminS
 import MissionValuesAdminSection from '../components/Admin/MissionValuesAdminSection.vue'
 import PrivacyAdminSection from '../components/Admin/PrivacyAdminSection.vue'
 import ProjectRequestsAdminSection from '../components/Admin/ProjectRequestsAdminSection.vue'
+import SeoAdminSection from '../components/Admin/SeoAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminClients } from '../composables/Admin/useAdminClients'
@@ -22,6 +23,7 @@ import { useAdminHystoryCompany } from '../composables/Admin/useAdminHystoryComp
 import { useAdminMissionValues } from '../composables/Admin/useAdminMissionValues'
 import { useAdminPrivacy } from '../composables/Admin/useAdminPrivacy'
 import { useAdminProjectRequests } from '../composables/Admin/useAdminProjectRequests'
+import { useAdminSeo } from '../composables/Admin/useAdminSeo'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
 
 const activeSection = ref('home-panels')
@@ -35,6 +37,7 @@ const hystoryCompany = useAdminHystoryCompany()
 const missionValues = useAdminMissionValues()
 const privacy = useAdminPrivacy()
 const projectRequests = useAdminProjectRequests()
+const seo = useAdminSeo()
 const stats = useAdminStats()
 
 onMounted(async () => {
@@ -49,6 +52,7 @@ onMounted(async () => {
       missionValues.loadContent(),
       privacy.loadBlocks(),
       projectRequests.loadRequests(),
+      seo.loadEntries(),
       stats.loadItems(),
     ])
   }
@@ -66,6 +70,7 @@ async function login() {
       missionValues.loadContent(),
       privacy.loadBlocks(),
       projectRequests.loadRequests(),
+      seo.loadEntries(),
       stats.loadItems(),
     ])
   })
@@ -82,6 +87,7 @@ function logout() {
   missionValues.clearContent()
   privacy.clearBlocks()
   projectRequests.clearRequests()
+  seo.clearEntries()
   stats.clearItems()
 }
 
@@ -286,6 +292,22 @@ async function resetProjectRequestFilters() {
         @delete="privacy.deleteBlock"
         @add-table-row="privacy.addTableRow"
         @remove-table-row="privacy.removeTableRow"
+      />
+
+      <SeoAdminSection
+        v-if="activeSection === 'seo'"
+        :error="seo.error.value"
+        :success-message="seo.successMessage.value"
+        :form="seo.form"
+        :form-title="seo.formTitle.value"
+        :entries="seo.entries.value"
+        :is-loading="seo.isLoading.value"
+        :is-saving="seo.isSaving.value"
+        @new-entry="seo.resetForm"
+        @save="seo.saveEntry"
+        @reset="seo.resetForm"
+        @edit="seo.editEntry"
+        @delete="seo.deleteEntry"
       />
     </section>
   </main>

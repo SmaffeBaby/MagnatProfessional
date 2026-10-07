@@ -96,6 +96,14 @@ defineEmits<{
     >
       Политика
     </button>
+    <button
+      class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'seo' }"
+      type="button"
+      @click="$emit('update:activeSection', 'seo')"
+    >
+      SEO
+    </button>
     <button class="admin-sidebar__logout" type="button" @click="$emit('logout')">Выйти</button>
   </aside>
 </template>
