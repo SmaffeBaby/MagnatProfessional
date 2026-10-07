@@ -258,7 +258,11 @@
 }
 
 .questions-form--project .questions-form__panel {
-  min-height: 100%;
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
   padding-top: 80px;
 }
 
@@ -272,8 +276,19 @@
   max-width: 100%;
 }
 
+.questions-form--project .questions-form__fields {
+  min-height: 0;
+}
+
+.questions-form--project .questions-form__textarea-wrap {
+  display: flex;
+  min-height: 0;
+}
+
 .questions-form--project .questions-form__textarea {
   min-height: 268px;
+  overflow-y: auto;
+  resize: none;
 }
 
 .questions-form--project .questions-form__textarea-wrap::after {
@@ -348,8 +363,9 @@
   }
 
   .questions-form--project .questions-form__panel {
-    min-height: 100%;
-    padding: 29px 33px 34px;
+    height: 100%;
+    min-height: 0;
+    padding: clamp(28px, 3.2vh, 44px) clamp(33px, 5.8vw, 60px) clamp(28px, 3.8vh, 44px);
     border-radius: 30px;
     background: #ffffff;
   }
@@ -370,27 +386,28 @@
 
   .questions-form--project .questions-form__title {
     max-width: calc(100% - 80px);
-    font-size: 60px;
+    font-size: clamp(48px, 6.2vw, 60px);
     line-height: 1.04;
   }
 
   .questions-form--project .questions-form__lead {
     max-width: 680px;
-    margin-top: 24px;
-    font-size: 24px;
+    margin-top: clamp(14px, 2vh, 24px);
+    font-size: clamp(20px, 2.4vw, 24px);
     line-height: 1.02;
   }
 
   .questions-form--project .questions-form__fields {
+    flex: 1 1 auto;
     gap: 21px;
-    margin-top: 31px;
+    margin-top: clamp(18px, 2.6vh, 31px);
   }
 
   .questions-form--project .questions-form__input,
   .questions-form--project .questions-form__textarea {
     border-bottom-color: #000000;
     color: #000000;
-    font-size: 24px;
+    font-size: clamp(20px, 2.4vw, 24px);
   }
 
   .questions-form--project .questions-form__input::placeholder,
@@ -399,16 +416,22 @@
   }
 
   .questions-form--project .questions-form__input {
-    height: 43px;
+    height: clamp(34px, 4.2vh, 43px);
+  }
+
+  .questions-form--project .questions-form__textarea-wrap {
+    flex: 1 1 auto;
   }
 
   .questions-form--project .questions-form__textarea {
-    min-height: 276px;
+    height: 100%;
+    min-height: 96px;
+    max-height: 100%;
   }
 
   .questions-form--project .questions-form__agreement {
     max-width: 680px;
-    margin-top: 18px;
+    margin-top: clamp(10px, 1.6vh, 18px);
     color: rgba(0, 0, 0, 0.5);
   }
 
@@ -423,7 +446,7 @@
   .questions-form--project .questions-form__button {
     min-width: 170px;
     height: 52px;
-    margin-top: 24px;
+    margin-top: clamp(14px, 2vh, 24px);
     background: #e3222a;
     color: #ffffff;
   }
@@ -472,8 +495,8 @@
   }
 
   .questions-form--project .questions-form__panel {
-    padding-top: 29px;
-    padding-bottom: 34px;
+    padding-top: clamp(28px, 3.2vh, 44px);
+    padding-bottom: clamp(28px, 3.8vh, 44px);
   }
 
   .questions-form--project .questions-form__cat-frame {
@@ -486,12 +509,12 @@
 
   .questions-form--project .questions-form__lead {
     max-width: 680px;
-    margin-top: 24px;
+    margin-top: clamp(14px, 2.4vh, 24px);
   }
 
   .questions-form--project .questions-form__fields {
     gap: 21px;
-    margin-top: 31px;
+    margin-top: clamp(18px, 3vh, 31px);
   }
 }
 
