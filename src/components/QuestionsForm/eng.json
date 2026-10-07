@@ -12,5 +12,10 @@
     "message": "Message"
   },
   "agreement": "I have read the User Agreement and consent to the processing of personal data in accordance with the Personal Data Processing Policy",
-  "submit": "Send"
+  "submit": "Send",
+  "sending": "Sending...",
+  "messages": {
+    "success": "Thank you! Your request has been sent, we will contact you soon.",
+    "error": "Failed to send the request. Please try again."
+  }
 }

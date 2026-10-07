@@ -10,6 +10,7 @@ import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.v
 import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminSection.vue'
 import MissionValuesAdminSection from '../components/Admin/MissionValuesAdminSection.vue'
 import PrivacyAdminSection from '../components/Admin/PrivacyAdminSection.vue'
+import ProjectRequestsAdminSection from '../components/Admin/ProjectRequestsAdminSection.vue'
 import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminClients } from '../composables/Admin/useAdminClients'
@@ -20,6 +21,7 @@ import { useAdminHomePanels } from '../composables/Admin/useAdminHomePanels'
 import { useAdminHystoryCompany } from '../composables/Admin/useAdminHystoryCompany'
 import { useAdminMissionValues } from '../composables/Admin/useAdminMissionValues'
 import { useAdminPrivacy } from '../composables/Admin/useAdminPrivacy'
+import { useAdminProjectRequests } from '../composables/Admin/useAdminProjectRequests'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
 
 const activeSection = ref('home-panels')
@@ -32,6 +34,7 @@ const homePanels = useAdminHomePanels()
 const hystoryCompany = useAdminHystoryCompany()
 const missionValues = useAdminMissionValues()
 const privacy = useAdminPrivacy()
+const projectRequests = useAdminProjectRequests()
 const stats = useAdminStats()
 
 onMounted(async () => {
@@ -45,6 +48,7 @@ onMounted(async () => {
       hystoryCompany.loadItems(),
       missionValues.loadContent(),
       privacy.loadBlocks(),
+      projectRequests.loadRequests(),
       stats.loadItems(),
     ])
   }
@@ -61,6 +65,7 @@ async function login() {
       hystoryCompany.loadItems(),
       missionValues.loadContent(),
       privacy.loadBlocks(),
+      projectRequests.loadRequests(),
       stats.loadItems(),
     ])
   })
@@ -76,7 +81,13 @@ function logout() {
   hystoryCompany.clearItems()
   missionValues.clearContent()
   privacy.clearBlocks()
+  projectRequests.clearRequests()
   stats.clearItems()
+}
+
+async function resetProjectRequestFilters() {
+  projectRequests.resetFilters()
+  await projectRequests.loadRequests()
 }
 </script>
 
@@ -93,6 +104,7 @@ function logout() {
     <section v-else class="admin-shell">
       <AdminSidebar
         v-model:active-section="activeSection"
+        :requests-badge="projectRequests.newCount.value"
         @logout="logout"
       />
 
@@ -243,6 +255,20 @@ function logout() {
         @delete-file="clients.deleteImage"
         @edit="clients.editItem"
         @delete="clients.deleteItem"
+      />
+
+      <ProjectRequestsAdminSection
+        v-if="activeSection === 'project-requests'"
+        v-model:status-filter="projectRequests.statusFilter.value"
+        v-model:search-query="projectRequests.searchQuery.value"
+        :error="projectRequests.error.value"
+        :requests="projectRequests.requests.value"
+        :is-loading="projectRequests.isLoading.value"
+        :has-active-filters="projectRequests.hasActiveFilters.value"
+        @refresh="projectRequests.loadRequests"
+        @reset-filters="resetProjectRequestFilters"
+        @update-status="projectRequests.updateStatus"
+        @delete="projectRequests.deleteRequest"
       />
 
       <PrivacyAdminSection

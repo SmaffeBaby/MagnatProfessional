@@ -541,3 +541,39 @@ drop policy if exists "Clients items are publicly readable." on public.clients_i
 create policy "Clients items are publicly readable."
   on public.clients_items for select
   using (true);
+
+create table if not exists public.project_requests (
+  id uuid primary key default gen_random_uuid(),
+  name text not null,
+  phone text not null default '',
+  email text not null default '',
+  message text not null default '',
+  status text not null default 'new',
+  source text not null default 'project-form',
+  created_at timestamp with time zone not null default now(),
+  updated_at timestamp with time zone not null default now(),
+  constraint project_requests_status_check check (status in ('new', 'in_progress', 'closed')),
+  constraint project_requests_contact_check check (phone <> '' or email <> '')
+);
+
+create index if not exists project_requests_status_created_idx
+  on public.project_requests (status, created_at desc);
+
+create or replace function public.set_project_requests_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+drop trigger if exists set_project_requests_updated_at on public.project_requests;
+
+create trigger set_project_requests_updated_at
+before update on public.project_requests
+for each row
+execute function public.set_project_requests_updated_at();
+
+alter table public.project_requests enable row level security;

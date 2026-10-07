@@ -147,10 +147,32 @@
 }
 
 .admin-sidebar__link {
+  display: inline-flex;
+  align-items: center;
   justify-content: flex-start;
   border: 1px solid rgba(255, 255, 255, 0.28);
   text-align: left;
   background: transparent;
+}
+
+.admin-sidebar__link--with-badge {
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.admin-sidebar__badge {
+  display: inline-flex;
+  min-width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 8px;
+  color: #ef3332;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .admin-logo + .admin-sidebar__link {
@@ -425,6 +447,92 @@
   flex: 0 0 auto;
 }
 
+.project-requests-admin {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.project-requests-admin__filters {
+  position: sticky;
+  top: 40px;
+}
+
+.project-requests-admin__list {
+  gap: 16px;
+}
+
+.project-request-card {
+  display: grid;
+  gap: 16px;
+  border: 1px solid #ededed;
+  border-radius: 8px;
+  padding: 18px;
+  background: #ffffff;
+}
+
+.project-request-card--new {
+  border-color: #ef3332;
+  box-shadow: 0 0 0 1px rgba(239, 51, 50, 0.14);
+}
+
+.project-request-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.project-request-card__header h3 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.project-request-card__header p,
+.project-request-card__message {
+  margin: 8px 0 0;
+  color: #696969;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.project-request-card__status {
+  display: inline-flex;
+  min-height: 30px;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0 12px;
+  color: #ef3332;
+  background: #ffe9e9;
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.project-request-card__details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+
+.project-request-card__details div {
+  min-width: 0;
+}
+
+.project-request-card__details dt {
+  color: #747474;
+  font-size: 12px;
+}
+
+.project-request-card__details dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
 .panel-form__actions,
 .panel-list__actions {
   display: flex;
@@ -662,6 +770,15 @@
 
   .admin-grid {
     grid-template-columns: 1fr;
+  }
+
+  .project-requests-admin,
+  .project-request-card__details {
+    grid-template-columns: 1fr;
+  }
+
+  .project-requests-admin__filters {
+    position: static;
   }
 
   .admin-content {

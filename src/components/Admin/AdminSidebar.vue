@@ -3,6 +3,7 @@ import AdminLogo from './AdminLogo.vue'
 
 defineProps<{
   activeSection: string
+  requestsBadge?: number
 }>()
 
 defineEmits<{
@@ -77,6 +78,15 @@ defineEmits<{
       @click="$emit('update:activeSection', 'clients')"
     >
       Клиенты
+    </button>
+    <button
+      class="admin-sidebar__link admin-sidebar__link--with-badge"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'project-requests' }"
+      type="button"
+      @click="$emit('update:activeSection', 'project-requests')"
+    >
+      <span>Заявки</span>
+      <span v-if="requestsBadge" class="admin-sidebar__badge">{{ requestsBadge }}</span>
     </button>
     <button
       class="admin-sidebar__link"

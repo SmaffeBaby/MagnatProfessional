@@ -3,6 +3,7 @@ import crypto from 'node:crypto'
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
+import nodemailer from 'nodemailer'
 import pg from 'pg'
 import { createClient } from '@supabase/supabase-js'
 import { getMainText } from './cache/mainTextCache.js'
@@ -22,6 +23,13 @@ const {
   MEDIA_CACHE_MAX_BYTES = String(256 * 1024 * 1024),
   SUPABASE_BUCKET_FILE_SIZE_LIMIT = String(50 * 1024 * 1024),
   SUPABASE_STORAGE_PUBLIC = 'true',
+  PROJECT_REQUEST_NOTIFY_EMAIL = 'develop1@lightdigital.ru',
+  SMTP_HOST,
+  SMTP_PORT = '587',
+  SMTP_USER,
+  SMTP_PASS,
+  SMTP_FROM,
+  SMTP_SECURE = 'false',
   POSTGRES_HOST = 'db',
   POSTGRES_PORT = '5432',
   POSTGRES_DB = 'postgres',
@@ -63,6 +71,7 @@ const { Client: PgClient } = pg
 const publicApiCache = new Map()
 const mediaCache = new Map()
 let mediaCacheBytes = 0
+let mailTransporter = null
 
 app.use(cors({ origin: CORS_ORIGIN.split(',').map((origin) => origin.trim()) }))
 app.use(express.json())
@@ -408,6 +417,30 @@ app.get('/api/clients', async (_req, res, next) => {
       .json({
         items: data.map(clientItemFromDatabase),
       })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/project-requests', async (req, res, next) => {
+  try {
+    const payload = projectRequestToDatabase(req.body)
+    const { data, error } = await supabase
+      .from('project_requests')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    const request = projectRequestFromDatabase(data)
+    sendProjectRequestNotification(request).catch((mailError) => {
+      console.error('Failed to send project request notification', mailError)
+    })
+
+    res.status(201).json({ request })
   } catch (error) {
     next(error)
   }
@@ -1147,6 +1180,87 @@ app.delete('/api/admin/clients/:id', requireAdminAuth, async (req, res, next) =>
     }
 
     await deleteStorageFiles('clients', collectMediaPaths(item))
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/project-requests', requireAdminAuth, async (req, res, next) => {
+  try {
+    const status = String(req.query.status || '').trim()
+    const search = String(req.query.search || '').trim()
+    const allowedStatuses = new Set(['new', 'in_progress', 'closed'])
+
+    let query = supabase
+      .from('project_requests')
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (allowedStatuses.has(status)) {
+      query = query.eq('status', status)
+    }
+
+    if (search) {
+      const pattern = `%${escapePostgrestLike(search)}%`
+      query = query.or(`name.ilike.${pattern},phone.ilike.${pattern},email.ilike.${pattern},message.ilike.${pattern}`)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      throw error
+    }
+
+    const { count, error: countError } = await supabase
+      .from('project_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'new')
+
+    if (countError) {
+      throw countError
+    }
+
+    res.json({
+      requests: data.map(projectRequestFromDatabase),
+      newCount: count || 0,
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.patch('/api/admin/project-requests/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const status = normalizeProjectRequestStatus(req.body.status)
+    const { data, error } = await supabase
+      .from('project_requests')
+      .update({ status })
+      .eq('id', req.params.id)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ request: projectRequestFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/project-requests/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const { error } = await supabase
+      .from('project_requests')
+      .delete()
+      .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -2382,6 +2496,193 @@ function clientItemToDatabase(item) {
   }
 }
 
+function projectRequestFromDatabase(request) {
+  return {
+    id: request.id,
+    name: request.name,
+    phone: request.phone,
+    email: request.email,
+    message: request.message,
+    status: request.status,
+    source: request.source,
+    createdAt: request.created_at,
+    updatedAt: request.updated_at,
+  }
+}
+
+function projectRequestToDatabase(request) {
+  const name = String(request.name || '').trim()
+  const phone = String(request.phone || '').trim()
+  const email = String(request.email || '').trim()
+  const message = String(request.message || '').trim()
+
+  if (!name) {
+    const error = new Error('Name is required')
+    error.status = 400
+    throw error
+  }
+
+  if (!phone && !email) {
+    const error = new Error('Phone or email is required')
+    error.status = 400
+    throw error
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    const error = new Error('Email is invalid')
+    error.status = 400
+    throw error
+  }
+
+  return {
+    name,
+    phone,
+    email,
+    message,
+    status: 'new',
+    source: String(request.source || 'project-form').trim().slice(0, 120) || 'project-form',
+  }
+}
+
+function normalizeProjectRequestStatus(status) {
+  const normalized = String(status || '').trim()
+
+  if (['new', 'in_progress', 'closed'].includes(normalized)) {
+    return normalized
+  }
+
+  const error = new Error('Request status is invalid')
+  error.status = 400
+  throw error
+}
+
+function escapePostgrestLike(value) {
+  return String(value).replace(/[,%]/g, (character) => `\\${character}`)
+}
+
+async function sendProjectRequestNotification(request) {
+  const transporter = getMailTransporter()
+
+  if (!transporter) {
+    console.warn('SMTP_HOST is not set, skipping project request email notification')
+    return
+  }
+
+  await Promise.all([
+    PROJECT_REQUEST_NOTIFY_EMAIL
+      ? sendProjectRequestAdminNotification(transporter, request)
+      : Promise.resolve(),
+    request.email
+      ? sendProjectRequestCustomerNotification(transporter, request)
+      : Promise.resolve(),
+  ])
+}
+
+async function sendProjectRequestAdminNotification(transporter, request) {
+  const rows = [
+    ['Имя', request.name],
+    ['Телефон', request.phone || 'Не указан'],
+    ['Email', request.email || 'Не указан'],
+    ['Сообщение', request.message || 'Не указано'],
+    ['Источник', request.source || 'project-form'],
+    ['Дата', new Date(request.createdAt).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })],
+  ]
+
+  await transporter.sendMail({
+    from: SMTP_FROM || SMTP_USER || `Magnat Professional <no-reply@${SMTP_HOST}>`,
+    to: PROJECT_REQUEST_NOTIFY_EMAIL,
+    subject: `Новая заявка с сайта Magnat Professional: ${request.name}`,
+    text: rows.map(([label, value]) => `${label}: ${value}`).join('\n'),
+    html: `
+      <h2>Новая заявка с сайта Magnat Professional</h2>
+      <table cellpadding="8" cellspacing="0" border="0">
+        ${rows.map(([label, value]) => `
+          <tr>
+            <td><strong>${escapeHtml(label)}</strong></td>
+            <td>${escapeHtml(value)}</td>
+          </tr>
+        `).join('')}
+      </table>
+    `,
+  })
+}
+
+async function sendProjectRequestCustomerNotification(transporter, request) {
+  const from = SMTP_FROM || SMTP_USER || `Magnat Professional <no-reply@${SMTP_HOST}>`
+  const subject = 'Ваша заявка в Magnat Professional получена'
+  const text = [
+    `${request.name}, здравствуйте!`,
+    '',
+    'Спасибо за заявку. Мы получили ваше обращение и скоро свяжемся с вами.',
+    '',
+    'Ваши данные:',
+    `Телефон: ${request.phone || 'Не указан'}`,
+    `Email: ${request.email}`,
+    `Сообщение: ${request.message || 'Не указано'}`,
+    '',
+    'Magnat Professional',
+  ].join('\n')
+
+  await transporter.sendMail({
+    from,
+    to: request.email,
+    replyTo: PROJECT_REQUEST_NOTIFY_EMAIL || SMTP_USER || undefined,
+    subject,
+    text,
+    html: `
+      <h2>${escapeHtml(request.name)}, здравствуйте!</h2>
+      <p>Спасибо за заявку. Мы получили ваше обращение и скоро свяжемся с вами.</p>
+      <h3>Ваши данные</h3>
+      <table cellpadding="8" cellspacing="0" border="0">
+        <tr>
+          <td><strong>Телефон</strong></td>
+          <td>${escapeHtml(request.phone || 'Не указан')}</td>
+        </tr>
+        <tr>
+          <td><strong>Email</strong></td>
+          <td>${escapeHtml(request.email)}</td>
+        </tr>
+        <tr>
+          <td><strong>Сообщение</strong></td>
+          <td>${escapeHtml(request.message || 'Не указано')}</td>
+        </tr>
+      </table>
+      <p>Magnat Professional</p>
+    `,
+  })
+}
+
+function getMailTransporter() {
+  if (!SMTP_HOST) {
+    return null
+  }
+
+  if (!mailTransporter) {
+    mailTransporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: Number(SMTP_PORT) || 587,
+      secure: SMTP_SECURE === 'true',
+      auth: SMTP_USER && SMTP_PASS
+        ? {
+            user: SMTP_USER,
+            pass: SMTP_PASS,
+          }
+        : undefined,
+    })
+  }
+
+  return mailTransporter
+}
+
+function escapeHtml(value) {
+  return String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 function normalizeRichText(value) {
   return String(value || '')
     .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
@@ -2734,6 +3035,42 @@ async function ensureDatabaseSchema() {
       create policy "Privacy blocks are publicly readable."
         on public.privacy_blocks for select
         using (true);
+
+      create table if not exists public.project_requests (
+        id uuid primary key default gen_random_uuid(),
+        name text not null,
+        phone text not null default '',
+        email text not null default '',
+        message text not null default '',
+        status text not null default 'new',
+        source text not null default 'project-form',
+        created_at timestamp with time zone not null default now(),
+        updated_at timestamp with time zone not null default now(),
+        constraint project_requests_status_check check (status in ('new', 'in_progress', 'closed')),
+        constraint project_requests_contact_check check (phone <> '' or email <> '')
+      );
+
+      create index if not exists project_requests_status_created_idx
+        on public.project_requests (status, created_at desc);
+
+      create or replace function public.set_project_requests_updated_at()
+      returns trigger
+      language plpgsql
+      as $$
+      begin
+        new.updated_at = now();
+        return new;
+      end;
+      $$;
+
+      drop trigger if exists set_project_requests_updated_at on public.project_requests;
+
+      create trigger set_project_requests_updated_at
+      before update on public.project_requests
+      for each row
+      execute function public.set_project_requests_updated_at();
+
+      alter table public.project_requests enable row level security;
     `)
 
     const { rows: panels } = await client.query('select id, title, slug from public.home_panels order by created_at asc')

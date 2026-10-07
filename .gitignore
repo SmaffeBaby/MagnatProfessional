@@ -40,3 +40,4 @@ supabase/.env.*
 /.deploy-backup/postgres.dump
 /.deploy-backup/postgres.sql
 /.deploy-backup/storage-data.tgz
+/backend/node_modules/

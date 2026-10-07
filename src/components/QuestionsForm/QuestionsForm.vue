@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import './style.css'
 
@@ -21,9 +21,60 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const isProjectVariant = computed(() => props.variant === 'project')
 const title = computed(() => t(isProjectVariant.value ? 'questionsForm.project.title' : 'questionsForm.title'))
+const form = reactive({
+  name: '',
+  phone: '',
+  email: '',
+  message: '',
+})
+const isSubmitting = ref(false)
+const submitError = ref('')
+const submitSuccess = ref('')
 
 function close() {
   emit('close')
+}
+
+function resetForm() {
+  form.name = ''
+  form.phone = ''
+  form.email = ''
+  form.message = ''
+}
+
+async function submitForm() {
+  if (isSubmitting.value) {
+    return
+  }
+
+  isSubmitting.value = true
+  submitError.value = ''
+  submitSuccess.value = ''
+
+  try {
+    const response = await fetch('/api/project-requests', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        ...form,
+        source: isProjectVariant.value ? 'project-drawer' : 'questions-form',
+      }),
+    })
+
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}))
+      throw new Error(payload.error || t('questionsForm.messages.error'))
+    }
+
+    resetForm()
+    submitSuccess.value = t('questionsForm.messages.success')
+  } catch (error) {
+    submitError.value = (error as Error).message || t('questionsForm.messages.error')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 </script>
 
@@ -33,7 +84,7 @@ function close() {
     :class="{ 'questions-form--project': isProjectVariant }"
     aria-labelledby="questions-form-title"
   >
-    <form class="questions-form__panel" @submit.prevent>
+    <form class="questions-form__panel" @submit.prevent="submitForm">
       <button
         v-if="closable"
         class="questions-form__close"
@@ -64,15 +115,18 @@ function close() {
 
       <div class="questions-form__fields">
         <input
+          v-model="form.name"
           class="questions-form__input"
           name="name"
           type="text"
           autocomplete="name"
+          required
           :aria-label="t('questionsForm.fields.name')"
           :placeholder="t('questionsForm.fields.name')"
         >
 
         <input
+          v-model="form.phone"
           class="questions-form__input"
           name="phone"
           type="tel"
@@ -82,6 +136,7 @@ function close() {
         >
 
         <input
+          v-model="form.email"
           class="questions-form__input"
           name="email"
           type="email"
@@ -92,6 +147,7 @@ function close() {
 
         <div class="questions-form__textarea-wrap">
           <textarea
+            v-model="form.message"
             class="questions-form__textarea"
             name="message"
             rows="4"
@@ -105,7 +161,18 @@ function close() {
         {{ t('questionsForm.agreement') }}
       </p>
 
-      <button class="questions-form__button" type="submit">{{ t('questionsForm.submit') }}</button>
+      <p
+        v-if="submitError || submitSuccess"
+        class="questions-form__message"
+        :class="{ 'questions-form__message--error': submitError }"
+        aria-live="polite"
+      >
+        {{ submitError || submitSuccess }}
+      </p>
+
+      <button class="questions-form__button" type="submit" :disabled="isSubmitting">
+        {{ isSubmitting ? t('questionsForm.sending') : t('questionsForm.submit') }}
+      </button>
     </form>
   </section>
 </template>

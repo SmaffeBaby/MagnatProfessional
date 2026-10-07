@@ -195,6 +195,20 @@
   line-height: 1.12;
 }
 
+.questions-form__message {
+  position: relative;
+  z-index: 2;
+  margin: 14px 0 0;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+.questions-form__message--error {
+  color: #ffe1e1;
+}
+
 .questions-form__button {
   position: relative;
   z-index: 2;
@@ -221,6 +235,11 @@
 
 .questions-form__button:hover {
   opacity: 0.88;
+}
+
+.questions-form__button:disabled {
+  cursor: progress;
+  opacity: 0.7;
 }
 
 .questions-form__button:active {
@@ -391,6 +410,14 @@
     max-width: 680px;
     margin-top: 18px;
     color: rgba(0, 0, 0, 0.5);
+  }
+
+  .questions-form--project .questions-form__message {
+    color: #237a35;
+  }
+
+  .questions-form--project .questions-form__message--error {
+    color: #b00020;
   }
 
   .questions-form--project .questions-form__button {
