@@ -56,6 +56,7 @@ const languageStore = useLanguageStore()
   <header
     class="mobile-header flex items-center justify-between gap-2 transition-[background-color] duration-300 ease-out"
     :class="[
+      isMenuOpen ? 'mobile-header--menu-open' : '',
       isFixed ? 'fixed left-0 right-0 top-0 z-[220] px-5 pb-4 pt-5' : 'relative z-10',
       showBacking && !isMenuOpen ? 'mobile-header--backed bg-white' : 'bg-transparent',
     ]"
@@ -119,13 +120,19 @@ const languageStore = useLanguageStore()
         :aria-label="isMenuOpen ? t('sidebarMobile.actions.closeMenu') : t('sidebarMobile.actions.openMenu')"
         @click="emit(isMenuOpen ? 'close-menu' : 'open-menu')"
       >
+        <span
+          v-if="isMenuOpen"
+          class="mobile-header__close-icon"
+          aria-hidden="true"
+        />
         <img
+          v-else
           class="mobile-header__menu-icon h-9 w-9 transition duration-300 ease-out mobile:h-11 mobile:w-11"
           :class="[
             (showBacking || isAboutLight) && !isMenuOpen ? 'brightness-0' : '',
             isAboutLight && !isMenuOpen ? 'mobile-header__menu-icon--about' : '',
           ]"
-          :src="isMenuOpen ? '/ico/cancel.svg' : '/ico/burger/burger_inactive.svg'"
+          src="/ico/burger/burger_inactive.svg"
           alt=""
         />
       </button>
@@ -136,6 +143,40 @@ const languageStore = useLanguageStore()
 <style scoped>
 .mobile-header--backed .mobile-header__language-button {
   color: #000000;
+}
+
+.mobile-header--menu-open .mobile-header__actions {
+  gap: 10px;
+}
+
+.mobile-header__close-icon {
+  position: relative;
+  display: block;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #ffffff;
+  border-radius: 999px;
+}
+
+.mobile-header__close-icon::before,
+.mobile-header__close-icon::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 16px;
+  height: 2px;
+  border-radius: 999px;
+  background: #ffffff;
+  content: '';
+  transform-origin: center;
+}
+
+.mobile-header__close-icon::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.mobile-header__close-icon::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
 }
 
 .mobile-header__menu-icon--about:hover,
@@ -167,7 +208,8 @@ button:active .mobile-header__menu-icon--about {
   .mobile-header__theme-button,
   .mobile-header__menu-button,
   .mobile-header__theme-icon,
-  .mobile-header__menu-icon {
+  .mobile-header__menu-icon,
+  .mobile-header__close-icon {
     width: 44px;
     height: 44px;
   }

@@ -84,7 +84,7 @@ defineExpose({
         <MobileThemeImage v-if="!isContentPageActive" :theme="theme" />
         <MobileHeader
           :is-dark-theme="isDarkTheme"
-          :is-about-light="isAboutActive && !isDarkTheme"
+          :is-about-light="(isAboutActive || isContentPageActive) && !isDarkTheme"
           @open-menu="openMenu"
         />
         <MainText v-if="!isContentPageActive" :theme="theme" />
