@@ -24,10 +24,12 @@ const languageStore = useLanguageStore()
 const { locale } = storeToRefs(languageStore)
 const root = ref<HTMLElement | null>(null)
 const scrollProgress = ref(0)
+const isBackToTopVisible = ref(false)
 const lightboxIndex = ref(-1)
 const visibleBlockIds = ref(new Set<string>())
 const blockElements = new Map<string, Element>()
 let blockObserver: IntersectionObserver | null = null
+let lastScrollTop = 0
 const panelSlug = computed(() => String(route.params.panelSlug || ''))
 const cardSlug = computed(() => String(route.params.cardSlug || ''))
 const { panel, card, previousCard, nextCard, isLoading } = usePortfolioCase(panelSlug, cardSlug)
@@ -96,15 +98,51 @@ function showNextImage(direction: -1 | 1) {
 }
 
 function updateProgress() {
+  const scrollState = getScrollState()
+
+  scrollProgress.value = scrollState.progress
+
+  if (scrollState.delta !== 0) {
+    isBackToTopVisible.value = scrollState.top > 260 && scrollState.delta < 0
+  }
+
+  lastScrollTop = scrollState.top
+}
+
+function getScrollState() {
   const element = root.value
 
   if (element && element.scrollHeight > element.clientHeight + 1) {
-    scrollProgress.value = element.scrollTop / (element.scrollHeight - element.clientHeight)
-    return
+    const top = element.scrollTop
+    const maxScroll = element.scrollHeight - element.clientHeight
+
+    return {
+      top,
+      delta: top - lastScrollTop,
+      progress: top / maxScroll,
+    }
   }
 
   const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-  scrollProgress.value = maxScroll > 0 ? window.scrollY / maxScroll : 0
+
+  return {
+    top: window.scrollY,
+    delta: window.scrollY - lastScrollTop,
+    progress: maxScroll > 0 ? window.scrollY / maxScroll : 0,
+  }
+}
+
+function scrollToTop() {
+  const element = root.value
+
+  if (element && element.scrollHeight > element.clientHeight + 1) {
+    element.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+  else {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  isBackToTopVisible.value = false
 }
 
 function handleKeydown(event: KeyboardEvent) {
@@ -157,6 +195,7 @@ function setupBlockObserver() {
 }
 
 onMounted(() => {
+  lastScrollTop = getScrollState().top
   updateProgress()
   setupBlockObserver()
   window.addEventListener('scroll', updateProgress, { passive: true })
@@ -175,6 +214,8 @@ watch(card, () => {
   blockElements.clear()
   root.value?.scrollTo({ top: 0 })
   window.scrollTo({ top: 0 })
+  lastScrollTop = 0
+  isBackToTopVisible.value = false
   updateProgress()
   nextTick(setupBlockObserver)
 })
@@ -190,6 +231,29 @@ watch(card, () => {
     <div class="portfolio-case__progress" aria-hidden="true">
       <span :style="{ transform: `scaleX(${Math.min(1, Math.max(0, scrollProgress))})` }"></span>
     </div>
+
+    <Transition name="portfolio-case-back-to-top">
+      <button
+        v-if="isBackToTopVisible"
+        class="portfolio-case__back-to-top"
+        type="button"
+        aria-label="Наверх"
+        @click="scrollToTop"
+      >
+        <svg
+          class="portfolio-case__back-to-top-icon"
+          width="90"
+          height="90"
+          viewBox="0 0 90 90"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle class="portfolio-case__back-to-top-circle" cx="45" cy="35" r="30" />
+          <path d="M45 46.3335L45 23.0002" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+          <path d="M33.333 35C33.333 35 44.9997 30 44.9997 23.3333C44.9997 30 56.6663 35 56.6663 35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </Transition>
 
     <Transition name="portfolio-case-fade" mode="out-in">
       <article :key="card?.id || route.fullPath" class="portfolio-case__inner">
