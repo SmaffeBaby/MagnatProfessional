@@ -1,0 +1,2 @@
+# Don't count shell scripts in GitHub language statistics
+*.sh linguist-vendored
