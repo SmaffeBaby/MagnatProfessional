@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import { useHomePanels } from '../../composables/useHomePanels'
@@ -20,6 +20,7 @@ const languageStore = useLanguageStore()
 const { locale } = storeToRefs(languageStore)
 const isDarkTheme = computed(() => props.theme === 'dark')
 const shouldUseVideo = computed(() => props.variant === 'home')
+const videoElements = new Map<string, HTMLVideoElement>()
 
 function panelTitle(panel: { title: string, titleEn?: string | null }) {
   return locale.value === 'en' && panel.titleEn ? panel.titleEn : panel.title
@@ -53,6 +54,36 @@ function hexToRgba(hex: string, opacity: number) {
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
 }
+
+function setVideoElement(panelId: string, element: Element | null) {
+  if (element instanceof HTMLVideoElement) {
+    videoElements.set(panelId, element)
+    playVideo(element)
+    return
+  }
+
+  videoElements.delete(panelId)
+}
+
+function playVideo(video: HTMLVideoElement) {
+  video.muted = true
+  video.playsInline = true
+  video.play().catch(() => undefined)
+}
+
+function playAllVideos() {
+  if (!shouldUseVideo.value) {
+    return
+  }
+
+  nextTick(() => {
+    videoElements.forEach(playVideo)
+  })
+}
+
+onMounted(playAllVideos)
+watch(panels, playAllVideos)
+watch(shouldUseVideo, playAllVideos)
 </script>
 
 <template>
@@ -75,6 +106,7 @@ function clamp(value: number, min: number, max: number) {
     >
       <video
         v-if="shouldUseVideo && panel.videoUrl"
+        :ref="(element) => setVideoElement(panel.id, element as Element | null)"
         class="home-panels__media"
         :src="panel.videoUrl"
         :poster="panel.posterUrl || panel.imageUrl || undefined"
@@ -82,6 +114,7 @@ function clamp(value: number, min: number, max: number) {
         muted
         loop
         playsinline
+        preload="auto"
       />
       <img
         v-else-if="panel.imageUrl || panel.posterUrl"

@@ -5,6 +5,9 @@ export type SidebarTheme = 'light' | 'dark'
 const THEME_STORAGE_KEY = 'magnat-theme'
 
 const themeAssets = [
+  '/ico/MagnatProfessionalLogo.svg',
+  '/ico/MagnatProfessionalLogo_color.svg',
+  '/ico/burger/burger_inactive.svg',
   '/main_page/TringleLogo_mobile.png',
   '/main_page/TringleLogoBlack_mobile.png',
   '/ico/moon/Moon_inactive.svg',
