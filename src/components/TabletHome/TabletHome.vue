@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
 import { homeNavLinks } from '../../composables/useHomeNavigation'
 import { useLanguageStore } from '../../composables/useLanguageStore'
@@ -37,8 +38,19 @@ const {
 } = useSidebar(props, emit)
 
 const { t } = useI18n()
+const router = useRouter()
 const languageStore = useLanguageStore()
 const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
+
+async function navigateHome() {
+  if (router.currentRoute.value.name !== 'home') {
+    await router.push({ name: 'home' })
+  }
+
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
+}
 </script>
 
 <template>
@@ -65,7 +77,7 @@ const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
       class="relative z-10 flex items-center gap-8 px-[55px] pt-[30px] transition-colors duration-500"
       :class="isAboutLight ? 'text-black' : 'text-white'"
     >
-      <RouterLink class="shrink-0" to="/" :aria-label="t('sidebar.logo')">
+      <RouterLink class="shrink-0" to="/" :aria-label="t('sidebar.logo')" @click.prevent="navigateHome">
         <img
           class="h-auto w-[244px]"
           :src="isAboutLight ? '/ico/MagnatProfessionalLogo_color.svg' : '/ico/MagnatProfessionalLogo.svg'"

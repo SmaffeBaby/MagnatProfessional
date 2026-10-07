@@ -1,6 +1,6 @@
 import { computed, watch } from 'vue'
 import { useApiQuery } from './useApiQuery'
-import { collectPanelMediaUrls, warmMediaUrls } from './useMediaPreload'
+import { collectPanelPreviewMediaUrls, warmMediaUrls } from './useMediaPreload'
 
 export type HomePanelTileType = 'wide' | 'vertical'
 export type PortfolioArticleImage = {
@@ -69,7 +69,7 @@ export function useHomePanels() {
   const panels = computed(() => Array.isArray(query.data.value?.panels) ? query.data.value.panels : [])
 
   watch(panels, (items) => {
-    warmMediaUrls(items.flatMap(collectPanelMediaUrls))
+    warmMediaUrls(items.flatMap(collectPanelPreviewMediaUrls))
   })
 
   return {

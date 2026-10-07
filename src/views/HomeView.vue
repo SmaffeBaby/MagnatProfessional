@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import AboutContent from '../components/AboutContent/AboutContent.vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
 import ContactsContent from '../components/ContactsContent/ContactsContent.vue'
@@ -28,6 +28,7 @@ import './home.css'
 const themeStore = useThemeStore()
 themeStore.preloadThemeAssets()
 const route = useRoute()
+const router = useRouter()
 
 const theme = computed({
   get: () => themeStore.theme,
@@ -90,6 +91,18 @@ function openProjectForm() {
 
 function closeProjectForm() {
   isProjectFormOpen.value = false
+}
+
+async function navigateHomeFromResponsiveHeader() {
+  if (router.currentRoute.value.name !== 'home') {
+    await router.push({ name: 'home' })
+  }
+
+  isHeaderBackingVisible.value = false
+
+  window.requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  })
 }
 
 provide('openProjectForm', openProjectForm)
@@ -285,7 +298,12 @@ onUnmounted(() => {
         class="responsive-header-backing responsive-header-backing--tablet"
         :class="isDarkTheme ? 'responsive-header-backing--dark' : 'responsive-header-backing--light'"
       >
-        <RouterLink class="responsive-header-backing__logo-link" to="/" :aria-label="t('sidebar.logo')">
+        <RouterLink
+          class="responsive-header-backing__logo-link"
+          to="/"
+          :aria-label="t('sidebar.logo')"
+          @click.prevent="navigateHomeFromResponsiveHeader"
+        >
           <img
             class="responsive-header-backing__logo"
             :src="isDarkTheme ? '/ico/MagnatProfessionalLogo.svg' : '/ico/MagnatProfessionalLogo_color.svg'"

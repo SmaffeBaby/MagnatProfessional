@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import { useHomePanels } from '../../composables/useHomePanels'
@@ -21,6 +21,9 @@ const { locale } = storeToRefs(languageStore)
 const isDarkTheme = computed(() => props.theme === 'dark')
 const shouldUseVideo = computed(() => props.variant === 'home')
 const videoElements = new Map<string, HTMLVideoElement>()
+const activeVideoIds = ref(new Set<string>())
+let videoObserver: IntersectionObserver | null = null
+let isMounted = false
 
 function panelTitle(panel: { title: string, titleEn?: string | null }) {
   return locale.value === 'en' && panel.titleEn ? panel.titleEn : panel.title
@@ -56,19 +59,54 @@ function clamp(value: number, min: number, max: number) {
 }
 
 function setVideoElement(panelId: string, element: Element | null) {
+  const previousElement = videoElements.get(panelId)
+
+  if (previousElement && previousElement !== element) {
+    videoObserver?.unobserve(previousElement)
+  }
+
   if (element instanceof HTMLVideoElement) {
     videoElements.set(panelId, element)
-    playVideo(element)
+
+    if (shouldUseVideo.value) {
+      if (videoObserver) {
+        videoObserver.observe(element)
+      }
+      else if (isMounted) {
+        activateVideo(panelId)
+      }
+    }
+
     return
   }
 
-  videoElements.delete(panelId)
+  if (previousElement) {
+    videoElements.delete(panelId)
+  }
 }
 
 function playVideo(video: HTMLVideoElement) {
   video.muted = true
   video.playsInline = true
   video.play().catch(() => undefined)
+}
+
+function activateVideo(panelId: string) {
+  if (activeVideoIds.value.has(panelId)) {
+    return
+  }
+
+  activeVideoIds.value = new Set(activeVideoIds.value).add(panelId)
+}
+
+function isVideoActive(panelId: string) {
+  return activeVideoIds.value.has(panelId)
+}
+
+function pauseHiddenVideo(video: HTMLVideoElement) {
+  if (!video.paused) {
+    video.pause()
+  }
 }
 
 function playAllVideos() {
@@ -81,9 +119,73 @@ function playAllVideos() {
   })
 }
 
-onMounted(playAllVideos)
+function setupVideoObserver() {
+  if (!shouldUseVideo.value) {
+    return
+  }
+
+  if (!('IntersectionObserver' in window)) {
+    videoElements.forEach((_video, panelId) => activateVideo(panelId))
+    playAllVideos()
+    return
+  }
+
+  videoObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      const video = entry.target
+
+      if (!(video instanceof HTMLVideoElement)) {
+        continue
+      }
+
+      const panelId = video.dataset.panelId
+
+      if (!panelId) {
+        continue
+      }
+
+      if (entry.isIntersecting) {
+        activateVideo(panelId)
+        nextTick(() => playVideo(video))
+      }
+      else {
+        pauseHiddenVideo(video)
+      }
+    }
+  }, {
+    rootMargin: '180px 0px',
+    threshold: 0.01,
+  })
+
+  videoElements.forEach((video) => videoObserver?.observe(video))
+}
+
+function teardownVideoObserver() {
+  videoObserver?.disconnect()
+  videoObserver = null
+}
+
+onMounted(() => {
+  isMounted = true
+  setupVideoObserver()
+})
+onBeforeUnmount(() => {
+  isMounted = false
+  teardownVideoObserver()
+  videoElements.forEach(pauseHiddenVideo)
+  videoElements.clear()
+})
 watch(panels, playAllVideos)
-watch(shouldUseVideo, playAllVideos)
+watch(shouldUseVideo, (useVideo) => {
+  teardownVideoObserver()
+
+  if (!useVideo) {
+    activeVideoIds.value = new Set()
+    return
+  }
+
+  setupVideoObserver()
+})
 </script>
 
 <template>
@@ -97,7 +199,7 @@ watch(shouldUseVideo, playAllVideos)
     aria-label="Панели на главной"
   >
     <RouterLink
-      v-for="panel in panels"
+      v-for="(panel, panelIndex) in panels"
       :key="panel.id"
       class="home-panels__item"
       :class="`home-panels__item--${panel.tileType}`"
@@ -108,20 +210,23 @@ watch(shouldUseVideo, playAllVideos)
         v-if="shouldUseVideo && panel.videoUrl"
         :ref="(element) => setVideoElement(panel.id, element as Element | null)"
         class="home-panels__media"
-        :src="panel.videoUrl"
+        :data-panel-id="panel.id"
+        :src="isVideoActive(panel.id) ? panel.videoUrl : undefined"
         :poster="panel.posterUrl || panel.imageUrl || undefined"
         autoplay
         muted
         loop
         playsinline
-        preload="auto"
+        preload="metadata"
       />
       <img
         v-else-if="panel.imageUrl || panel.posterUrl"
         class="home-panels__media"
         :src="panel.imageUrl || panel.posterUrl || ''"
         :alt="panelTitle(panel)"
-        loading="lazy"
+        :loading="props.variant === 'home' && panelIndex === 0 ? 'eager' : 'lazy'"
+        :fetchpriority="props.variant === 'home' && panelIndex === 0 ? 'high' : 'auto'"
+        decoding="async"
       >
       <span v-else class="home-panels__empty" aria-hidden="true" />
 

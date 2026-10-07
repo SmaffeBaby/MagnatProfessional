@@ -11,6 +11,14 @@ export function collectPanelMediaUrls(panel?: HomePanel | null) {
   ])
 }
 
+export function collectPanelPreviewMediaUrls(panel?: HomePanel | null) {
+  return compactUrls([
+    panel?.imageUrl,
+    panel?.posterUrl,
+    panel?.mascotUrl,
+  ])
+}
+
 export function collectPortfolioCardMediaUrls(card?: PortfolioCard | null) {
   const articleImages = (card?.articleBlocks || []).flatMap((block) => {
     if (block.imageGroups?.length) {
