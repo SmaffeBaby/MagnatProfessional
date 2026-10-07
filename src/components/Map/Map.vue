@@ -25,7 +25,7 @@ const { t } = useI18n()
 
         <div class="map-section__socials" aria-label="Социальные ссылки">
           <a class="map-section__social-link" href="#" aria-label="Telegram">TG</a>
-          <a class="map-section__social-link" href="#" aria-label="HeadHunter">HH</a>
+          <a class="map-section__social-link" href="https://spb.hh.ru/employer/126100" aria-label="HeadHunter">HH</a>
         </div>
       </address>
 

@@ -48,7 +48,7 @@ function handleProjectClick() {
 
         <div class="contacts-content__socials" :aria-label="t('contactsContent.socialsLabel')">
           <a class="contacts-content__social-link" href="#" aria-label="Telegram">TG</a>
-          <a class="contacts-content__social-link" href="#" aria-label="HeadHunter">HH</a>
+          <a class="contacts-content__social-link" href="https://spb.hh.ru/employer/126100" aria-label="HeadHunter">HH</a>
         </div>
       </div>
 
