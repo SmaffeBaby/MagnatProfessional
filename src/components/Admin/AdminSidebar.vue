@@ -98,6 +98,22 @@ defineEmits<{
     </button>
     <button
       class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'user-agreement' }"
+      type="button"
+      @click="$emit('update:activeSection', 'user-agreement')"
+    >
+      Пользовательское соглашение
+    </button>
+    <button
+      class="admin-sidebar__link"
+      :class="{ 'admin-sidebar__link--active': activeSection === 'policy' }"
+      type="button"
+      @click="$emit('update:activeSection', 'policy')"
+    >
+      Политика сайта
+    </button>
+    <button
+      class="admin-sidebar__link"
       :class="{ 'admin-sidebar__link--active': activeSection === 'seo' }"
       type="button"
       @click="$emit('update:activeSection', 'seo')"

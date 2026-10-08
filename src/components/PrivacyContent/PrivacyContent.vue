@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import Footer from '../Footer/Footer.vue'
-import { usePrivacy, type PrivacyBlock } from '../../composables/usePrivacy'
+import { useLegalDocument, type LegalDocumentKey, type PrivacyBlock } from '../../composables/usePrivacy'
 import './style.css'
 
 const props = defineProps({
@@ -9,10 +9,15 @@ const props = defineProps({
     type: String,
     default: 'light',
   },
+  documentKey: {
+    type: String as () => LegalDocumentKey,
+    default: 'privacy',
+  },
 })
 
 const closedBlockIds = ref<Set<string>>(new Set())
-const { localizedBlocks, localizedTitle, isLoading, error } = usePrivacy()
+const activeDocumentKey = computed(() => props.documentKey)
+const { localizedBlocks, localizedTitle, isLoading, error } = useLegalDocument(activeDocumentKey)
 const isDarkTheme = computed(() => props.theme === 'dark')
 
 watch(

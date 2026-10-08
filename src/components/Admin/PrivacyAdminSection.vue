@@ -9,6 +9,7 @@ defineProps<{
   blocks: PrivacyBlock[]
   isLoading: boolean
   isSaving: boolean
+  documentTitle?: string
 }>()
 
 defineEmits<{
@@ -27,7 +28,7 @@ defineEmits<{
     <header class="admin-content__header">
       <div>
         <p>Раздел</p>
-        <h1>Политика обработки персональных данных</h1>
+        <h1>{{ documentTitle || 'Политика обработки персональных данных' }}</h1>
       </div>
       <button type="button" @click="$emit('newBlock')">Новый блок</button>
     </header>

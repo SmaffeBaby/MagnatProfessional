@@ -72,6 +72,7 @@ const publicApiCache = new Map()
 const mediaCache = new Map()
 let mediaCacheBytes = 0
 let mailTransporter = null
+const LEGAL_DOCUMENT_KEYS = new Set(['privacy', 'user-agreement', 'policy'])
 
 app.use(cors({ origin: CORS_ORIGIN.split(',').map((origin) => origin.trim()) }))
 app.use(express.json())
@@ -406,23 +407,28 @@ app.get('/api/hystory-company', async (_req, res, next) => {
 
 app.get('/api/privacy', async (_req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('privacy_blocks')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      throw error
-    }
+    const blocks = await getLegalDocumentBlocks('privacy')
 
     res
       .set({
         'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
       })
-      .json({
-        blocks: data.map(privacyBlockFromDatabase),
+      .json({ blocks })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/legal-documents/:documentKey', async (req, res, next) => {
+  try {
+    const documentKey = normalizeLegalDocumentKey(req.params.documentKey)
+    const blocks = await getLegalDocumentBlocks(documentKey)
+
+    res
+      .set({
+        'Cache-Control': 'public, max-age=5, stale-while-revalidate=30',
       })
+      .json({ blocks })
   } catch (error) {
     next(error)
   }
@@ -1060,18 +1066,8 @@ app.delete('/api/admin/hystory-company/:id', requireAdminAuth, async (req, res, 
 
 app.get('/api/admin/privacy', requireAdminAuth, async (_req, res, next) => {
   try {
-    const { data, error } = await supabase
-      .from('privacy_blocks')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: true })
-
-    if (error) {
-      throw error
-    }
-
     res.json({
-      blocks: data.map(privacyBlockFromDatabase),
+      blocks: await getLegalDocumentBlocks('privacy'),
     })
   } catch (error) {
     next(error)
@@ -1080,7 +1076,7 @@ app.get('/api/admin/privacy', requireAdminAuth, async (_req, res, next) => {
 
 app.post('/api/admin/privacy', requireAdminAuth, async (req, res, next) => {
   try {
-    const payload = privacyBlockToDatabase(req.body)
+    const payload = privacyBlockToDatabase(req.body, 'privacy')
     const { data, error } = await supabase
       .from('privacy_blocks')
       .insert(payload)
@@ -1099,7 +1095,7 @@ app.post('/api/admin/privacy', requireAdminAuth, async (req, res, next) => {
 
 app.put('/api/admin/privacy/:id', requireAdminAuth, async (req, res, next) => {
   try {
-    const payload = privacyBlockToDatabase(req.body)
+    const payload = privacyBlockToDatabase(req.body, 'privacy')
     const { data, error } = await supabase
       .from('privacy_blocks')
       .update(payload)
@@ -1123,6 +1119,79 @@ app.delete('/api/admin/privacy/:id', requireAdminAuth, async (req, res, next) =>
       .from('privacy_blocks')
       .delete()
       .eq('id', req.params.id)
+
+    if (error) {
+      throw error
+    }
+
+    res.status(204).end()
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/legal-documents/:documentKey', requireAdminAuth, async (req, res, next) => {
+  try {
+    const documentKey = normalizeLegalDocumentKey(req.params.documentKey)
+
+    res.json({
+      blocks: await getLegalDocumentBlocks(documentKey),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/legal-documents/:documentKey', requireAdminAuth, async (req, res, next) => {
+  try {
+    const documentKey = normalizeLegalDocumentKey(req.params.documentKey)
+    const payload = privacyBlockToDatabase(req.body, documentKey)
+    const { data, error } = await supabase
+      .from('privacy_blocks')
+      .insert(payload)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.status(201).json({ block: privacyBlockFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.put('/api/admin/legal-documents/:documentKey/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const documentKey = normalizeLegalDocumentKey(req.params.documentKey)
+    const payload = privacyBlockToDatabase(req.body, documentKey)
+    const { data, error } = await supabase
+      .from('privacy_blocks')
+      .update(payload)
+      .eq('id', req.params.id)
+      .eq('document_key', documentKey)
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    res.json({ block: privacyBlockFromDatabase(data) })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.delete('/api/admin/legal-documents/:documentKey/:id', requireAdminAuth, async (req, res, next) => {
+  try {
+    const documentKey = normalizeLegalDocumentKey(req.params.documentKey)
+    const { error } = await supabase
+      .from('privacy_blocks')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('document_key', documentKey)
 
     if (error) {
       throw error
@@ -2313,6 +2382,20 @@ function fallbackSeoByPath(path) {
       descriptionEn: 'Magnat Professional privacy policy',
       priority: 0.3,
     },
+    '/user-agreement': {
+      title: 'Пользовательское соглашение | Magnat Professional',
+      titleEn: 'User agreement | Magnat Professional',
+      description: 'Пользовательское соглашение Magnat Professional',
+      descriptionEn: 'Magnat Professional user agreement',
+      priority: 0.3,
+    },
+    '/policy': {
+      title: 'Политика | Magnat Professional',
+      titleEn: 'Policy | Magnat Professional',
+      description: 'Политика Magnat Professional',
+      descriptionEn: 'Magnat Professional policy',
+      priority: 0.3,
+    },
   }
   const entry = entries[path] || entries['/']
 
@@ -2863,9 +2946,38 @@ function normalizePrivacyTableRows(rows) {
     .filter((row) => row.left || row.right)
 }
 
+function normalizeLegalDocumentKey(documentKey) {
+  const normalizedKey = String(documentKey || '').trim()
+
+  if (!LEGAL_DOCUMENT_KEYS.has(normalizedKey)) {
+    const error = new Error('Legal document not found')
+    error.status = 404
+    throw error
+  }
+
+  return normalizedKey
+}
+
+async function getLegalDocumentBlocks(documentKey) {
+  const normalizedKey = normalizeLegalDocumentKey(documentKey)
+  const { data, error } = await supabase
+    .from('privacy_blocks')
+    .select('*')
+    .eq('document_key', normalizedKey)
+    .order('sort_order', { ascending: true })
+    .order('created_at', { ascending: true })
+
+  if (error) {
+    throw error
+  }
+
+  return data.map(privacyBlockFromDatabase)
+}
+
 function privacyBlockFromDatabase(block) {
   return {
     id: block.id,
+    documentKey: block.document_key || 'privacy',
     type: block.block_type,
     sortOrder: block.sort_order,
     title: block.title,
@@ -2879,8 +2991,9 @@ function privacyBlockFromDatabase(block) {
   }
 }
 
-function privacyBlockToDatabase(block) {
+function privacyBlockToDatabase(block, documentKey = 'privacy') {
   const type = block.type === 'table' ? 'table' : 'text'
+  const normalizedDocumentKey = normalizeLegalDocumentKey(documentKey)
   const title = String(block.title || '').trim()
   const text = String(block.text || '').trim()
   const tableRows = normalizePrivacyTableRows(block.tableRows)
@@ -2905,6 +3018,7 @@ function privacyBlockToDatabase(block) {
   }
 
   return {
+    document_key: normalizedDocumentKey,
     block_type: type,
     sort_order: sortOrder,
     title,
@@ -3607,11 +3721,14 @@ async function ensureDatabaseSchema() {
         ('page', '/portfolio', 'Портфолио | Magnat Professional', 'Portfolio | Magnat Professional', 'Портфолио Magnat Professional', 'Magnat Professional portfolio', '/portfolio', 'index,follow', 0.9, 'weekly'),
         ('page', '/about', 'О нас | Magnat Professional', 'About us | Magnat Professional', 'О компании Magnat Professional', 'About Magnat Professional', '/about', 'index,follow', 0.8, 'monthly'),
         ('page', '/contacts', 'Контакты | Magnat Professional', 'Contacts | Magnat Professional', 'Контакты Magnat Professional', 'Magnat Professional contacts', '/contacts', 'index,follow', 0.8, 'monthly'),
-        ('page', '/privacy', 'Политика обработки персональных данных | Magnat Professional', 'Privacy policy | Magnat Professional', 'Политика обработки персональных данных Magnat Professional', 'Magnat Professional privacy policy', '/privacy', 'index,follow', 0.3, 'yearly')
+        ('page', '/privacy', 'Политика обработки персональных данных | Magnat Professional', 'Privacy policy | Magnat Professional', 'Политика обработки персональных данных Magnat Professional', 'Magnat Professional privacy policy', '/privacy', 'index,follow', 0.3, 'yearly'),
+        ('page', '/user-agreement', 'Пользовательское соглашение | Magnat Professional', 'User agreement | Magnat Professional', 'Пользовательское соглашение Magnat Professional', 'Magnat Professional user agreement', '/user-agreement', 'index,follow', 0.3, 'yearly'),
+        ('page', '/policy', 'Политика | Magnat Professional', 'Policy | Magnat Professional', 'Политика Magnat Professional', 'Magnat Professional policy', '/policy', 'index,follow', 0.3, 'yearly')
       on conflict (path) do nothing;
 
       create table if not exists public.privacy_blocks (
         id uuid primary key default gen_random_uuid(),
+        document_key text not null default 'privacy',
         block_type text not null default 'text',
         sort_order integer not null default 0,
         title text not null,
@@ -3622,8 +3739,29 @@ async function ensureDatabaseSchema() {
         table_rows_en jsonb not null default '[]'::jsonb,
         created_at timestamp with time zone not null default now(),
         updated_at timestamp with time zone not null default now(),
+        constraint privacy_blocks_document_key_check check (document_key in ('privacy', 'user-agreement', 'policy')),
         constraint privacy_blocks_type_check check (block_type in ('text', 'table'))
       );
+
+      alter table if exists public.privacy_blocks
+        add column if not exists document_key text not null default 'privacy';
+
+      do $$
+      begin
+        if not exists (
+          select 1
+          from pg_constraint
+          where conname = 'privacy_blocks_document_key_check'
+        ) then
+          alter table public.privacy_blocks
+            add constraint privacy_blocks_document_key_check
+            check (document_key in ('privacy', 'user-agreement', 'policy'));
+        end if;
+      end;
+      $$;
+
+      create index if not exists privacy_blocks_document_sort_idx
+        on public.privacy_blocks (document_key, sort_order, created_at);
 
       create or replace function public.set_privacy_blocks_updated_at()
       returns trigger

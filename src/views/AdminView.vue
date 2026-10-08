@@ -36,6 +36,8 @@ const homePanels = useAdminHomePanels()
 const hystoryCompany = useAdminHystoryCompany()
 const missionValues = useAdminMissionValues()
 const privacy = useAdminPrivacy()
+const userAgreement = useAdminPrivacy('user-agreement')
+const policy = useAdminPrivacy('policy')
 const projectRequests = useAdminProjectRequests()
 const seo = useAdminSeo()
 const stats = useAdminStats()
@@ -51,6 +53,8 @@ onMounted(async () => {
       hystoryCompany.loadItems(),
       missionValues.loadContent(),
       privacy.loadBlocks(),
+      userAgreement.loadBlocks(),
+      policy.loadBlocks(),
       projectRequests.loadRequests(),
       seo.loadEntries(),
       stats.loadItems(),
@@ -69,6 +73,8 @@ async function login() {
       hystoryCompany.loadItems(),
       missionValues.loadContent(),
       privacy.loadBlocks(),
+      userAgreement.loadBlocks(),
+      policy.loadBlocks(),
       projectRequests.loadRequests(),
       seo.loadEntries(),
       stats.loadItems(),
@@ -86,6 +92,8 @@ function logout() {
   hystoryCompany.clearItems()
   missionValues.clearContent()
   privacy.clearBlocks()
+  userAgreement.clearBlocks()
+  policy.clearBlocks()
   projectRequests.clearRequests()
   seo.clearEntries()
   stats.clearItems()
@@ -279,6 +287,7 @@ async function resetProjectRequestFilters() {
 
       <PrivacyAdminSection
         v-if="activeSection === 'privacy'"
+        document-title="Политика обработки персональных данных"
         :error="privacy.error.value"
         :form="privacy.form"
         :form-title="privacy.formTitle.value"
@@ -292,6 +301,42 @@ async function resetProjectRequestFilters() {
         @delete="privacy.deleteBlock"
         @add-table-row="privacy.addTableRow"
         @remove-table-row="privacy.removeTableRow"
+      />
+
+      <PrivacyAdminSection
+        v-if="activeSection === 'user-agreement'"
+        document-title="Пользовательское соглашение"
+        :error="userAgreement.error.value"
+        :form="userAgreement.form"
+        :form-title="userAgreement.formTitle.value"
+        :blocks="userAgreement.blocks.value"
+        :is-loading="userAgreement.isLoading.value"
+        :is-saving="userAgreement.isSaving.value"
+        @new-block="userAgreement.resetForm"
+        @save="userAgreement.saveBlock"
+        @reset="userAgreement.resetForm"
+        @edit="userAgreement.editBlock"
+        @delete="userAgreement.deleteBlock"
+        @add-table-row="userAgreement.addTableRow"
+        @remove-table-row="userAgreement.removeTableRow"
+      />
+
+      <PrivacyAdminSection
+        v-if="activeSection === 'policy'"
+        document-title="Политика"
+        :error="policy.error.value"
+        :form="policy.form"
+        :form-title="policy.formTitle.value"
+        :blocks="policy.blocks.value"
+        :is-loading="policy.isLoading.value"
+        :is-saving="policy.isSaving.value"
+        @new-block="policy.resetForm"
+        @save="policy.saveBlock"
+        @reset="policy.resetForm"
+        @edit="policy.editBlock"
+        @delete="policy.deleteBlock"
+        @add-table-row="policy.addTableRow"
+        @remove-table-row="policy.removeTableRow"
       />
 
       <SeoAdminSection

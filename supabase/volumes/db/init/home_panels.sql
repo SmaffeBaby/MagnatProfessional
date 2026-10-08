@@ -254,7 +254,9 @@ values
   ('page', '/portfolio', 'Портфолио | Magnat Professional', 'Portfolio | Magnat Professional', 'Портфолио Magnat Professional', 'Magnat Professional portfolio', '/portfolio', 'index,follow', 0.9, 'weekly'),
   ('page', '/about', 'О нас | Magnat Professional', 'About us | Magnat Professional', 'О компании Magnat Professional', 'About Magnat Professional', '/about', 'index,follow', 0.8, 'monthly'),
   ('page', '/contacts', 'Контакты | Magnat Professional', 'Contacts | Magnat Professional', 'Контакты Magnat Professional', 'Magnat Professional contacts', '/contacts', 'index,follow', 0.8, 'monthly'),
-  ('page', '/privacy', 'Политика обработки персональных данных | Magnat Professional', 'Privacy policy | Magnat Professional', 'Политика обработки персональных данных Magnat Professional', 'Magnat Professional privacy policy', '/privacy', 'index,follow', 0.3, 'yearly')
+  ('page', '/privacy', 'Политика обработки персональных данных | Magnat Professional', 'Privacy policy | Magnat Professional', 'Политика обработки персональных данных Magnat Professional', 'Magnat Professional privacy policy', '/privacy', 'index,follow', 0.3, 'yearly'),
+  ('page', '/user-agreement', 'Пользовательское соглашение | Magnat Professional', 'User agreement | Magnat Professional', 'Пользовательское соглашение Magnat Professional', 'Magnat Professional user agreement', '/user-agreement', 'index,follow', 0.3, 'yearly'),
+  ('page', '/policy', 'Политика | Magnat Professional', 'Policy | Magnat Professional', 'Политика Magnat Professional', 'Magnat Professional policy', '/policy', 'index,follow', 0.3, 'yearly')
 on conflict (path) do nothing;
 
 create table if not exists public.about_us_content (
@@ -482,6 +484,7 @@ create policy "Hystory company items are publicly readable."
 
 create table if not exists public.privacy_blocks (
   id uuid primary key default gen_random_uuid(),
+  document_key text not null default 'privacy',
   block_type text not null default 'text',
   sort_order integer not null default 0,
   title text not null,
@@ -492,8 +495,29 @@ create table if not exists public.privacy_blocks (
   table_rows_en jsonb not null default '[]'::jsonb,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
+  constraint privacy_blocks_document_key_check check (document_key in ('privacy', 'user-agreement', 'policy')),
   constraint privacy_blocks_type_check check (block_type in ('text', 'table'))
 );
+
+alter table if exists public.privacy_blocks
+  add column if not exists document_key text not null default 'privacy';
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'privacy_blocks_document_key_check'
+  ) then
+    alter table public.privacy_blocks
+      add constraint privacy_blocks_document_key_check
+      check (document_key in ('privacy', 'user-agreement', 'policy'));
+  end if;
+end;
+$$;
+
+create index if not exists privacy_blocks_document_sort_idx
+  on public.privacy_blocks (document_key, sort_order, created_at);
 
 create or replace function public.set_privacy_blocks_updated_at()
 returns trigger

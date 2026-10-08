@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import AboutContent from '../components/AboutContent/AboutContent.vue'
 import AboutUs from '../components/AboutUs/AboutUs.vue'
 import ContactsContent from '../components/ContactsContent/ContactsContent.vue'
+import CookieConsent from '../components/CookieConsent/CookieConsent.vue'
 import Description from '../components/Description/Description.vue'
 import DesktopHome from '../components/DesktopHome/DesktopHome.vue'
 import DottedSeparator from '../components/DottedSeparator/DottedSeparator.vue'
@@ -41,13 +42,27 @@ const isMobileMenuBackdropActive = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
 const isPrivacyActive = computed(() => route.name === 'privacy')
+const isUserAgreementActive = computed(() => route.name === 'user-agreement')
+const isPolicyActive = computed(() => route.name === 'policy')
 const isPortfolioActive = computed(() => route.name === 'portfolio')
 const isPortfolioDetailActive = computed(() => route.name === 'portfolio-detail')
 const isPortfolioCaseActive = computed(() => route.name === 'portfolio-case')
 const isPortfolioPageActive = computed(() => isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value)
-const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value || isPrivacyActive.value || isPortfolioCaseActive.value)
+const isLegalDocumentActive = computed(() => isPrivacyActive.value || isUserAgreementActive.value || isPolicyActive.value)
+const legalDocumentKey = computed(() => {
+  if (isUserAgreementActive.value) {
+    return 'user-agreement'
+  }
+
+  if (isPolicyActive.value) {
+    return 'policy'
+  }
+
+  return 'privacy'
+})
+const isLightPageActive = computed(() => isAboutActive.value || isContactsActive.value || isLegalDocumentActive.value || isPortfolioCaseActive.value)
 const isContentPageActive = computed(() => (
-  isAboutActive.value || isContactsActive.value || isPrivacyActive.value || isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value
+  isAboutActive.value || isContactsActive.value || isLegalDocumentActive.value || isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value
 ))
 const pageBackgroundColor = computed(() => {
   if (theme.value === 'dark') {
@@ -241,7 +256,7 @@ onUnmounted(() => {
       />
       <AboutContent v-if="isAboutActive" :key="`mobile-about-${route.fullPath}`" :theme="theme" />
       <ContactsContent v-else-if="isContactsActive" :key="`mobile-contacts-${route.fullPath}`" :theme="theme" />
-      <PrivacyContent v-else-if="isPrivacyActive" :key="`mobile-privacy-${route.fullPath}`" :theme="theme" />
+      <PrivacyContent v-else-if="isLegalDocumentActive" :key="`mobile-legal-${route.fullPath}`" :theme="theme" :document-key="legalDocumentKey" />
       <PortfolioCaseContent v-else-if="isPortfolioCaseActive" :key="`mobile-portfolio-case-${route.fullPath}`" :theme="theme" />
       <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="`mobile-portfolio-detail-${route.fullPath}`" :theme="theme" />
       <PortfolioContent v-else-if="isPortfolioActive" :key="`mobile-portfolio-${route.fullPath}`" :theme="theme" />
@@ -265,7 +280,7 @@ onUnmounted(() => {
       />
       <AboutContent v-if="isAboutActive" :key="`tablet-about-${route.fullPath}`" :theme="theme" />
       <ContactsContent v-else-if="isContactsActive" :key="`tablet-contacts-${route.fullPath}`" :theme="theme" />
-      <PrivacyContent v-else-if="isPrivacyActive" :key="`tablet-privacy-${route.fullPath}`" :theme="theme" />
+      <PrivacyContent v-else-if="isLegalDocumentActive" :key="`tablet-legal-${route.fullPath}`" :theme="theme" :document-key="legalDocumentKey" />
       <PortfolioCaseContent v-else-if="isPortfolioCaseActive" :key="`tablet-portfolio-case-${route.fullPath}`" :theme="theme" />
       <PortfolioDetailContent v-else-if="isPortfolioDetailActive" :key="`tablet-portfolio-detail-${route.fullPath}`" :theme="theme" />
       <PortfolioContent v-else-if="isPortfolioActive" :key="`tablet-portfolio-${route.fullPath}`" :theme="theme" />
@@ -359,7 +374,8 @@ onUnmounted(() => {
         :theme="theme"
         :is-about-active="isAboutActive"
         :is-contacts-active="isContactsActive"
-        :is-privacy-active="isPrivacyActive"
+        :is-privacy-active="isLegalDocumentActive"
+        :legal-document-key="legalDocumentKey"
         :is-portfolio-active="isPortfolioActive"
         :is-portfolio-detail-active="isPortfolioDetailActive"
         :is-portfolio-case-active="isPortfolioCaseActive"
@@ -368,5 +384,6 @@ onUnmounted(() => {
 
     <OnTheMapPanel :is-open="isMapOpen" @close="isMapOpen = false" />
     <ProjectFormDrawer :open="isProjectFormOpen" @close="closeProjectForm" />
+    <CookieConsent />
   </main>
 </template>

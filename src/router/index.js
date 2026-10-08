@@ -23,6 +23,16 @@ const routes = [
     component: HomeView,
   },
   {
+    path: '/user-agreement',
+    name: 'user-agreement',
+    component: HomeView,
+  },
+  {
+    path: '/policy',
+    name: 'policy',
+    component: HomeView,
+  },
+  {
     path: '/portfolio',
     name: 'portfolio',
     component: HomeView,

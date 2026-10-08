@@ -1,6 +1,6 @@
 import { computed, reactive, ref } from 'vue'
 import { adminRequest } from '../useAdminApi'
-import type { PrivacyBlock, PrivacyTableRow } from '../usePrivacy'
+import type { LegalDocumentKey, PrivacyBlock, PrivacyTableRow } from '../usePrivacy'
 
 export type PrivacyBlockForm = {
   id: string | null
@@ -44,7 +44,7 @@ function cloneRows(rows: PrivacyTableRow[] = []) {
   return clonedRows.length ? clonedRows : [emptyRow()]
 }
 
-export function useAdminPrivacy() {
+export function useAdminPrivacy(documentKey: LegalDocumentKey = 'privacy') {
   const form = reactive<PrivacyBlockForm>(emptyForm())
   const blocks = ref<PrivacyBlock[]>([])
   const isLoading = ref(false)
@@ -58,7 +58,7 @@ export function useAdminPrivacy() {
     error.value = ''
 
     try {
-      const payload = await adminRequest('/api/admin/privacy')
+      const payload = await adminRequest(`/api/admin/legal-documents/${documentKey}`)
       blocks.value = payload.blocks
     } catch (requestError) {
       error.value = (requestError as Error).message
@@ -72,7 +72,9 @@ export function useAdminPrivacy() {
     error.value = ''
 
     try {
-      const path = form.id ? `/api/admin/privacy/${form.id}` : '/api/admin/privacy'
+      const path = form.id
+        ? `/api/admin/legal-documents/${documentKey}/${form.id}`
+        : `/api/admin/legal-documents/${documentKey}`
       const method = form.id ? 'PUT' : 'POST'
 
       await adminRequest(path, {
@@ -98,7 +100,7 @@ export function useAdminPrivacy() {
     error.value = ''
 
     try {
-      await adminRequest(`/api/admin/privacy/${block.id}`, {
+      await adminRequest(`/api/admin/legal-documents/${documentKey}/${block.id}`, {
         method: 'DELETE',
       })
       await loadBlocks()

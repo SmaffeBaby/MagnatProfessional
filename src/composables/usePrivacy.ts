@@ -1,7 +1,9 @@
-import { computed } from 'vue'
+import { computed, toValue, type MaybeRefOrGetter } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from './useLanguageStore'
 import { useApiQuery } from './useApiQuery'
+
+export type LegalDocumentKey = 'privacy' | 'user-agreement' | 'policy'
 
 export type PrivacyTableRow = {
   left: string
@@ -10,6 +12,7 @@ export type PrivacyTableRow = {
 
 export type PrivacyBlock = {
   id: string
+  documentKey?: LegalDocumentKey
   type: 'text' | 'table'
   sortOrder: number
   title: string
@@ -22,17 +25,39 @@ export type PrivacyBlock = {
   updatedAt?: string
 }
 
-export function usePrivacy() {
-  const query = useApiQuery<{ blocks: PrivacyBlock[] }>(['privacy'], '/api/privacy')
+const documentTitles: Record<LegalDocumentKey, { ru: string; en: string }> = {
+  privacy: {
+    ru: 'Политика в отношении обработки персональных данных',
+    en: 'Personal data processing policy',
+  },
+  'user-agreement': {
+    ru: 'Пользовательское соглашение',
+    en: 'User agreement',
+  },
+  policy: {
+    ru: 'Политика',
+    en: 'Policy',
+  },
+}
+
+function resolveDocumentKey(documentKey: MaybeRefOrGetter<LegalDocumentKey>) {
+  return toValue(documentKey) || 'privacy'
+}
+
+export function useLegalDocument(documentKey: MaybeRefOrGetter<LegalDocumentKey> = 'privacy') {
+  const query = useApiQuery<{ blocks: PrivacyBlock[] }>(
+    computed(() => ['legal-document', resolveDocumentKey(documentKey)]),
+    computed(() => `/api/legal-documents/${resolveDocumentKey(documentKey)}`),
+  )
   const blocks = computed(() => Array.isArray(query.data.value?.blocks) ? query.data.value.blocks : [])
   const languageStore = useLanguageStore()
   const { locale } = storeToRefs(languageStore)
 
-  const localizedTitle = computed(() => (
-    locale.value === 'en'
-      ? 'Personal data processing policy'
-      : 'Политика в отношении обработки персональных данных'
-  ))
+  const localizedTitle = computed(() => {
+    const titles = documentTitles[resolveDocumentKey(documentKey)] || documentTitles.privacy
+
+    return locale.value === 'en' ? titles.en : titles.ru
+  })
 
   const localizedBlocks = computed(() => blocks.value.map((block) => ({
     ...block,
@@ -49,6 +74,11 @@ export function usePrivacy() {
     localizedTitle,
     isLoading: query.isLoading,
     error: query.error,
+    loadDocument: query.refetch,
     loadPrivacy: query.refetch,
   }
+}
+
+export function usePrivacy() {
+  return useLegalDocument('privacy')
 }

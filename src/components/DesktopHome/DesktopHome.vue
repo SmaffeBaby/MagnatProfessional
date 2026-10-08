@@ -1,4 +1,4 @@
-<script setup>
+<script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useLanguageStore } from '../../composables/useLanguageStore'
@@ -9,6 +9,7 @@ import PortfolioCaseContent from '../PortfolioCaseContent/PortfolioCaseContent.v
 import PortfolioDetailContent from '../PortfolioDetailContent/PortfolioDetailContent.vue'
 import PortfolioContent from '../PortfolioContent/PortfolioContent.vue'
 import PrivacyContent from '../PrivacyContent/PrivacyContent.vue'
+import type { LegalDocumentKey } from '../../composables/usePrivacy'
 
 const props = defineProps({
   theme: {
@@ -26,6 +27,10 @@ const props = defineProps({
   isPrivacyActive: {
     type: Boolean,
     default: false,
+  },
+  legalDocumentKey: {
+    type: String as () => LegalDocumentKey,
+    default: 'privacy',
   },
   isPortfolioActive: {
     type: Boolean,
@@ -179,6 +184,7 @@ watch(
         v-else-if="props.isPrivacyActive"
         key="privacy-content"
         :theme="theme"
+        :document-key="props.legalDocumentKey"
         @scroll.passive="handleContentScroll"
       />
       <PortfolioDetailContent
