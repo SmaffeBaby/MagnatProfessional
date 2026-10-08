@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import Footer from '../Footer/Footer.vue'
+import PortfolioRelatedProjects from '../PortfolioRelatedProjects/PortfolioRelatedProjects.vue'
 import QuestionsForm from '../QuestionsForm/QuestionsForm.vue'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import { usePortfolioCase } from '../../composables/usePortfolioCase'
@@ -32,7 +33,7 @@ let blockObserver: IntersectionObserver | null = null
 let lastScrollTop = 0
 const panelSlug = computed(() => String(route.params.panelSlug || ''))
 const cardSlug = computed(() => String(route.params.cardSlug || ''))
-const { panel, card, previousCard, nextCard, isLoading } = usePortfolioCase(panelSlug, cardSlug)
+const { panel, card, previousCard, nextCard, relatedCards, isLoading } = usePortfolioCase(panelSlug, cardSlug)
 const isDarkTheme = computed(() => props.theme === 'dark')
 
 const title = computed(() => localized(card.value?.title, card.value?.titleEn))
@@ -217,7 +218,9 @@ watch(card, () => {
   lastScrollTop = 0
   isBackToTopVisible.value = false
   updateProgress()
-  nextTick(setupBlockObserver)
+  nextTick(() => {
+    setupBlockObserver()
+  })
 })
 </script>
 
@@ -335,6 +338,8 @@ watch(card, () => {
             </div>
           </section>
         </section>
+
+        <PortfolioRelatedProjects :cards="relatedCards" :theme="theme" />
 
         <QuestionsForm class="portfolio-case__questions" />
         <Footer />

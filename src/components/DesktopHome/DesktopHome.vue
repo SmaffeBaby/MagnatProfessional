@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRoute } from 'vue-router'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import AboutContent from '../AboutContent/AboutContent.vue'
 import ContactsContent from '../ContactsContent/ContactsContent.vue'
@@ -47,6 +48,7 @@ const props = defineProps({
 })
 
 const isDarkTheme = computed(() => props.theme === 'dark')
+const route = useRoute()
 const isLightPage = computed(() => (
   props.isAboutActive || props.isContactsActive || props.isPrivacyActive || props.isPortfolioCaseActive
 ))
@@ -195,7 +197,7 @@ watch(
       />
       <PortfolioCaseContent
         v-else-if="props.isPortfolioCaseActive"
-        key="portfolio-case-content"
+        :key="`portfolio-case-content-${route.fullPath}`"
         :theme="theme"
         @scroll.passive="handleContentScroll"
       />

@@ -258,6 +258,7 @@ app.get('/api/portfolio/:panelSlug/:cardSlug', async (req, res, next) => {
     const mappedCards = cardsWithArticleBlocks.map((card) => portfolioCardFromDatabase(card, panel.slug))
     const previousCard = mappedCards[(currentIndex - 1 + mappedCards.length) % mappedCards.length] || null
     const nextCard = mappedCards[(currentIndex + 1) % mappedCards.length] || null
+    const relatedCards = mappedCards.filter((card) => card.id !== mappedCards[currentIndex]?.id)
 
     res
       .set({
@@ -268,6 +269,7 @@ app.get('/api/portfolio/:panelSlug/:cardSlug', async (req, res, next) => {
         card: mappedCards[currentIndex],
         previousCard: previousCard?.id === mappedCards[currentIndex]?.id ? null : previousCard,
         nextCard: nextCard?.id === mappedCards[currentIndex]?.id ? null : nextCard,
+        relatedCards,
       })
   } catch (error) {
     next(error)
