@@ -73,6 +73,7 @@ const mediaCache = new Map()
 let mediaCacheBytes = 0
 let mailTransporter = null
 const LEGAL_DOCUMENT_KEYS = new Set(['privacy', 'user-agreement', 'policy'])
+const DIGITAL_PANEL_EXTERNAL_URL = 'https://lightdigital.ru/'
 
 app.use(cors({ origin: CORS_ORIGIN.split(',').map((origin) => origin.trim()) }))
 app.use(express.json())
@@ -2561,11 +2562,13 @@ function normalizeOptionalSeoUrl(value) {
 }
 
 function panelFromDatabase(panel, options = {}) {
+  const slug = panel.slug || slugify(panel.title)
+
   return {
     id: panel.id,
     title: panel.title,
     titleEn: panel.title_en,
-    slug: panel.slug || slugify(panel.title),
+    slug,
     detailText: panel.detail_text || '',
     detailTextEn: panel.detail_text_en,
     mascotPath: panel.mascot_path,
@@ -2582,11 +2585,18 @@ function panelFromDatabase(panel, options = {}) {
     videoUrl: storageUrl(panel.video_url, panel.video_path, SUPABASE_HOME_PANELS_BUCKET, options),
     posterPath: panel.poster_path,
     posterUrl: storageUrl(panel.poster_url, panel.poster_path, SUPABASE_HOME_PANELS_BUCKET, options),
-    linkPath: `/portfolio/${panel.slug || slugify(panel.title)}/`,
+    linkPath: isDigitalPanel(panel, slug) ? DIGITAL_PANEL_EXTERNAL_URL : `/portfolio/${slug}/`,
     tileType: panel.tile_type,
     createdAt: panel.created_at,
     updatedAt: panel.updated_at,
   }
+}
+
+function isDigitalPanel(panel, slug = panel.slug || slugify(panel.title)) {
+  const title = String(panel.title || '').trim().replace(/^#+\s*/, '').toLowerCase()
+  const titleEn = String(panel.title_en || '').trim().replace(/^#+\s*/, '').toLowerCase()
+
+  return slug === 'digital' || title === 'digital' || titleEn === 'digital'
 }
 
 function panelToDatabase(panel) {

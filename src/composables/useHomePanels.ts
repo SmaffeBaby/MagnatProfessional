@@ -79,3 +79,7 @@ export function useHomePanels() {
     loadHomePanels: query.refetch,
   }
 }
+
+export function isExternalLink(link?: string | null) {
+  return /^https?:\/\//i.test(String(link || ''))
+}

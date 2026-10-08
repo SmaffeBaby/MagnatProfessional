@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import { RouterLink } from 'vue-router'
 import { useLanguageStore } from '../../composables/useLanguageStore'
-import { useHomePanels } from '../../composables/useHomePanels'
+import { isExternalLink, useHomePanels } from '../../composables/useHomePanels'
 
 const props = defineProps({
   theme: {
@@ -198,12 +199,16 @@ watch(shouldUseVideo, (useVideo) => {
     ]"
     aria-label="Панели на главной"
   >
-    <RouterLink
+    <component
+      :is="isExternalLink(panel.linkPath) ? 'a' : RouterLink"
       v-for="(panel, panelIndex) in panels"
       :key="panel.id"
       class="home-panels__item"
       :class="`home-panels__item--${panel.tileType}`"
-      :to="panel.linkPath"
+      :to="isExternalLink(panel.linkPath) ? undefined : panel.linkPath"
+      :href="isExternalLink(panel.linkPath) ? panel.linkPath : undefined"
+      :target="isExternalLink(panel.linkPath) ? '_blank' : undefined"
+      :rel="isExternalLink(panel.linkPath) ? 'noopener noreferrer' : undefined"
       :style="panelGradient(panel)"
     >
       <video
@@ -232,7 +237,7 @@ watch(shouldUseVideo, (useVideo) => {
 
       <span class="home-panels__shade" aria-hidden="true" />
       <span class="home-panels__title">{{ panelTitle(panel) }}</span>
-    </RouterLink>
+    </component>
   </section>
 </template>
 

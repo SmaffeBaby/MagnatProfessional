@@ -2,8 +2,9 @@
 import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
-import { useHomePanels } from '../../composables/useHomePanels'
+import { isExternalLink, useHomePanels } from '../../composables/useHomePanels'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 
 const props = defineProps({
@@ -86,15 +87,19 @@ function panelTitle(panel) {
       :class="isAboutLight ? 'text-black/45' : 'text-white/45'"
       :aria-label="t('sidebar.servicesLabel')"
     >
-      <RouterLink
+      <component
+        :is="isExternalLink(panel.linkPath) ? 'a' : RouterLink"
         v-for="panel in panels"
         :key="panel.id"
         class="transition"
         :class="isAboutLight ? 'hover:text-black' : 'hover:text-white'"
-        :to="panel.linkPath || '/portfolio'"
+        :to="isExternalLink(panel.linkPath) ? undefined : panel.linkPath || '/portfolio'"
+        :href="isExternalLink(panel.linkPath) ? panel.linkPath : undefined"
+        :target="isExternalLink(panel.linkPath) ? '_blank' : undefined"
+        :rel="isExternalLink(panel.linkPath) ? 'noopener noreferrer' : undefined"
       >
         {{ panelTitle(panel) }}
-      </RouterLink>
+      </component>
     </nav>
 
     <div class="desktop-sidebar__contacts mt-auto space-y-0 pt-8">
