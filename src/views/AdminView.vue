@@ -166,6 +166,7 @@ async function resetProjectRequestFilters() {
         @edit-card="homePanels.editCard"
         @edit-case="homePanels.editCase"
         @delete-card="homePanels.deleteCard"
+        @transfer-card="homePanels.transferCard"
       />
 
       <AboutUsAdminSection

@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { HomePanel, PortfolioArticleBlockLayout, PortfolioCard } from '../../composables/useHomePanels'
 import type { PanelUploadTarget, PortfolioCardForm, PortfolioCaseForm } from '../../composables/Admin/useAdminHomePanels'
 
-defineProps<{
+const props = defineProps<{
   cards: PortfolioCard[]
+  panels: HomePanel[]
   form: PortfolioCardForm
   caseForm: PortfolioCaseForm
   formTitle: string
@@ -34,7 +36,25 @@ const emit = defineEmits<{
   edit: [card: PortfolioCard]
   editCase: [card: PortfolioCard]
   delete: [card: PortfolioCard]
+  transfer: [card: PortfolioCard, targetPanelId: string, mode: 'move' | 'copy']
 }>()
+
+const transferPanelIds = ref<Record<string, string>>({})
+
+function availablePanels(card: PortfolioCard) {
+  return props.panels.filter((panel) => panel.id !== card.panelId)
+}
+
+function transferCard(card: PortfolioCard, mode: 'move' | 'copy') {
+  const targetPanelId = transferPanelIds.value[card.id]
+
+  if (!targetPanelId) {
+    window.alert('Выберите панель для переноса или копирования карточки.')
+    return
+  }
+
+  emit('transfer', card, targetPanelId, mode)
+}
 
 function uploadFile(event: Event, target: Exclude<PanelUploadTarget, 'mascot'>) {
   const input = event.target as HTMLInputElement
@@ -206,6 +226,17 @@ function uploadCaseHero(event: Event) {
           <div class="panel-list__actions">
             <button type="button" @click="$emit('edit', card)">Изменить</button>
             <button type="button" @click="$emit('editCase', card)">Кейсы</button>
+            <label class="portfolio-card-transfer">
+              <span>В другую панель</span>
+              <select v-model="transferPanelIds[card.id]" :disabled="isSaving || availablePanels(card).length === 0">
+                <option value="">Выбрать панель</option>
+                <option v-for="panel in availablePanels(card)" :key="panel.id" :value="panel.id">
+                  {{ panel.title }}
+                </option>
+              </select>
+            </label>
+            <button type="button" class="button-secondary" :disabled="isSaving || !transferPanelIds[card.id]" @click="transferCard(card, 'copy')">Копировать</button>
+            <button type="button" class="button-secondary" :disabled="isSaving || !transferPanelIds[card.id]" @click="transferCard(card, 'move')">Переместить</button>
             <button type="button" class="button-danger" @click="$emit('delete', card)">Удалить</button>
           </div>
         </article>

@@ -541,6 +541,26 @@
   gap: 10px;
 }
 
+.portfolio-card-transfer {
+  display: grid;
+  min-width: 220px;
+  gap: 6px;
+  color: #555555;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.portfolio-card-transfer select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid #d6d6d6;
+  border-radius: 6px;
+  padding: 0 12px;
+  color: #171717;
+  background: #ffffff;
+  font: inherit;
+}
+
 .panel-form__actions {
   margin-top: 22px;
 }

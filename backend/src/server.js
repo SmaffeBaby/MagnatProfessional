@@ -717,6 +717,105 @@ app.put('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, async
   }
 })
 
+app.post('/api/admin/home-panels/:panelId/cards/:cardId/transfer', requireAdminAuth, async (req, res, next) => {
+  try {
+    const mode = req.body?.mode === 'copy' ? 'copy' : 'move'
+    const targetPanelId = String(req.body?.targetPanelId || '').trim()
+
+    if (!targetPanelId) {
+      res.status(400).json({ error: 'Target panel is required' })
+      return
+    }
+
+    const sourcePanel = await getPanelById(req.params.panelId)
+    const targetPanel = await getPanelById(targetPanelId)
+    const { data: sourceCard, error: fetchError } = await supabase
+      .from('portfolio_cards')
+      .select('*')
+      .eq('id', req.params.cardId)
+      .eq('panel_id', sourcePanel.id)
+      .maybeSingle()
+
+    if (fetchError) {
+      throw fetchError
+    }
+
+    if (!sourceCard) {
+      res.status(404).json({ error: 'Portfolio card not found' })
+      return
+    }
+
+    if (mode === 'move' && sourcePanel.id === targetPanel.id) {
+      const [cardWithArticleBlocks] = await attachArticleBlocksToCards([sourceCard], { proxyMedia: false })
+      res.json({
+        card: portfolioCardFromDatabase(cardWithArticleBlocks, targetPanel.slug, { proxyMedia: false }),
+      })
+      return
+    }
+
+    const slug = await uniquePortfolioCardSlug(targetPanel.id, sourceCard.slug || sourceCard.title, mode === 'move' ? sourceCard.id : null)
+
+    if (mode === 'move') {
+      const { data, error } = await supabase
+        .from('portfolio_cards')
+        .update({
+          panel_id: targetPanel.id,
+          slug,
+        })
+        .eq('id', sourceCard.id)
+        .eq('panel_id', sourcePanel.id)
+        .select('*')
+        .single()
+
+      if (error) {
+        throw error
+      }
+
+      const [cardWithArticleBlocks] = await attachArticleBlocksToCards([data], { proxyMedia: false })
+      res.json({
+        card: portfolioCardFromDatabase(cardWithArticleBlocks, targetPanel.slug, { proxyMedia: false }),
+      })
+      return
+    }
+
+    const {
+      id: _id,
+      created_at: _createdAt,
+      updated_at: _updatedAt,
+      articleBlocks,
+      ...copyPayload
+    } = sourceCard
+    const { data, error } = await supabase
+      .from('portfolio_cards')
+      .insert({
+        ...copyPayload,
+        panel_id: targetPanel.id,
+        slug,
+        article_blocks: normalizeArticleBlocks(articleBlocks || sourceCard.article_blocks, { proxyMedia: false }),
+      })
+      .select('*')
+      .single()
+
+    if (error) {
+      throw error
+    }
+
+    const [sourceCardWithArticleBlocks] = await attachArticleBlocksToCards([sourceCard], { proxyMedia: false })
+    const copiedBlocks = clonePortfolioArticleBlocksForCopy(sourceCardWithArticleBlocks.articleBlocks || [])
+    const copiedArticleBlocks = await savePortfolioCardArticleBlocks(
+      data.id,
+      copiedBlocks,
+      { proxyMedia: false },
+    )
+
+    res.status(201).json({
+      card: portfolioCardFromDatabase({ ...data, articleBlocks: copiedArticleBlocks }, targetPanel.slug, { proxyMedia: false }),
+    })
+  } catch (error) {
+    next(error)
+  }
+})
+
 app.delete('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, async (req, res, next) => {
   try {
     const { data: card, error: fetchError } = await supabase
@@ -742,7 +841,10 @@ app.delete('/api/admin/home-panels/:panelId/cards/:cardId', requireAdminAuth, as
       throw error
     }
 
-    await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, collectMediaPaths(cardWithArticleBlocks))
+    await deleteStorageFiles(
+      SUPABASE_PORTFOLIO_BUCKET,
+      await unusedPortfolioMediaPaths(collectMediaPaths(cardWithArticleBlocks), [req.params.cardId]),
+    )
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -809,6 +911,7 @@ app.delete('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next
       throw cardsFetchError
     }
 
+    const cardsWithArticleBlocks = await attachArticleBlocksToCards(cards, { proxyMedia: false })
     const { error } = await supabase
       .from('home_panels')
       .delete()
@@ -819,12 +922,16 @@ app.delete('/api/admin/home-panels/:id', requireAdminAuth, async (req, res, next
     }
 
     await deleteStorageFiles(SUPABASE_HOME_PANELS_BUCKET, collectMediaPaths(panel))
-    const cardsWithArticleBlocks = await attachArticleBlocksToCards(cards)
-
-    await deleteStorageFiles(SUPABASE_PORTFOLIO_BUCKET, [
-      ...(panel?.mascot_path ? [panel.mascot_path] : []),
-      ...cardsWithArticleBlocks.flatMap(collectMediaPaths),
-    ])
+    await deleteStorageFiles(
+      SUPABASE_PORTFOLIO_BUCKET,
+      [
+        ...(panel?.mascot_path ? [panel.mascot_path] : []),
+        ...await unusedPortfolioMediaPaths(
+          cardsWithArticleBlocks.flatMap(collectMediaPaths),
+          cardsWithArticleBlocks.map((card) => card.id),
+        ),
+      ],
+    )
     res.status(204).end()
   } catch (error) {
     next(error)
@@ -2084,6 +2191,25 @@ function articleBlockToDatabase(block, cardId, index) {
   }
 }
 
+function clonePortfolioArticleBlocksForCopy(blocks) {
+  return normalizeArticleBlocks(blocks, { proxyMedia: false }).map((block) => ({
+    ...block,
+    id: crypto.randomUUID(),
+    imageGroups: (block.imageGroups || []).map((group) => ({
+      ...group,
+      id: crypto.randomUUID(),
+      images: (group.images || []).map((image) => ({
+        ...image,
+        id: crypto.randomUUID(),
+      })),
+    })),
+    images: (block.images || []).map((image) => ({
+      ...image,
+      id: crypto.randomUUID(),
+    })),
+  }))
+}
+
 async function attachArticleBlocksToCards(cards, options = {}) {
   if (!Array.isArray(cards) || cards.length === 0) {
     return []
@@ -2735,6 +2861,64 @@ async function getPanelById(panelId) {
   }
 
   return data
+}
+
+async function uniquePortfolioCardSlug(panelId, value, excludeCardId = null) {
+  const baseSlug = normalizeSlug(value || 'card') || 'card'
+  let nextSlug = baseSlug
+  let suffix = 2
+
+  while (true) {
+    let query = supabase
+      .from('portfolio_cards')
+      .select('id')
+      .eq('panel_id', panelId)
+      .eq('slug', nextSlug)
+      .limit(1)
+
+    if (excludeCardId) {
+      query = query.neq('id', excludeCardId)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      return nextSlug
+    }
+
+    nextSlug = `${baseSlug}-${suffix}`
+    suffix += 1
+  }
+}
+
+async function unusedPortfolioMediaPaths(paths, ignoredCardIds = []) {
+  const uniquePaths = [...new Set(paths.filter(Boolean))]
+
+  if (uniquePaths.length === 0) {
+    return []
+  }
+
+  const ignoredIds = new Set(ignoredCardIds.filter(Boolean))
+  const { data, error } = await supabase
+    .from('portfolio_cards')
+    .select('id, image_path, video_path, poster_path, case_hero_path, article_blocks')
+
+  if (error) {
+    throw error
+  }
+
+  const cardsWithArticleBlocks = await attachArticleBlocksToCards(data || [], { proxyMedia: false })
+  const usedPaths = new Set(
+    cardsWithArticleBlocks
+      .filter((card) => !ignoredIds.has(card.id))
+      .flatMap(collectMediaPaths),
+  )
+
+  return uniquePaths.filter((path) => !usedPaths.has(path))
 }
 
 async function getAboutUsContent() {
@@ -3572,11 +3756,7 @@ async function ensureDatabaseSchema() {
         sort_order
       )
       select
-        case
-          when block.value->>'id' ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$'
-            then (block.value->>'id')::uuid
-          else gen_random_uuid()
-        end,
+        gen_random_uuid(),
         card.id,
         coalesce(block.value->>'title', ''),
         nullif(block.value->>'titleEn', ''),

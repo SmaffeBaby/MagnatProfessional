@@ -51,6 +51,7 @@ defineEmits<{
   editCard: [card: PortfolioCard]
   editCase: [card: PortfolioCard]
   deleteCard: [card: PortfolioCard]
+  transferCard: [card: PortfolioCard, targetPanelId: string, mode: 'move' | 'copy']
 }>()
 </script>
 
@@ -90,6 +91,7 @@ defineEmits<{
     <PortfolioCardsAdminSection
       class="admin-tree-section"
       :cards="cards"
+      :panels="panels"
       :form="cardForm"
       :case-form="caseForm"
       :form-title="cardFormTitle"
@@ -117,6 +119,7 @@ defineEmits<{
       @edit="(card) => $emit('editCard', card)"
       @edit-case="(card) => $emit('editCase', card)"
       @delete="(card) => $emit('deleteCard', card)"
+      @transfer="(card, targetPanelId, mode) => $emit('transferCard', card, targetPanelId, mode)"
     />
   </section>
 </template>

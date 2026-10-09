@@ -379,6 +379,47 @@ export function useAdminHomePanels() {
     }
   }
 
+  async function transferCard(card: PortfolioCard, targetPanelId: string, mode: 'move' | 'copy') {
+    if (!selectedPanel.value) {
+      error.value = 'Сначала выберите панель'
+      return
+    }
+
+    const targetPanel = panels.value.find((panel) => panel.id === targetPanelId)
+    if (!targetPanel) {
+      error.value = 'Целевая панель не найдена'
+      return
+    }
+
+    const actionText = mode === 'copy' ? 'Скопировать' : 'Переместить'
+    if (!window.confirm(`${actionText} карточку «${card.title}» в панель «${targetPanel.title}» вместе с кейсом?`)) {
+      return
+    }
+
+    isLoadingCards.value = true
+    error.value = ''
+
+    try {
+      await adminRequest(`/api/admin/home-panels/${selectedPanel.value.id}/cards/${card.id}/transfer`, {
+        method: 'POST',
+        body: JSON.stringify({
+          targetPanelId,
+          mode,
+        }),
+      })
+
+      await loadCards(selectedPanel.value)
+      resetCardForm()
+      if (caseForm.cardId === card.id && mode === 'move') {
+        resetCaseForm()
+      }
+    } catch (requestError) {
+      error.value = (requestError as Error).message
+    } finally {
+      isLoadingCards.value = false
+    }
+  }
+
   async function uploadFile(file: File, target: PanelUploadTarget) {
     uploadField.value = target
     error.value = ''
@@ -720,6 +761,7 @@ export function useAdminHomePanels() {
     saveCase,
     deletePanel,
     deleteCard,
+    transferCard,
     uploadFile,
     uploadCardFile,
     uploadCaseHero,
