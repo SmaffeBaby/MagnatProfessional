@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { HomePanel, PortfolioArticleBlockLayout, PortfolioCard } from '../../composables/useHomePanels'
 import type { PanelForm, PanelUploadTarget, PortfolioCardForm, PortfolioCaseForm } from '../../composables/Admin/useAdminHomePanels'
 import HomePanelsAdminForm from './HomePanelsAdminForm.vue'
@@ -23,7 +24,7 @@ defineProps<{
   uploadField: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   newPanel: []
   save: []
   reset: []
@@ -52,7 +53,26 @@ defineEmits<{
   editCase: [card: PortfolioCard]
   deleteCard: [card: PortfolioCard]
   transferCard: [card: PortfolioCard, targetPanelId: string, mode: 'move' | 'copy']
+  exportPanels: []
+  importPanels: [file: File]
 }>()
+
+const importInput = ref<HTMLInputElement | null>(null)
+
+function chooseImportFile() {
+  importInput.value?.click()
+}
+
+function importFile(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+
+  if (file) {
+    emit('importPanels', file)
+  }
+
+  input.value = ''
+}
 </script>
 
 <template>
@@ -62,7 +82,12 @@ defineEmits<{
         <p>Раздел</p>
         <h1>Панели на главной</h1>
       </div>
-      <button type="button" @click="$emit('newPanel')">Новая панель</button>
+      <div class="admin-content__header-actions">
+        <button type="button" class="button-secondary" @click="$emit('exportPanels')">Экспорт ZIP</button>
+        <button type="button" class="button-secondary" @click="chooseImportFile">Импорт ZIP</button>
+        <input ref="importInput" class="admin-file-input" type="file" accept=".zip,application/zip" @change="importFile">
+        <button type="button" @click="$emit('newPanel')">Новая панель</button>
+      </div>
     </header>
 
     <p v-if="error" class="admin-message admin-message--error">{{ error }}</p>

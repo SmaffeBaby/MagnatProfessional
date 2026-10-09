@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import crypto from 'node:crypto'
+import zlib from 'node:zlib'
 import express from 'express'
 import cors from 'cors'
 import multer from 'multer'
@@ -49,7 +50,7 @@ const app = express()
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 100 * 1024 * 1024,
+    fileSize: 512 * 1024 * 1024,
   },
 })
 
@@ -74,6 +75,15 @@ let mediaCacheBytes = 0
 let mailTransporter = null
 const LEGAL_DOCUMENT_KEYS = new Set(['privacy', 'user-agreement', 'policy'])
 const DIGITAL_PANEL_EXTERNAL_URL = 'https://lightdigital.ru/'
+const CRC32_TABLE = Array.from({ length: 256 }, (_value, index) => {
+  let crc = index
+
+  for (let bit = 0; bit < 8; bit += 1) {
+    crc = (crc & 1) ? (0xedb88320 ^ (crc >>> 1)) : (crc >>> 1)
+  }
+
+  return crc >>> 0
+})
 
 app.use(cors({ origin: CORS_ORIGIN.split(',').map((origin) => origin.trim()) }))
 app.use(express.json())
@@ -634,6 +644,36 @@ app.get('/api/admin/home-panels', requireAdminAuth, async (_req, res, next) => {
     res.json({
       panels: data.map((panel) => panelFromDatabase(panel, { proxyMedia: false })),
     })
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.get('/api/admin/home-panels/export', requireAdminAuth, async (_req, res, next) => {
+  try {
+    const archive = await buildHomePanelsExportArchive()
+
+    res
+      .set({
+        'Content-Type': 'application/zip',
+        'Content-Disposition': `attachment; filename="magnat-home-panels-${new Date().toISOString().slice(0, 10)}.zip"`,
+        'Content-Length': archive.length,
+      })
+      .send(archive)
+  } catch (error) {
+    next(error)
+  }
+})
+
+app.post('/api/admin/home-panels/import', requireAdminAuth, upload.single('archive'), async (req, res, next) => {
+  try {
+    if (!req.file?.buffer) {
+      res.status(400).json({ error: 'ZIP archive is required' })
+      return
+    }
+
+    const result = await importHomePanelsArchive(req.file.buffer)
+    res.json(result)
   } catch (error) {
     next(error)
   }
@@ -1746,6 +1786,474 @@ async function deleteStorageFiles(bucket, paths) {
   for (const path of uniquePaths) {
     clearMediaCache(bucket, path)
   }
+}
+
+async function buildHomePanelsExportArchive() {
+  const [{ data: panels, error: panelsError }, { data: cards, error: cardsError }, { data: articleBlocks, error: articleBlocksError }] = await Promise.all([
+    supabase
+      .from('home_panels')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('portfolio_cards')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('portfolio_card_article_blocks')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .order('created_at', { ascending: true }),
+  ])
+
+  if (panelsError) {
+    throw panelsError
+  }
+
+  if (cardsError) {
+    throw cardsError
+  }
+
+  if (articleBlocksError) {
+    throw articleBlocksError
+  }
+
+  const files = new Map()
+  for (const panel of panels || []) {
+    addExportFile(files, SUPABASE_HOME_PANELS_BUCKET, panel.image_path)
+    addExportFile(files, SUPABASE_HOME_PANELS_BUCKET, panel.video_path)
+    addExportFile(files, SUPABASE_HOME_PANELS_BUCKET, panel.poster_path)
+    addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, panel.mascot_path)
+  }
+
+  for (const card of cards || []) {
+    addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, card.image_path)
+    addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, card.video_path)
+    addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, card.poster_path)
+    addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, card.case_hero_path)
+    for (const path of collectMediaPaths({ article_blocks: card.article_blocks || [] })) {
+      addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, path)
+    }
+  }
+
+  for (const block of articleBlocks || []) {
+    for (const path of collectMediaPaths({ article_blocks: [{ imageGroups: block.images || [] }] })) {
+      addExportFile(files, SUPABASE_PORTFOLIO_BUCKET, path)
+    }
+  }
+
+  const manifest = {
+    type: 'magnat-home-panels-export',
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    buckets: {
+      homePanels: SUPABASE_HOME_PANELS_BUCKET,
+      portfolio: SUPABASE_PORTFOLIO_BUCKET,
+    },
+    data: {
+      panels: panels || [],
+      cards: cards || [],
+      articleBlocks: articleBlocks || [],
+    },
+  }
+
+  const entries = [{
+    name: 'manifest.json',
+    data: Buffer.from(JSON.stringify(manifest, null, 2)),
+  }]
+
+  for (const file of files.values()) {
+    const data = await downloadStorageFile(file.bucket, file.path)
+    if (data) {
+      entries.push({
+        name: exportFileEntryName(file.bucket, file.path),
+        data,
+      })
+    }
+  }
+
+  return createStoredZip(entries)
+}
+
+async function importHomePanelsArchive(buffer) {
+  const entries = readStoredZip(buffer)
+  const manifestEntry = entries.get('manifest.json')
+
+  if (!manifestEntry) {
+    const error = new Error('manifest.json is missing from archive')
+    error.status = 400
+    throw error
+  }
+
+  const manifest = JSON.parse(manifestEntry.toString('utf8'))
+  if (manifest?.type !== 'magnat-home-panels-export' || manifest?.version !== 1) {
+    const error = new Error('Unsupported home panels archive')
+    error.status = 400
+    throw error
+  }
+
+  await Promise.all([
+    ensureBucket(SUPABASE_HOME_PANELS_BUCKET),
+    ensureBucket(SUPABASE_PORTFOLIO_BUCKET),
+  ])
+
+  let importedFiles = 0
+  for (const [name, data] of entries) {
+    if (!name.startsWith('files/')) {
+      continue
+    }
+
+    const file = parseExportFileEntryName(name)
+    if (!file) {
+      continue
+    }
+
+    const { error } = await supabase.storage
+      .from(file.bucket)
+      .upload(file.path, data, {
+        upsert: true,
+        contentType: contentTypeFromPath(file.path),
+      })
+
+    if (error) {
+      throw error
+    }
+
+    clearMediaCache(file.bucket, file.path)
+    importedFiles += 1
+  }
+
+  await replaceHomePanelsData(manifest.data || {})
+
+  return {
+    panels: manifest.data?.panels?.length || 0,
+    cards: manifest.data?.cards?.length || 0,
+    articleBlocks: manifest.data?.articleBlocks?.length || 0,
+    files: importedFiles,
+  }
+}
+
+function addExportFile(files, bucket, path) {
+  if (!bucket || !path) {
+    return
+  }
+
+  files.set(`${bucket}/${path}`, { bucket, path })
+}
+
+async function downloadStorageFile(bucket, path) {
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .download(path)
+
+  if (error) {
+    console.warn(`Failed to add ${bucket}/${path} to export:`, error.message)
+    return null
+  }
+
+  return Buffer.from(await data.arrayBuffer())
+}
+
+function exportFileEntryName(bucket, path) {
+  return `files/${encodeURIComponent(bucket)}/${String(path).split('/').map((segment) => encodeURIComponent(segment)).join('/')}`
+}
+
+function parseExportFileEntryName(name) {
+  const parts = String(name).split('/')
+
+  if (parts.length < 3 || parts[0] !== 'files') {
+    return null
+  }
+
+  const bucket = decodeURIComponent(parts[1])
+  const path = parts.slice(2).map((part) => decodeURIComponent(part)).join('/')
+
+  if (!bucket || !path || path.includes('..')) {
+    return null
+  }
+
+  return { bucket, path }
+}
+
+function contentTypeFromPath(path) {
+  const extension = String(path).split('.').pop()?.toLowerCase()
+  const types = {
+    avif: 'image/avif',
+    gif: 'image/gif',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    mov: 'video/quicktime',
+    mp4: 'video/mp4',
+    png: 'image/png',
+    svg: 'image/svg+xml',
+    webm: 'video/webm',
+    webp: 'image/webp',
+  }
+
+  return types[extension] || 'application/octet-stream'
+}
+
+async function replaceHomePanelsData(data) {
+  const panels = Array.isArray(data.panels) ? data.panels : []
+  const cards = Array.isArray(data.cards) ? data.cards : []
+  const articleBlocks = Array.isArray(data.articleBlocks) ? data.articleBlocks : []
+  const client = new PgClient({
+    host: POSTGRES_HOST,
+    port: Number(POSTGRES_PORT),
+    database: POSTGRES_DB,
+    user: POSTGRES_USER,
+    password: POSTGRES_PASSWORD,
+  })
+
+  await client.connect()
+
+  try {
+    await client.query('begin')
+    await client.query('delete from public.portfolio_card_article_blocks')
+    await client.query('delete from public.portfolio_cards')
+    await client.query('delete from public.home_panels')
+
+    for (const panel of panels) {
+      await client.query(`
+        insert into public.home_panels (
+          id, title, title_en, slug, detail_text, detail_text_en, mascot_path, mascot_url,
+          sort_order, gradient_from_color, gradient_from_opacity, gradient_to_color,
+          gradient_to_opacity, gradient_to_position, image_path, image_url, video_path,
+          video_url, poster_path, poster_url, link_path, tile_type, created_at, updated_at
+        )
+        values (
+          $1, $2, $3, $4, $5, $6, $7, $8,
+          $9, $10, $11, $12,
+          $13, $14, $15, $16, $17,
+          $18, $19, $20, $21, $22, $23, $24
+        )
+      `, [
+        panel.id,
+        panel.title,
+        panel.title_en,
+        panel.slug,
+        panel.detail_text || '',
+        panel.detail_text_en,
+        panel.mascot_path,
+        panel.mascot_url,
+        panel.sort_order ?? 0,
+        panel.gradient_from_color || '#DA2128',
+        panel.gradient_from_opacity ?? 1,
+        panel.gradient_to_color || '#DA2128',
+        panel.gradient_to_opacity ?? 0,
+        panel.gradient_to_position ?? 70,
+        panel.image_path,
+        panel.image_url,
+        panel.video_path,
+        panel.video_url,
+        panel.poster_path,
+        panel.poster_url,
+        panel.link_path || `/portfolio/${panel.slug}/`,
+        panel.tile_type === 'vertical' ? 'vertical' : 'wide',
+        panel.created_at || new Date().toISOString(),
+        panel.updated_at || new Date().toISOString(),
+      ])
+    }
+
+    for (const card of cards) {
+      await client.query(`
+        insert into public.portfolio_cards (
+          id, panel_id, title, title_en, slug, sort_order, gradient_from_color,
+          gradient_from_opacity, gradient_to_color, gradient_to_opacity,
+          gradient_to_position, image_path, image_url, video_path, video_url,
+          poster_path, poster_url, case_hero_path, case_hero_url, tile_type,
+          article_blocks, created_at, updated_at
+        )
+        values (
+          $1, $2, $3, $4, $5, $6, $7,
+          $8, $9, $10,
+          $11, $12, $13, $14, $15,
+          $16, $17, $18, $19, $20,
+          $21::jsonb, $22, $23
+        )
+      `, [
+        card.id,
+        card.panel_id,
+        card.title,
+        card.title_en,
+        card.slug,
+        card.sort_order ?? 0,
+        card.gradient_from_color || '#DA2128',
+        card.gradient_from_opacity ?? 1,
+        card.gradient_to_color || '#DA2128',
+        card.gradient_to_opacity ?? 0,
+        card.gradient_to_position ?? 70,
+        card.image_path,
+        card.image_url,
+        card.video_path,
+        card.video_url,
+        card.poster_path,
+        card.poster_url,
+        card.case_hero_path,
+        card.case_hero_url,
+        card.tile_type === 'wide' ? 'wide' : 'vertical',
+        JSON.stringify(card.article_blocks || []),
+        card.created_at || new Date().toISOString(),
+        card.updated_at || new Date().toISOString(),
+      ])
+    }
+
+    for (const block of articleBlocks) {
+      await client.query(`
+        insert into public.portfolio_card_article_blocks (
+          id, card_id, title, title_en, text, text_en, layout, images,
+          sort_order, created_at, updated_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8::jsonb, $9, $10, $11)
+      `, [
+        block.id,
+        block.card_id,
+        block.title || '',
+        block.title_en,
+        block.text || '',
+        block.text_en,
+        ['single-wide', 'two-medium', 'three-vertical'].includes(block.layout) ? block.layout : 'single-wide',
+        JSON.stringify(block.images || []),
+        block.sort_order ?? 0,
+        block.created_at || new Date().toISOString(),
+        block.updated_at || new Date().toISOString(),
+      ])
+    }
+
+    await client.query('commit')
+  } catch (error) {
+    await client.query('rollback')
+    throw error
+  } finally {
+    await client.end()
+  }
+}
+
+function createStoredZip(entries) {
+  const localParts = []
+  const centralParts = []
+  let offset = 0
+
+  for (const entry of entries) {
+    const name = Buffer.from(entry.name)
+    const data = Buffer.isBuffer(entry.data) ? entry.data : Buffer.from(entry.data)
+    const crc = crc32(data)
+    const localHeader = Buffer.alloc(30)
+
+    localHeader.writeUInt32LE(0x04034b50, 0)
+    localHeader.writeUInt16LE(20, 4)
+    localHeader.writeUInt16LE(0x0800, 6)
+    localHeader.writeUInt16LE(0, 8)
+    localHeader.writeUInt16LE(0, 10)
+    localHeader.writeUInt16LE(0, 12)
+    localHeader.writeUInt32LE(crc, 14)
+    localHeader.writeUInt32LE(data.length, 18)
+    localHeader.writeUInt32LE(data.length, 22)
+    localHeader.writeUInt16LE(name.length, 26)
+    localHeader.writeUInt16LE(0, 28)
+    localParts.push(localHeader, name, data)
+
+    const centralHeader = Buffer.alloc(46)
+    centralHeader.writeUInt32LE(0x02014b50, 0)
+    centralHeader.writeUInt16LE(20, 4)
+    centralHeader.writeUInt16LE(20, 6)
+    centralHeader.writeUInt16LE(0x0800, 8)
+    centralHeader.writeUInt16LE(0, 10)
+    centralHeader.writeUInt16LE(0, 12)
+    centralHeader.writeUInt16LE(0, 14)
+    centralHeader.writeUInt32LE(crc, 16)
+    centralHeader.writeUInt32LE(data.length, 20)
+    centralHeader.writeUInt32LE(data.length, 24)
+    centralHeader.writeUInt16LE(name.length, 28)
+    centralHeader.writeUInt16LE(0, 30)
+    centralHeader.writeUInt16LE(0, 32)
+    centralHeader.writeUInt16LE(0, 34)
+    centralHeader.writeUInt16LE(0, 36)
+    centralHeader.writeUInt32LE(0, 38)
+    centralHeader.writeUInt32LE(offset, 42)
+    centralParts.push(centralHeader, name)
+
+    offset += localHeader.length + name.length + data.length
+  }
+
+  const centralDirectory = Buffer.concat(centralParts)
+  const end = Buffer.alloc(22)
+  end.writeUInt32LE(0x06054b50, 0)
+  end.writeUInt16LE(0, 4)
+  end.writeUInt16LE(0, 6)
+  end.writeUInt16LE(entries.length, 8)
+  end.writeUInt16LE(entries.length, 10)
+  end.writeUInt32LE(centralDirectory.length, 12)
+  end.writeUInt32LE(offset, 16)
+  end.writeUInt16LE(0, 20)
+
+  return Buffer.concat([...localParts, centralDirectory, end])
+}
+
+function readStoredZip(buffer) {
+  const archive = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer)
+  const endOffset = archive.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]))
+
+  if (endOffset < 0) {
+    const error = new Error('Invalid ZIP archive')
+    error.status = 400
+    throw error
+  }
+
+  const entryCount = archive.readUInt16LE(endOffset + 10)
+  let centralOffset = archive.readUInt32LE(endOffset + 16)
+  const entries = new Map()
+
+  for (let index = 0; index < entryCount; index += 1) {
+    if (archive.readUInt32LE(centralOffset) !== 0x02014b50) {
+      const error = new Error('Invalid ZIP central directory')
+      error.status = 400
+      throw error
+    }
+
+    const method = archive.readUInt16LE(centralOffset + 10)
+    const compressedSize = archive.readUInt32LE(centralOffset + 20)
+    const uncompressedSize = archive.readUInt32LE(centralOffset + 24)
+    const nameLength = archive.readUInt16LE(centralOffset + 28)
+    const extraLength = archive.readUInt16LE(centralOffset + 30)
+    const commentLength = archive.readUInt16LE(centralOffset + 32)
+    const localOffset = archive.readUInt32LE(centralOffset + 42)
+    const name = archive.subarray(centralOffset + 46, centralOffset + 46 + nameLength).toString('utf8')
+
+    if (![0, 8].includes(method)) {
+      const error = new Error('Unsupported ZIP compression method')
+      error.status = 400
+      throw error
+    }
+
+    const localNameLength = archive.readUInt16LE(localOffset + 26)
+    const localExtraLength = archive.readUInt16LE(localOffset + 28)
+    const dataOffset = localOffset + 30 + localNameLength + localExtraLength
+    const compressedData = archive.subarray(dataOffset, dataOffset + compressedSize)
+    const data = method === 8 ? zlib.inflateRawSync(compressedData) : compressedData
+
+    if (data.length !== uncompressedSize) {
+      const error = new Error('Invalid ZIP entry size')
+      error.status = 400
+      throw error
+    }
+
+    entries.set(name, data)
+    centralOffset += 46 + nameLength + extraLength + commentLength
+  }
+
+  return entries
+}
+
+function crc32(buffer) {
+  let crc = 0xffffffff
+
+  for (const byte of buffer) {
+    crc = CRC32_TABLE[(crc ^ byte) & 0xff] ^ (crc >>> 8)
+  }
+
+  return (crc ^ 0xffffffff) >>> 0
 }
 
 function clearMediaCache(bucket, objectPath) {

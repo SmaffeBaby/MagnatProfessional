@@ -167,6 +167,8 @@ async function resetProjectRequestFilters() {
         @edit-case="homePanels.editCase"
         @delete-card="homePanels.deleteCard"
         @transfer-card="homePanels.transferCard"
+        @export-panels="homePanels.exportPanelsArchive"
+        @import-panels="homePanels.importPanelsArchive"
       />
 
       <AboutUsAdminSection

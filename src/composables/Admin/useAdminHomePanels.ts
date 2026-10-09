@@ -1,5 +1,5 @@
 import { computed, reactive, ref } from 'vue'
-import { adminRequest, deleteAdminFile, uploadAdminFile } from '../useAdminApi'
+import { adminRequest, deleteAdminFile, getAdminToken, uploadAdminFile } from '../useAdminApi'
 import type {
   HomePanel,
   HomePanelTileType,
@@ -376,6 +376,68 @@ export function useAdminHomePanels() {
       error.value = (requestError as Error).message
     } finally {
       isLoadingCards.value = false
+    }
+  }
+
+  async function exportPanelsArchive() {
+    error.value = ''
+
+    try {
+      const headers = new Headers()
+      const token = getAdminToken()
+
+      if (token) {
+        headers.set('Authorization', `Bearer ${token}`)
+      }
+
+      const response = await fetch('/api/admin/home-panels/export', { headers })
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => ({}))
+        throw new Error(payload.error || `Request failed with status ${response.status}`)
+      }
+
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `magnat-home-panels-${new Date().toISOString().slice(0, 10)}.zip`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (requestError) {
+      error.value = (requestError as Error).message
+    }
+  }
+
+  async function importPanelsArchive(file: File) {
+    if (!window.confirm('Импорт заменит текущие панели, карточки и кейсы данными из ZIP-архива. Продолжить?')) {
+      return
+    }
+
+    isLoading.value = true
+    error.value = ''
+
+    try {
+      const body = new FormData()
+      body.append('archive', file)
+      await adminRequest('/api/admin/home-panels/import', {
+        method: 'POST',
+        body,
+      })
+
+      resetForm()
+      resetCardForm()
+      resetCaseForm()
+      selectedPanel.value = null
+      cards.value = []
+      await loadPanels()
+      window.alert('Импорт завершён.')
+    } catch (requestError) {
+      error.value = (requestError as Error).message
+    } finally {
+      isLoading.value = false
     }
   }
 
@@ -761,6 +823,8 @@ export function useAdminHomePanels() {
     saveCase,
     deletePanel,
     deleteCard,
+    exportPanelsArchive,
+    importPanelsArchive,
     transferCard,
     uploadFile,
     uploadCardFile,
