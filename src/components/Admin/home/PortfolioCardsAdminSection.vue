@@ -1,7 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { HomePanel, PortfolioArticleBlockLayout, PortfolioCard } from '../../composables/useHomePanels'
-import type { PanelUploadTarget, PortfolioCardForm, PortfolioCaseForm } from '../../composables/Admin/useAdminHomePanels'
+import { computed, ref, watch } from 'vue'
+import AdminPagination from '../shared/AdminPagination.vue'
+import PortfolioCaseAdminEditor from './PortfolioCaseAdminEditor.vue'
+import { useRoute, useRouter } from 'vue-router'
+import type { HomePanel, PortfolioArticleBlockLayout, PortfolioCard } from '../../../composables/useHomePanels'
+import type { PanelUploadTarget, PortfolioCardForm, PortfolioCaseForm } from '../../../composables/Admin/useAdminHomePanels'
 
 const props = defineProps<{
   cards: PortfolioCard[]
@@ -14,6 +17,7 @@ const props = defineProps<{
   isSaving: boolean
   selectedPanel: HomePanel | null
   uploadField: string
+  error: string
 }>()
 
 const emit = defineEmits<{
@@ -39,6 +43,25 @@ const emit = defineEmits<{
   transfer: [card: PortfolioCard, targetPanelId: string, mode: 'move' | 'copy']
 }>()
 
+const route = useRoute()
+const router = useRouter()
+const caseId = computed(() => String(route.query.case || ''))
+const currentCase = computed(() => props.cards.find(card => card.id === caseId.value))
+function openCase(card: PortfolioCard) {
+  router.push({ query: { ...route.query, case: card.id, caseTab: 'content' } })
+}
+function closeCase() {
+  router.push({ query: { ...route.query, case: undefined, caseTab: undefined }, hash: '' })
+}
+function restoreCase() {
+  if (currentCase.value && !props.isLoading) emit('editCase', currentCase.value)
+}
+watch([caseId, () => props.cards, () => props.isLoading], restoreCase, { immediate: true })
+const page = ref(1)
+const pageSize = 6
+const visibleCards = computed(() => props.cards.slice((page.value - 1) * pageSize, page.value * pageSize))
+watch(() => props.selectedPanel?.id, () => { page.value = 1 })
+watch(() => props.cards.length, length => { page.value = Math.min(page.value, Math.max(1, Math.ceil(length / pageSize))) })
 const transferPanelIds = ref<Record<string, string>>({})
 
 function availablePanels(card: PortfolioCard) {
@@ -67,31 +90,10 @@ function uploadFile(event: Event, target: Exclude<PanelUploadTarget, 'mascot'>) 
   input.value = ''
 }
 
-function uploadArticleImage(event: Event, blockId: string, groupId: string) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-
-  if (file) {
-    emit('uploadArticleImage', file, blockId, groupId)
-  }
-
-  input.value = ''
-}
-
-function uploadCaseHero(event: Event) {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-
-  if (file) {
-    emit('uploadCaseHero', file)
-  }
-
-  input.value = ''
-}
 </script>
 
 <template>
-  <section class="panel-list portfolio-cards-admin">
+  <section v-if="!caseId" class="panel-list portfolio-cards-admin">
     <header class="portfolio-cards-admin__header">
       <div>
         <p>Вложенный раздел</p>
@@ -216,16 +218,16 @@ function uploadCaseHero(event: Event) {
       </form>
 
       <div class="panel-list">
-        <h2>Карточки</h2>
+        <h2>Карточки</h2><AdminPagination v-model="page" :total="cards.length" :page-size="pageSize" />
         <p v-if="isLoading" class="admin-message">Загружаем данные...</p>
-        <article v-for="card in cards" :key="card.id" class="panel-list__item">
+        <article v-for="card in visibleCards" :key="card.id" class="panel-list__item">
           <div>
             <h3>{{ card.title }}</h3>
             <p>{{ card.sortOrder }} · {{ card.tileType === 'wide' ? 'Широкая' : 'Вертикальная' }} · {{ card.linkPath }}</p>
           </div>
           <div class="panel-list__actions">
             <button type="button" @click="$emit('edit', card)">Изменить</button>
-            <button type="button" @click="$emit('editCase', card)">Кейсы</button>
+            <button type="button" @click="openCase(card)">Открыть кейс →</button>
             <label class="portfolio-card-transfer">
               <span>В другую панель</span>
               <select v-model="transferPanelIds[card.id]" :disabled="isSaving || availablePanels(card).length === 0">
@@ -243,138 +245,18 @@ function uploadCaseHero(event: Event) {
       </div>
     </div>
 
-    <section v-if="selectedPanel" class="portfolio-case-admin">
-      <header class="portfolio-case-admin__header">
-        <div>
-          <p>Кейс</p>
-          <h2>{{ caseFormTitle }}</h2>
-          <small v-if="caseForm.cardId">{{ caseForm.linkPath }}</small>
-          <small v-else>Выберите карточку через кнопку “Кейсы”.</small>
-        </div>
-        <button type="button" class="button-secondary" :disabled="!caseForm.cardId" @click="$emit('resetCase')">Закрыть кейс</button>
-      </header>
 
-      <form v-if="caseForm.cardId" class="panel-form portfolio-case-admin__form" @submit.prevent="$emit('saveCase')">
-        <fieldset class="portfolio-article-admin portfolio-article-admin--hero">
-          <legend>Начальное большое изображение</legend>
-
-          <label>
-            <span>Загрузить широкое изображение кейса</span>
-            <input type="file" accept="image/*" @change="uploadCaseHero">
-            <small v-if="caseForm.caseHeroUrl">Файл загружен</small>
-          </label>
-
-          <div v-if="caseForm.caseHeroUrl" class="panel-form__preview panel-form__preview--wide">
-            <img :src="caseForm.caseHeroUrl" alt="">
-          </div>
-
-          <button v-if="caseForm.caseHeroPath" type="button" class="button-secondary" @click="$emit('deleteCaseHero')">Удалить начальное изображение</button>
-        </fieldset>
-
-        <fieldset class="portfolio-article-admin">
-          <legend>Конструктор статьи</legend>
-
-          <div class="portfolio-article-admin__actions">
-            <button type="button" class="button-secondary" @click="$emit('addArticleBlock', 'single-wide')">+ Блок: одно большое</button>
-            <button type="button" class="button-secondary" @click="$emit('addArticleBlock', 'two-medium')">+ Блок: два средних</button>
-            <button type="button" class="button-secondary" @click="$emit('addArticleBlock', 'three-vertical')">+ Блок: три вертикальных</button>
-          </div>
-
-          <article
-            v-for="(block, index) in caseForm.articleBlocks"
-            :key="block.id"
-            class="portfolio-article-admin__block"
-          >
-            <header class="portfolio-article-admin__block-header">
-              <h3>Блок {{ index + 1 }}</h3>
-              <div>
-                <button type="button" class="button-secondary" :disabled="index === 0" @click="$emit('moveArticleBlock', block.id, -1)">Выше</button>
-                <button type="button" class="button-secondary" :disabled="index === caseForm.articleBlocks.length - 1" @click="$emit('moveArticleBlock', block.id, 1)">Ниже</button>
-                <button type="button" class="button-danger" @click="$emit('removeArticleBlock', block.id)">Удалить блок</button>
-              </div>
-            </header>
-
-            <label>
-              <span>Заголовок блока</span>
-              <input v-model="block.title" type="text">
-            </label>
-
-            <label>
-              <span>Заголовок блока[en]</span>
-              <input v-model="block.titleEn" type="text">
-            </label>
-
-            <label>
-              <span>Текст блока</span>
-              <textarea v-model="block.text" rows="4"></textarea>
-            </label>
-
-            <label>
-              <span>Текст блока[en]</span>
-              <textarea v-model="block.textEn" rows="4"></textarea>
-            </label>
-
-            <div class="portfolio-article-admin__groups">
-              <article
-                v-for="(group, groupIndex) in block.imageGroups"
-                :key="group.id"
-                class="portfolio-article-admin__group"
-              >
-                <header class="portfolio-article-admin__group-header">
-                  <h4>Группа изображений {{ groupIndex + 1 }}</h4>
-                  <button type="button" class="button-secondary" @click="$emit('removeArticleImageGroup', block.id, group.id)">Удалить группу</button>
-                </header>
-
-                <div v-if="group.images.length" class="portfolio-article-admin__images">
-                  <div
-                    v-for="image in group.images"
-                    :key="image.id"
-                    class="portfolio-article-admin__image"
-                  >
-                    <img :src="image.url" alt="">
-                    <button type="button" class="button-secondary" @click="$emit('deleteArticleImage', block.id, group.id, image.id)">Удалить</button>
-                  </div>
-                </div>
-
-                <label>
-                  <span>Добавить изображение</span>
-                  <input type="file" accept="image/*" @change="uploadArticleImage($event, block.id, group.id)">
-                </label>
-
-                <div class="portfolio-article-admin__group-controls">
-                  <label>
-                    <span>Тип блока изображений</span>
-                    <select v-model="group.layout">
-                      <option value="single-wide">Одно большое</option>
-                      <option value="two-medium">Два средних</option>
-                      <option value="three-vertical">Три вертикальных</option>
-                    </select>
-                  </label>
-                  <button type="button" class="button-secondary" @click="$emit('addArticleImageGroup', block.id, 'single-wide')">+</button>
-                </div>
-              </article>
-
-              <button
-                v-if="!block.imageGroups?.length"
-                type="button"
-                class="button-secondary"
-                @click="$emit('addArticleImageGroup', block.id, 'single-wide')"
-              >
-                + Добавить группу изображений
-              </button>
-            </div>
-          </article>
-        </fieldset>
-
-        <p v-if="uploadField.startsWith('article-')" class="admin-message">Загружаем изображение статьи...</p>
-
-        <div class="panel-form__actions">
-          <button type="submit" :disabled="isSaving || uploadField.startsWith('article-')">
-            {{ isSaving ? 'Сохраняем...' : 'Сохранить кейс' }}
-          </button>
-          <button type="button" class="button-secondary" @click="$emit('resetCase')">Сбросить</button>
-        </div>
-      </form>
-    </section>
   </section>
+  <div v-else-if="isLoading" class="admin-message" role="status">Загружаем кейс…</div>
+  <div v-else-if="!currentCase" class="admin-empty"><h2>Кейс не найден</h2><button @click="closeCase">Вернуться к карточкам</button></div>
+  <PortfolioCaseAdminEditor v-else-if="caseForm.cardId === caseId" :case-form="caseForm" :is-saving="isSaving" :upload-field="uploadField" :error="error"
+    @close="closeCase" @save-case="$emit('saveCase')" @reset-case="restoreCase"
+    @upload-case-hero="file => $emit('uploadCaseHero', file)" @delete-case-hero="$emit('deleteCaseHero')"
+    @upload-article-image="(file, blockId, groupId) => $emit('uploadArticleImage', file, blockId, groupId)"
+    @delete-article-image="(blockId, groupId, imageId) => $emit('deleteArticleImage', blockId, groupId, imageId)"
+    @add-article-block="layout => $emit('addArticleBlock', layout)"
+    @add-article-image-group="(blockId, layout) => $emit('addArticleImageGroup', blockId, layout)"
+    @remove-article-image-group="(blockId, groupId) => $emit('removeArticleImageGroup', blockId, groupId)"
+    @remove-article-block="blockId => $emit('removeArticleBlock', blockId)"
+    @move-article-block="(blockId, direction) => $emit('moveArticleBlock', blockId, direction)" />
 </template>

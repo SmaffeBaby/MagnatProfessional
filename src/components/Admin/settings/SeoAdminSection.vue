@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { SeoEntryForm } from '../../composables/Admin/useAdminSeo'
-import type { SeoEntry } from '../../composables/useSeo'
+import type { SeoEntryForm } from '../../../composables/Admin/useAdminSeo'
+import type { SeoEntry } from '../../../composables/useSeo'
 
 defineProps<{
   error: string

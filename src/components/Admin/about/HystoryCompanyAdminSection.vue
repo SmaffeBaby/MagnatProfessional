@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { HystoryCompanyForm } from '../../composables/Admin/useAdminHystoryCompany'
-import type { HystoryCompanyItem } from '../../composables/useHystoryCompany'
+import type { HystoryCompanyForm } from '../../../composables/Admin/useAdminHystoryCompany'
+import type { HystoryCompanyItem } from '../../../composables/useHystoryCompany'
 
 defineProps<{
   error: string

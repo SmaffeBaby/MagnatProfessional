@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AboutUsForm } from '../../composables/Admin/useAdminAboutUs'
+import type { AboutUsForm } from '../../../composables/Admin/useAdminAboutUs'
 
 defineProps<{
   error: string

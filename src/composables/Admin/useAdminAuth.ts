@@ -1,9 +1,10 @@
-import { reactive, ref } from 'vue'
+import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import {
   adminRequest,
   clearAdminToken,
   getAdminToken,
-  setAdminToken,
+  setAdminSession,
+  AdminApiError,
 } from '../useAdminApi'
 
 export function useAdminAuth() {
@@ -13,7 +14,18 @@ export function useAdminAuth() {
   })
   const isAuthorized = ref(Boolean(getAdminToken()))
   const isLoading = ref(false)
+  const isChecking = ref(Boolean(getAdminToken()))
   const error = ref('')
+
+  function syncSession() { isAuthorized.value = Boolean(getAdminToken()) }
+  onMounted(() => {
+    window.addEventListener('magnat-admin-session-change', syncSession)
+    window.addEventListener('storage', syncSession)
+  })
+  onUnmounted(() => {
+    window.removeEventListener('magnat-admin-session-change', syncSession)
+    window.removeEventListener('storage', syncSession)
+  })
 
   async function verifySession() {
     try {
@@ -22,10 +34,14 @@ export function useAdminAuth() {
       error.value = ''
       return true
     } catch (requestError) {
-      clearAdminToken()
-      isAuthorized.value = false
+      if (requestError instanceof AdminApiError && requestError.status === 401) {
+        clearAdminToken()
+        isAuthorized.value = false
+      }
       error.value = (requestError as Error).message
       return false
+    } finally {
+      isChecking.value = false
     }
   }
 
@@ -39,7 +55,7 @@ export function useAdminAuth() {
         body: JSON.stringify(loginForm),
       })
 
-      setAdminToken(payload.session.access_token)
+      setAdminSession(payload.session)
       isAuthorized.value = true
       loginForm.password = ''
       await onSuccess?.()
@@ -60,6 +76,7 @@ export function useAdminAuth() {
     loginForm,
     isAuthorized,
     isLoading,
+    isChecking,
     error,
     verifySession,
     login,

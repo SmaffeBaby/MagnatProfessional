@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { PanelForm, PanelUploadTarget } from '../../composables/Admin/useAdminHomePanels'
+import type { PanelForm, PanelUploadTarget } from '../../../composables/Admin/useAdminHomePanels'
 
 defineProps<{
   form: PanelForm

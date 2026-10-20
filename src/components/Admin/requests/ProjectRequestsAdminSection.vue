@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProjectRequest, ProjectRequestStatus } from '../../composables/Admin/useAdminProjectRequests'
+import type { ProjectRequest, ProjectRequestStatus } from '../../../composables/Admin/useAdminProjectRequests'
 
 defineProps<{
   error: string

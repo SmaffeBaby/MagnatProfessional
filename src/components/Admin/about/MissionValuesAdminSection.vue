@@ -2,9 +2,9 @@
 import type {
   MissionValuesCardForm,
   MissionValuesContentForm,
-} from '../../composables/Admin/useAdminMissionValues'
-import type { MissionValuesCard } from '../../composables/useMissionValues'
-import RichTextColorEditor from './RichTextColorEditor.vue'
+} from '../../../composables/Admin/useAdminMissionValues'
+import type { MissionValuesCard } from '../../../composables/useMissionValues'
+import RichTextColorEditor from '../shared/RichTextColorEditor.vue'
 
 defineProps<{
   cards: MissionValuesCard[]

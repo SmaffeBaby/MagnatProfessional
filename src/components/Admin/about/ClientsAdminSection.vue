@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { ClientForm } from '../../composables/Admin/useAdminClients'
-import type { ClientItem } from '../../composables/useClients'
+import type { ClientForm } from '../../../composables/Admin/useAdminClients'
+import type { ClientItem } from '../../../composables/useClients'
 
 defineProps<{
   error: string

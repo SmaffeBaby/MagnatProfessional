@@ -1,18 +1,22 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import AboutUsAdminSection from '../components/Admin/AboutUsAdminSection.vue'
-import AdminLogin from '../components/Admin/AdminLogin.vue'
-import AdminSidebar from '../components/Admin/AdminSidebar.vue'
-import ClientsAdminSection from '../components/Admin/ClientsAdminSection.vue'
-import DescriptionAdminSection from '../components/Admin/DescriptionAdminSection.vue'
-import DirectorTextAdminSection from '../components/Admin/DirectorTextAdminSection.vue'
-import HomePanelsAdminSection from '../components/Admin/HomePanelsAdminSection.vue'
-import HystoryCompanyAdminSection from '../components/Admin/HystoryCompanyAdminSection.vue'
-import MissionValuesAdminSection from '../components/Admin/MissionValuesAdminSection.vue'
-import PrivacyAdminSection from '../components/Admin/PrivacyAdminSection.vue'
-import ProjectRequestsAdminSection from '../components/Admin/ProjectRequestsAdminSection.vue'
-import SeoAdminSection from '../components/Admin/SeoAdminSection.vue'
-import StatsAdminSection from '../components/Admin/StatsAdminSection.vue'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { adminNavigation } from '../config/adminNavigation'
+import AdminOverview from '../components/Admin/layout/AdminOverview.vue'
+import AdminIcon from '../components/Admin/shared/AdminIcon.vue'
+import AboutUsAdminSection from '../components/Admin/home/AboutUsAdminSection.vue'
+import AdminLogin from '../components/Admin/layout/AdminLogin.vue'
+import AdminSidebar from '../components/Admin/layout/AdminSidebar.vue'
+import ClientsAdminSection from '../components/Admin/about/ClientsAdminSection.vue'
+import DescriptionAdminSection from '../components/Admin/home/DescriptionAdminSection.vue'
+import DirectorTextAdminSection from '../components/Admin/about/DirectorTextAdminSection.vue'
+import HomePanelsAdminSection from '../components/Admin/home/HomePanelsAdminSection.vue'
+import HystoryCompanyAdminSection from '../components/Admin/about/HystoryCompanyAdminSection.vue'
+import MissionValuesAdminSection from '../components/Admin/about/MissionValuesAdminSection.vue'
+import PrivacyAdminSection from '../components/Admin/legal/PrivacyAdminSection.vue'
+import ProjectRequestsAdminSection from '../components/Admin/requests/ProjectRequestsAdminSection.vue'
+import SeoAdminSection from '../components/Admin/settings/SeoAdminSection.vue'
+import StatsAdminSection from '../components/Admin/home/StatsAdminSection.vue'
 import { useAdminAboutUs } from '../composables/Admin/useAdminAboutUs'
 import { useAdminClients } from '../composables/Admin/useAdminClients'
 import { useAdminDescription } from '../composables/Admin/useAdminDescription'
@@ -26,7 +30,16 @@ import { useAdminProjectRequests } from '../composables/Admin/useAdminProjectReq
 import { useAdminSeo } from '../composables/Admin/useAdminSeo'
 import { useAdminStats } from '../composables/Admin/useAdminStats'
 
-const activeSection = ref('home-panels')
+const route = useRoute()
+const router = useRouter()
+const sidebarOpen = ref(false)
+const activeSection = computed(() => adminNavigation.some(group => group.items.some(item => item.id === route.query.section)) ? String(route.query.section) : 'dashboard')
+const activeGroup = computed(() => adminNavigation.find(group => group.id === route.query.page && group.items.some(item => item.id === activeSection.value)) || adminNavigation.find(group => group.items.some(item => item.id === activeSection.value)) || adminNavigation[0])
+const sectionTitle = computed(() => activeSection.value === 'dashboard' ? 'Обзор' : activeGroup.value.items.find(item => item.id === activeSection.value)?.label || 'Обзор')
+function navigate(section: string, page: string) {
+  sidebarOpen.value = false
+  router.push({ path: '/admin', query: section === 'dashboard' ? {} : { section, page } })
+}
 const auth = useAdminAuth()
 const aboutUs = useAdminAboutUs()
 const clients = useAdminClients()
@@ -42,45 +55,19 @@ const projectRequests = useAdminProjectRequests()
 const seo = useAdminSeo()
 const stats = useAdminStats()
 
-onMounted(async () => {
-  if (auth.isAuthorized.value && await auth.verifySession()) {
-    await Promise.all([
-      homePanels.loadPanels(),
-      aboutUs.loadContent(),
-      clients.loadItems(),
-      description.loadContent(),
-      directorText.loadContent(),
-      hystoryCompany.loadItems(),
-      missionValues.loadContent(),
-      privacy.loadBlocks(),
-      userAgreement.loadBlocks(),
-      policy.loadBlocks(),
-      projectRequests.loadRequests(),
-      seo.loadEntries(),
-      stats.loadItems(),
-    ])
-  }
-})
-
-async function login() {
-  await auth.login(async () => {
-    await Promise.all([
-      homePanels.loadPanels(),
-      aboutUs.loadContent(),
-      clients.loadItems(),
-      description.loadContent(),
-      directorText.loadContent(),
-      hystoryCompany.loadItems(),
-      missionValues.loadContent(),
-      privacy.loadBlocks(),
-      userAgreement.loadBlocks(),
-      policy.loadBlocks(),
-      projectRequests.loadRequests(),
-      seo.loadEntries(),
-      stats.loadItems(),
-    ])
-  })
+async function loadContent() {
+  await Promise.all([
+    homePanels.loadPanels(), aboutUs.loadContent(), clients.loadItems(),
+    description.loadContent(), directorText.loadContent(), hystoryCompany.loadItems(),
+    missionValues.loadContent(), privacy.loadBlocks(), userAgreement.loadBlocks(),
+    policy.loadBlocks(), projectRequests.loadRequests(), seo.loadEntries(), stats.loadItems(),
+  ])
 }
+async function restoreSession() {
+  if (auth.isAuthorized.value && await auth.verifySession()) await loadContent()
+}
+onMounted(restoreSession)
+async function login() { await auth.login(loadContent) }
 
 function logout() {
   auth.logout()
@@ -107,8 +94,9 @@ async function resetProjectRequestFilters() {
 
 <template>
   <main class="admin-page">
+    <div v-if="auth.isChecking.value" class="admin-session-check" role="status">Проверяем доступ…</div>
     <AdminLogin
-      v-if="!auth.isAuthorized.value"
+      v-else-if="!auth.isAuthorized.value"
       :login-form="auth.loginForm"
       :error="auth.error.value"
       :is-loading="auth.isLoading.value"
@@ -117,11 +105,22 @@ async function resetProjectRequestFilters() {
 
     <section v-else class="admin-shell">
       <AdminSidebar
-        v-model:active-section="activeSection"
+        :active-section="activeSection"
+        :active-page="activeGroup.id"
+        :open="sidebarOpen"
+        @close="sidebarOpen = false"
+        @navigate="navigate"
         :requests-badge="projectRequests.newCount.value"
         @logout="logout"
       />
 
+      <div class="admin-main">
+        <header class="admin-topbar">
+          <div class="admin-topbar__leading"><button class="admin-menu-toggle button-secondary" aria-label="Открыть меню" @click="sidebarOpen = !sidebarOpen"><AdminIcon name="menu" /></button><span class="admin-topbar__context">Панель управления</span><span class="admin-topbar__divider">/</span><strong>{{ sectionTitle }}</strong></div>
+          <a :href="activeSection === 'dashboard' ? '/' : activeGroup.path" target="_blank" rel="noopener" class="admin-site-link">Открыть сайт <AdminIcon name="arrow" :size="15" /></a>
+        </header>
+        <AdminOverview v-if="activeSection === 'dashboard'" :requests-count="projectRequests.newCount.value" @navigate="navigate" />
+        <p v-if="auth.error.value" class="admin-session-error admin-message admin-message--error" role="alert">{{ auth.error.value }} <button type="button" class="button-secondary" @click="restoreSession">Повторить</button></p>
       <HomePanelsAdminSection
         v-if="activeSection === 'home-panels'"
         :error="homePanels.error.value"
@@ -357,6 +356,7 @@ async function resetProjectRequestFilters() {
         @edit="seo.editEntry"
         @delete="seo.deleteEntry"
       />
+      </div>
     </section>
   </main>
 </template>

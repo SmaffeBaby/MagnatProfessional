@@ -1,3 +1,5 @@
+import { createPortfolioOverviewHandler } from './portfolio/overview.js'
+import { createRefreshSessionHandler } from './auth/refreshSession.js'
 import 'dotenv/config'
 import crypto from 'node:crypto'
 import zlib from 'node:zlib'
@@ -522,6 +524,7 @@ app.post('/api/project-requests', async (req, res, next) => {
 })
 
 app.post('/api/admin/auth/login', async (req, res, next) => {
+  res.set('Cache-Control', 'no-store')
   try {
     const { email, password } = req.body
 
@@ -548,6 +551,10 @@ app.post('/api/admin/auth/login', async (req, res, next) => {
     next(error)
   }
 })
+
+app.post('/api/admin/auth/refresh', createRefreshSessionHandler(() => createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+})))
 
 app.get('/api/admin/auth/me', requireAdminAuth, (req, res) => {
   res.json({ user: req.user })
@@ -628,6 +635,8 @@ app.delete('/api/admin/seo/:id', requireAdminAuth, async (req, res, next) => {
     next(error)
   }
 })
+
+app.get('/api/admin/portfolio-overview', requireAdminAuth, createPortfolioOverviewHandler(supabase, isDigitalPanel))
 
 app.get('/api/admin/home-panels', requireAdminAuth, async (_req, res, next) => {
   try {

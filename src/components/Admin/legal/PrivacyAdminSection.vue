@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { PrivacyBlockForm } from '../../composables/Admin/useAdminPrivacy'
-import type { PrivacyBlock } from '../../composables/usePrivacy'
+import type { PrivacyBlockForm } from '../../../composables/Admin/useAdminPrivacy'
+import type { PrivacyBlock } from '../../../composables/usePrivacy'
 
 defineProps<{
   error: string

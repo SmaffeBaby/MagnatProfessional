@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import type { StatsForm } from '../../composables/Admin/useAdminStats'
-import type { StatsItem } from '../../composables/useStats'
+import type { StatsForm } from '../../../composables/Admin/useAdminStats'
+import type { StatsItem } from '../../../composables/useStats'
 
 defineProps<{
   error: string

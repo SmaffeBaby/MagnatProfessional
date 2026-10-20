@@ -2,7 +2,7 @@
 import type {
   DescriptionForm,
   DescriptionPlaqueTarget,
-} from '../../composables/Admin/useAdminDescription'
+} from '../../../composables/Admin/useAdminDescription'
 
 defineProps<{
   error: string

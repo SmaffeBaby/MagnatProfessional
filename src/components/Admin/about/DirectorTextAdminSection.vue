@@ -2,7 +2,7 @@
 import type {
   DirectorTextForm,
   DirectorTextPhotoTarget,
-} from '../../composables/Admin/useAdminDirectorText'
+} from '../../../composables/Admin/useAdminDirectorText'
 
 defineProps<{
   error: string
