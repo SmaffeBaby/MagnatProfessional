@@ -3,7 +3,9 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
-import { homeNavLinks } from '../../composables/useHomeNavigation'
+import SharedLink from '../SharedLink.vue'
+import { useSiteChrome } from '../../composables/useSiteChrome'
+const { headerLinks: homeNavLinks } = useSiteChrome()
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import MainText from '../MainText/MainText.vue'
 import './style.css'
@@ -115,19 +117,19 @@ async function navigateHome() {
       </button>
 
       <nav class="flex min-w-0 items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
-        <RouterLink
+        <SharedLink
           v-for="navLink in homeNavLinks"
-          :key="navLink.href"
+          :key="navLink.id"
           class="rounded-full border-2 px-5 py-2.5 text-lg font-normal leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:border-magnat-light active:bg-magnat-light active:text-white"
           :class="isAboutLight
             ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white focus-visible:ring-magnat-light focus-visible:ring-offset-white'
             : isDarkTheme
               ? 'border-white text-white hover:bg-white hover:text-black focus-visible:ring-white focus-visible:ring-offset-[#222222]'
               : 'border-white text-white hover:bg-white hover:text-magnat-red focus-visible:ring-white focus-visible:ring-offset-magnat-red'"
-          :to="navLink.href"
+          :href="navLink.href"
         >
-          {{ t(navLink.labelKey) }}
-        </RouterLink>
+          {{ navLink.label }}
+        </SharedLink>
       </nav>
 
       <button

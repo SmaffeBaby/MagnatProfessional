@@ -1,3 +1,4 @@
+import { useSiteChrome } from '../useSiteChrome'
 import { ref, watch } from 'vue'
 import { useSidebar } from './useSidebar'
 import type { SidebarTheme } from './useThemeStore'
@@ -11,23 +12,9 @@ type SidebarMobileEmit = {
   (event: 'menu-open-change', value: boolean): void
 }
 
-const menuLinks = [
-  {
-    labelKey: 'sidebarMobile.navigation.portfolio',
-    href: '/portfolio',
-  },
-  {
-    labelKey: 'sidebarMobile.navigation.about',
-    href: '/about',
-  },
-  {
-    labelKey: 'sidebarMobile.navigation.contacts',
-    href: '/contacts',
-  },
-]
-
 export function useSidebarMobile(props: SidebarMobileProps, emit: SidebarMobileEmit) {
   const isMenuOpen = ref(false)
+  const { headerLinks: menuLinks } = useSiteChrome()
 
   const sidebar = useSidebar(props, emit)
 

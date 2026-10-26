@@ -15,6 +15,7 @@
 
 .site-footer__content {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: column;
   gap: 20px;
   padding: 60px 20px 0;

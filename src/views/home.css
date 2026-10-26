@@ -216,3 +216,6 @@
     width: clamp(471px, calc(10vw + 291px), 560px);
   }
 }
+
+.responsive-header-backing__nav { min-width: 0; overflow-x: auto; padding-block: 4px; }
+.responsive-header-backing__nav-link { flex-shrink: 0; white-space: nowrap; }

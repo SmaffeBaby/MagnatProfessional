@@ -1,6 +1,6 @@
 import { computed, onMounted, onUnmounted, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { homeNavLinks } from './useHomeNavigation'
+import { useSiteChrome } from './useSiteChrome'
 import { useLanguageStore } from './useLanguageStore'
 
 type Theme = 'light' | 'dark'
@@ -15,6 +15,7 @@ export function useResponsiveHeaderBacking(theme: Ref<Theme>) {
   const mobileSidebar = ref<MobileSidebarExpose | null>(null)
   const languageStore = useLanguageStore()
   const { t } = useI18n()
+  const { headerLinks } = useSiteChrome()
 
   const isDarkTheme = computed(() => theme.value === 'dark')
   const inactiveThemeIcon = computed(() => (
@@ -66,7 +67,7 @@ export function useResponsiveHeaderBacking(theme: Ref<Theme>) {
     isMobileMenuOpen,
     languageStore,
     mobileSidebar,
-    navLinks: homeNavLinks,
+    navLinks: headerLinks,
     openMobileMenu,
     t,
     toggleTheme,

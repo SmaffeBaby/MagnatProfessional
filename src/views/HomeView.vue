@@ -1,4 +1,5 @@
 <script setup>
+import SharedLink from '../components/SharedLink.vue'
 import { computed, onMounted, onUnmounted, provide, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import AboutContent from '../components/AboutContent/AboutContent.vue'
@@ -340,14 +341,14 @@ onUnmounted(() => {
         </button>
 
         <nav class="responsive-header-backing__nav" :aria-label="t('desktopHome.navigationLabel')">
-          <RouterLink
+          <SharedLink
             v-for="navLink in navLinks"
-            :key="navLink.href"
+            :key="navLink.id"
             class="responsive-header-backing__nav-link"
-            :to="navLink.href"
+            :href="navLink.href"
           >
-            {{ t(navLink.labelKey) }}
-          </RouterLink>
+            {{ navLink.label }}
+          </SharedLink>
         </nav>
 
         <button

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SiteChromeAdminSection from '../components/Admin/general/SiteChromeAdminSection.vue'
+import type { ChromeSection } from '../types/siteChrome'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { adminNavigation } from '../config/adminNavigation'
@@ -34,7 +36,8 @@ const route = useRoute()
 const router = useRouter()
 const sidebarOpen = ref(false)
 const activeSection = computed(() => adminNavigation.some(group => group.items.some(item => item.id === route.query.section)) ? String(route.query.section) : 'dashboard')
-const activeGroup = computed(() => adminNavigation.find(group => group.id === route.query.page && group.items.some(item => item.id === activeSection.value)) || adminNavigation.find(group => group.items.some(item => item.id === activeSection.value)) || adminNavigation[0])
+const activeGroup = computed(() => adminNavigation.find(group => group.id === route.query.page && group.items.some(item => item.id === activeSection.value)) || adminNavigation.find(group => group.items.some(item => item.id === activeSection.value)) || adminNavigation.find(group => group.id === 'home')!)
+const chromeSection = computed(() => activeSection.value.replace('site-', '') as ChromeSection)
 const sectionTitle = computed(() => activeSection.value === 'dashboard' ? 'Обзор' : activeGroup.value.items.find(item => item.id === activeSection.value)?.label || 'Обзор')
 function navigate(section: string, page: string) {
   sidebarOpen.value = false
@@ -121,6 +124,7 @@ async function resetProjectRequestFilters() {
         </header>
         <AdminOverview v-if="activeSection === 'dashboard'" :requests-count="projectRequests.newCount.value" @navigate="navigate" />
         <p v-if="auth.error.value" class="admin-session-error admin-message admin-message--error" role="alert">{{ auth.error.value }} <button type="button" class="button-secondary" @click="restoreSession">Повторить</button></p>
+        <SiteChromeAdminSection v-if="['site-sidebar', 'site-header', 'site-footer'].includes(activeSection)" :section="chromeSection" />
       <HomePanelsAdminSection
         v-if="activeSection === 'home-panels'"
         :error="homePanels.error.value"

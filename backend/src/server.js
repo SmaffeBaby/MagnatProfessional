@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { createSiteChromeHandlers } from './content/siteChrome.js'
 import { createPortfolioOverviewHandler } from './portfolio/overview.js'
 import { createRefreshSessionHandler } from './auth/refreshSession.js'
 import 'dotenv/config'
@@ -171,6 +173,11 @@ app.get('/api/storage/buckets', async (_req, res, next) => {
     next(error)
   }
 })
+
+const siteChrome = createSiteChromeHandlers(supabase)
+app.get('/api/site-chrome', siteChrome.publicGet)
+app.get('/api/admin/site-chrome/:section', requireAdminAuth, siteChrome.adminGet)
+app.put('/api/admin/site-chrome/:section', requireAdminAuth, siteChrome.adminPut)
 
 app.get('/api/main-text', async (req, res, next) => {
   try {
@@ -4182,6 +4189,7 @@ async function ensureDatabaseSchema() {
   await client.connect()
 
   try {
+    await client.query(readFileSync(new URL('./content/siteChrome.sql', import.meta.url), 'utf8'))
     await client.query(`
       create extension if not exists "pgcrypto";
 

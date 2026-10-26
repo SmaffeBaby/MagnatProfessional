@@ -2,6 +2,8 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
+import SharedLink from '../SharedLink.vue'
+import { useSiteChrome } from '../../composables/useSiteChrome'
 import { useLanguageStore } from '../../composables/useLanguageStore'
 import AboutContent from '../AboutContent/AboutContent.vue'
 import ContactsContent from '../ContactsContent/ContactsContent.vue'
@@ -62,20 +64,7 @@ const isHeaderRevealed = ref(true)
 const isHeaderScrolled = ref(false)
 const lastContentScrollTop = ref(0)
 
-const navLinks = [
-  {
-    labelKey: 'desktopHome.navigation.portfolio',
-    href: '/portfolio',
-  },
-  {
-    labelKey: 'desktopHome.navigation.about',
-    href: '/about',
-  },
-  {
-    labelKey: 'desktopHome.navigation.contacts',
-    href: '/contacts',
-  },
-]
+const { headerLinks: navLinks } = useSiteChrome()
 
 function handleContentScroll(event) {
   const currentScrollTop = event.currentTarget?.scrollTop ?? 0
@@ -137,19 +126,19 @@ watch(
       ]"
     >
       <nav class="flex items-center gap-2.5" :aria-label="t('desktopHome.navigationLabel')">
-        <RouterLink
+        <SharedLink
           v-for="navLink in navLinks"
-          :key="navLink.href"
+          :key="navLink.id"
           class="desktop-home__nav-link inline-flex h-11 items-center justify-center rounded-full border-2 px-5 text-base font-normal leading-none transition duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 active:border-magnat-light active:bg-magnat-light active:text-white"
           :class="isAboutLight
             ? 'border-black text-black hover:border-magnat-light hover:bg-magnat-light hover:text-white focus-visible:ring-magnat-light focus-visible:ring-offset-white'
             : isDarkTheme
               ? 'border-white text-white hover:bg-white hover:text-black focus-visible:ring-white focus-visible:ring-offset-[#222222]'
               : 'border-white text-white hover:bg-white hover:text-magnat-red focus-visible:ring-white focus-visible:ring-offset-magnat-red'"
-          :to="navLink.href"
+          :href="navLink.href"
         >
-          {{ t(navLink.labelKey) }}
-        </RouterLink>
+          {{ navLink.label }}
+        </SharedLink>
       </nav>
 
       <div class="flex shrink-0 items-center gap-3">
@@ -239,6 +228,9 @@ watch(
     transform 320ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: transform, opacity;
 }
+
+.desktop-home__header > nav { min-width: 0; overflow-x: auto; padding-block: 4px; }
+.desktop-home__nav-link { flex-shrink: 0; white-space: nowrap; }
 
 .desktop-home__header--scrolled {
   background: #c40f1c;

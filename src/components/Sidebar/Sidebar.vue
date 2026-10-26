@@ -1,11 +1,10 @@
 <script setup>
-import { storeToRefs } from 'pinia'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 import { useSidebar } from '../../composables/Sidebar/useSidebar'
-import { isExternalLink, useHomePanels } from '../../composables/useHomePanels'
-import { useLanguageStore } from '../../composables/useLanguageStore'
+import SharedLink from '../SharedLink.vue'
+import { useSidebarContent } from '../../composables/useSiteChrome'
 
 const props = defineProps({
   theme: {
@@ -29,14 +28,9 @@ const {
 } = useSidebar(props, emit)
 
 const { t } = useI18n()
-const { panels } = useHomePanels()
-const languageStore = useLanguageStore()
-const { locale } = storeToRefs(languageStore)
+const { serviceLinks, sidebar, officeText, mapLabel, phoneHref } = useSidebarContent()
 const isAboutLight = computed(() => props.isAboutActive && !isDarkTheme.value)
 
-function panelTitle(panel) {
-  return locale.value === 'en' && panel.titleEn ? panel.titleEn : panel.title
-}
 </script>
 
 <template>
@@ -87,19 +81,7 @@ function panelTitle(panel) {
       :class="isAboutLight ? 'text-black/45' : 'text-white/45'"
       :aria-label="t('sidebar.servicesLabel')"
     >
-      <component
-        :is="isExternalLink(panel.linkPath) ? 'a' : RouterLink"
-        v-for="panel in panels"
-        :key="panel.id"
-        class="transition"
-        :class="isAboutLight ? 'hover:text-black' : 'hover:text-white'"
-        :to="isExternalLink(panel.linkPath) ? undefined : panel.linkPath || '/portfolio'"
-        :href="isExternalLink(panel.linkPath) ? panel.linkPath : undefined"
-        :target="isExternalLink(panel.linkPath) ? '_blank' : undefined"
-        :rel="isExternalLink(panel.linkPath) ? 'noopener noreferrer' : undefined"
-      >
-        {{ panelTitle(panel) }}
-      </component>
+      <SharedLink v-for="link in serviceLinks" :key="link.id" :href="link.href" class="transition" :class="isAboutLight ? 'hover:text-black' : 'hover:text-white'">{{ link.label }}</SharedLink>
     </nav>
 
     <div class="desktop-sidebar__contacts mt-auto space-y-0 pt-8">
@@ -108,7 +90,7 @@ function panelTitle(panel) {
         :class="isAboutLight ? 'bg-[#f1f1f6]' : 'bg-white'"
       >
         <h2 class="desktop-sidebar__office-text text-[1.38rem] font-normal leading-[1.18] tracking-normal">
-          {{ t('sidebar.contacts.officeText') }}
+          {{ officeText }}
         </h2>
 
         <button
@@ -116,7 +98,7 @@ function panelTitle(panel) {
           type="button"
           @click="emit('open-map')"
         >
-          {{ t('sidebar.contacts.map') }}
+          {{ mapLabel }}
         </button>
       </section>
 
@@ -124,8 +106,8 @@ function panelTitle(panel) {
         class="desktop-sidebar__contact-card rounded-[28px] p-7 text-black transition-colors duration-500"
         :class="isAboutLight ? 'bg-[#f1f1f6]' : 'bg-white'"
       >
-        <a class="desktop-sidebar__phone block text-[1.45rem] font-normal leading-none" href="tel:+78123404478">+7 (812) 340-44-78</a>
-        <a class="desktop-sidebar__email mt-2 block text-sm font-normal uppercase text-magnat-light" href="mailto:office@magnatmedia.com">office@magnatmedia.com</a>
+        <a class="desktop-sidebar__phone block text-[1.45rem] font-normal leading-none" :href="phoneHref" v-if="sidebar.phone">{{ sidebar.phone }}</a>
+        <a class="desktop-sidebar__email mt-2 block text-sm font-normal uppercase text-magnat-light" :href="`mailto:${sidebar.email}`" v-if="sidebar.email">{{ sidebar.email }}</a>
       </section>
     </div>
   </aside>

@@ -1,4 +1,9 @@
 export const adminNavigation = [
+  { id: 'general', label: 'Общие элементы сайта', path: '/', icon: 'grid', items: [
+    { id: 'site-sidebar', label: 'Сайдбар' },
+    { id: 'site-header', label: 'Хедер и меню' },
+    { id: 'site-footer', label: 'Футер' },
+  ] },
   { id: 'home', label: 'Главная страница', path: '/', icon: 'home', items: [
     { id: 'home-panels', label: 'Панели на главной' },
     { id: 'about-us', label: 'О компании' },

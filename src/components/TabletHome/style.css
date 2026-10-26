@@ -34,3 +34,6 @@
     transition: none;
   }
 }
+
+.tablet-home header > nav { overflow-x: auto; padding-block: 4px; }
+.tablet-home header > nav > a { flex-shrink: 0; white-space: nowrap; }
