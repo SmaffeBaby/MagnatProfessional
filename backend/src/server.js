@@ -1,3 +1,4 @@
+import { importLegalDocuments } from './content/legal/importDocuments.js'
 import { readFileSync } from 'node:fs'
 import { createSiteChromeHandlers } from './content/siteChrome.js'
 import { createPortfolioOverviewHandler } from './portfolio/overview.js'
@@ -77,7 +78,7 @@ const publicApiCache = new Map()
 const mediaCache = new Map()
 let mediaCacheBytes = 0
 let mailTransporter = null
-const LEGAL_DOCUMENT_KEYS = new Set(['privacy', 'user-agreement', 'policy'])
+const LEGAL_DOCUMENT_KEYS = new Set(['privacy', 'user-agreement', 'policy', 'cookie-consent'])
 const DIGITAL_PANEL_EXTERNAL_URL = 'https://lightdigital.ru/'
 const CRC32_TABLE = Array.from({ length: 256 }, (_value, index) => {
   let crc = index
@@ -3028,6 +3029,13 @@ function fallbackSeoByPath(path) {
       descriptionEn: 'Magnat Professional contacts',
       priority: 0.8,
     },
+    '/cookie-consent': {
+      title: 'Согласие на использование cookie-файлов | Magnat Professional',
+      titleEn: 'Cookie consent | Magnat Professional',
+      description: 'Согласие на использование cookie-файлов',
+      descriptionEn: 'Consent to the use of cookies',
+      priority: 0.3,
+    },
     '/privacy': {
       title: 'Политика обработки персональных данных | Magnat Professional',
       titleEn: 'Privacy policy | Magnat Professional',
@@ -4540,6 +4548,8 @@ async function ensureDatabaseSchema() {
 
       alter table public.project_requests enable row level security;
     `)
+
+    await importLegalDocuments(client, JSON.parse(readFileSync(new URL('./content/legal/documents-2026-10-27.json', import.meta.url), 'utf8')))
 
     const { rows: panels } = await client.query('select id, title, slug from public.home_panels order by created_at asc')
     const usedSlugs = new Set()

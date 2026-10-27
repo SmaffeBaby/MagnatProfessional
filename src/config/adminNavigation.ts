@@ -3,6 +3,7 @@ export const adminNavigation = [
     { id: 'site-sidebar', label: 'Сайдбар' },
     { id: 'site-header', label: 'Хедер и меню' },
     { id: 'site-footer', label: 'Футер' },
+    { id: 'site-cookie', label: 'Cookie-баннер' },
   ] },
   { id: 'home', label: 'Главная страница', path: '/', icon: 'home', items: [
     { id: 'home-panels', label: 'Панели на главной' },
@@ -20,7 +21,8 @@ export const adminNavigation = [
     { id: 'clients', label: 'Клиенты' },
   ] },
   { id: 'legal', label: 'Документы', path: '/privacy', icon: 'file', items: [
-    { id: 'privacy', label: 'Персональные данные' },
+    { id: 'privacy', label: 'Политика в отношении ПДн' },
+    { id: 'cookie-consent', label: 'Согласие на cookie-файлы' },
     { id: 'user-agreement', label: 'Пользовательское соглашение' },
     { id: 'policy', label: 'Политика сайта' },
   ] },

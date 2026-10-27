@@ -6,7 +6,7 @@ import type { ChromeSection, SiteChromeContent } from '../../types/siteChrome'
 import type { HomePanel } from '../useHomePanels'
 
 export function useAdminSiteChrome(section: Ref<ChromeSection>) {
-  const form = reactive<SiteChromeContent>({ header: defaultSiteChrome('header'), sidebar: defaultSiteChrome('sidebar'), footer: defaultSiteChrome('footer') })
+  const form = reactive<SiteChromeContent>({ header: defaultSiteChrome('header'), sidebar: defaultSiteChrome('sidebar'), footer: defaultSiteChrome('footer'), cookie: defaultSiteChrome('cookie') })
   const panels = ref<HomePanel[]>([])
   const isLoading = ref(false)
   const isSaving = ref(false)
@@ -54,6 +54,7 @@ export function useAdminSiteChrome(section: Ref<ChromeSection>) {
     try {
       const payload = await adminRequest(`/api/admin/site-chrome/${current}`, { method: 'PUT', body: JSON.stringify(form[current]) })
       queryClient.setQueryData<{ content: SiteChromeContent }>(['site-chrome'], cached => ({ content: {
+        cookie: cached?.content.cookie || defaultSiteChrome('cookie'),
         header: cached?.content.header || defaultSiteChrome('header'),
         sidebar: cached?.content.sidebar || defaultSiteChrome('sidebar'),
         footer: cached?.content.footer || defaultSiteChrome('footer'),

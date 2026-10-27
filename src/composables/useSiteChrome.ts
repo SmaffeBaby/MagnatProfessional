@@ -3,7 +3,7 @@ import { useLanguageStore } from './useLanguageStore'
 import { useApiQuery } from './useApiQuery'
 import { useHomePanels } from './useHomePanels'
 import type { SiteChromeContent } from '../types/siteChrome'
-import { defaultSiteChrome, localizedChromeText, renderCopyright } from '../../backend/src/content/siteChromeConfig.js'
+import { defaultSiteChrome, localizedChromeText, renderCopyright, cookieBannerParts } from '../../backend/src/content/siteChromeConfig.js'
 export { isExternalChromeLink } from '../../backend/src/content/siteChromeConfig.js'
 
 export function useSiteChrome() {
@@ -11,12 +11,14 @@ export function useSiteChrome() {
   const language = useLanguageStore()
   const header = computed(() => query.data.value?.content.header || defaultSiteChrome('header') as SiteChromeContent['header'])
   const sidebar = computed(() => query.data.value?.content.sidebar || defaultSiteChrome('sidebar') as SiteChromeContent['sidebar'])
+  const cookie = computed(() => query.data.value?.content.cookie || defaultSiteChrome('cookie') as SiteChromeContent['cookie'])
+  const banner = computed(() => cookieBannerParts(cookie.value, language.locale))
   const footer = computed(() => query.data.value?.content.footer || defaultSiteChrome('footer') as SiteChromeContent['footer'])
   const localize = (text: string, textEn?: string) => localizedChromeText(text, textEn, language.locale)
   const headerLinks = computed(() => header.value.links.map(link => ({ ...link, label: localize(link.label, link.labelEn) })))
   const footerLinks = computed(() => footer.value.links.map(link => ({ ...link, label: localize(link.label, link.labelEn) })))
   const copyright = computed(() => renderCopyright(localize(footer.value.copyright, footer.value.copyrightEn)))
-  return { header, sidebar, footer, headerLinks, footerLinks, copyright, localize }
+  return { header, sidebar, footer, cookie, banner, headerLinks, footerLinks, copyright, localize }
 }
 export function useSidebarContent() {
   const chrome = useSiteChrome()

@@ -17,6 +17,7 @@ const routes = [
     name: 'contacts',
     component: HomeView,
   },
+  { path: '/cookie-consent', name: 'cookie-consent', component: HomeView },
   {
     path: '/privacy',
     name: 'privacy',

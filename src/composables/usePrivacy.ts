@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia'
 import { useLanguageStore } from './useLanguageStore'
 import { useApiQuery } from './useApiQuery'
 
-export type LegalDocumentKey = 'privacy' | 'user-agreement' | 'policy'
+export type LegalDocumentKey = 'privacy' | 'user-agreement' | 'policy' | 'cookie-consent'
 
 export type PrivacyTableRow = {
   left: string
@@ -26,8 +26,9 @@ export type PrivacyBlock = {
 }
 
 const documentTitles: Record<LegalDocumentKey, { ru: string; en: string }> = {
+  'cookie-consent': { ru: 'Согласие на использование cookie-файлов', en: 'Consent to the use of cookies' },
   privacy: {
-    ru: 'Политика в отношении обработки персональных данных',
+    ru: 'Политика в отношении обработки персональных данных пользователей сайта',
     en: 'Personal data processing policy',
   },
   'user-agreement': {

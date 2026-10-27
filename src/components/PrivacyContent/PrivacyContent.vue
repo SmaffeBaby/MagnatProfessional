@@ -56,7 +56,7 @@ function toggleBlock(block: PrivacyBlock) {
 
       <p v-if="isLoading" class="privacy-content__state">Загружаем данные...</p>
       <p v-else-if="error" class="privacy-content__state privacy-content__state--error">
-        Не удалось загрузить политику.
+        Не удалось загрузить документ.
       </p>
 
       <div v-else class="privacy-content__blocks">
@@ -67,6 +67,7 @@ function toggleBlock(block: PrivacyBlock) {
           :class="{ 'privacy-content__block--collapsed': !isOpen(block) }"
         >
           <button
+            v-if="block.localizedTitle !== localizedTitle"
             class="privacy-content__block-title"
             type="button"
             :aria-expanded="isOpen(block)"

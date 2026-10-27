@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { computed, toRef } from 'vue'
 import { useAdminSiteChrome } from '../../../composables/Admin/useAdminSiteChrome'
-import { renderCopyright } from '../../../../backend/src/content/siteChromeConfig.js'
+import { renderCopyright, cookieBannerParts } from '../../../../backend/src/content/siteChromeConfig.js'
 import type { ChromeSection } from '../../../types/siteChrome'
 import AdminBilingualField from './AdminBilingualField.vue'
 import AdminLinksEditor from './AdminLinksEditor.vue'
 const props = defineProps<{ section: ChromeSection }>()
 const sectionRef = toRef(props, 'section')
 const { form, panels, isLoading, isSaving, loaded, error, notice, load, save, discard } = useAdminSiteChrome(sectionRef)
-const title = computed(() => ({ sidebar: 'Сайдбар', header: 'Хедер и меню', footer: 'Футер' })[props.section])
+const previewRu = computed(() => cookieBannerParts(form.cookie, 'ru'))
+const previewEn = computed(() => cookieBannerParts(form.cookie, 'en'))
+const title = computed(() => ({ sidebar: 'Сайдбар', header: 'Хедер и меню', footer: 'Футер', cookie: 'Cookie-баннер' })[props.section])
 function insertYear(field: 'copyright' | 'copyrightEn') {
   if (!form.footer[field].includes('{year}')) form.footer[field] = form.footer[field].replace(/©\s*(?:\d{4}\s*)?/, '© {year} ')
   if (!form.footer[field].includes('{year}')) form.footer[field] = `{year} ${form.footer[field]}`
@@ -36,6 +38,15 @@ function insertYear(field: 'copyright' | 'copyrightEn') {
             <article v-for="panel in panels" :key="panel.id" class="admin-link-fields"><h3>{{ panel.title }}</h3><AdminBilingualField v-if="form.sidebar.serviceOverrides.find(item => item.id === panel.id)" v-model="form.sidebar.serviceOverrides.find(item => item.id === panel.id)!.label" v-model:model-en="form.sidebar.serviceOverrides.find(item => item.id === panel.id)!.labelEn" label="Название в сайдбаре" :placeholder="panel.title" :placeholder-en="panel.titleEn || panel.title" /></article>
           </section>
           <section class="admin-chrome-part"><AdminLinksEditor :links="form.sidebar.extraLinks" title="Дополнительные ссылки сайдбара" /></section>
+        </template>
+        <template v-else-if="section === 'cookie'">
+          <h2>Текст уведомления</h2><p class="admin-message">Метка {cookies} заменяется кликабельной ссылкой на согласие. Она должна встречаться ровно один раз. Переход по ссылке не означает принятие cookie — согласие сохраняется только после нажатия кнопки.</p>
+          <AdminBilingualField v-model="form.cookie.text" v-model:model-en="form.cookie.textEn" label="Текст баннера" multiline />
+          <AdminBilingualField v-model="form.cookie.linkText" v-model:model-en="form.cookie.linkTextEn" label="Текст ссылки на согласие" />
+          <AdminBilingualField v-model="form.cookie.buttonText" v-model:model-en="form.cookie.buttonTextEn" label="Текст кнопки согласия" />
+          <p class="admin-message"><RouterLink :to="{ path: '/admin', query: { section: 'cookie-consent', page: 'legal' } }">Редактировать документ «Согласие на использование cookie-файлов» →</RouterLink></p>
+          <div class="admin-chrome-preview"><span>Предпросмотр · Русский</span><p>{{ previewRu.before }}<RouterLink to="/cookie-consent">{{ previewRu.linkText }}</RouterLink>{{ previewRu.after }}</p><strong>{{ previewRu.buttonText }}</strong></div>
+          <div class="admin-chrome-preview"><span>Предпросмотр · English</span><p>{{ previewEn.before }}<RouterLink to="/cookie-consent">{{ previewEn.linkText }}</RouterLink>{{ previewEn.after }}</p><strong>{{ previewEn.buttonText }}</strong></div>
         </template>
         <template v-else>
           <h2>Копирайт</h2><p class="admin-message">Вставьте {year} в любом месте текста — сайт автоматически покажет текущий год.</p>

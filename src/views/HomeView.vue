@@ -42,6 +42,7 @@ const isProjectFormOpen = ref(false)
 const isMobileMenuBackdropActive = ref(false)
 const isAboutActive = computed(() => route.name === 'about')
 const isContactsActive = computed(() => route.name === 'contacts')
+const isCookieConsentActive = computed(() => route.name === 'cookie-consent')
 const isPrivacyActive = computed(() => route.name === 'privacy')
 const isUserAgreementActive = computed(() => route.name === 'user-agreement')
 const isPolicyActive = computed(() => route.name === 'policy')
@@ -49,8 +50,9 @@ const isPortfolioActive = computed(() => route.name === 'portfolio')
 const isPortfolioDetailActive = computed(() => route.name === 'portfolio-detail')
 const isPortfolioCaseActive = computed(() => route.name === 'portfolio-case')
 const isPortfolioPageActive = computed(() => isPortfolioActive.value || isPortfolioDetailActive.value || isPortfolioCaseActive.value)
-const isLegalDocumentActive = computed(() => isPrivacyActive.value || isUserAgreementActive.value || isPolicyActive.value)
+const isLegalDocumentActive = computed(() => isPrivacyActive.value || isUserAgreementActive.value || isPolicyActive.value || isCookieConsentActive.value)
 const legalDocumentKey = computed(() => {
+  if (isCookieConsentActive.value) return 'cookie-consent'
   if (isUserAgreementActive.value) {
     return 'user-agreement'
   }

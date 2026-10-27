@@ -5,6 +5,12 @@ const navigation = [
 ]
 const defaults = {
   header: { links: navigation },
+  cookie: {
+    text: 'Используем {cookies}, чтобы сделать сайт удобнее для Вас.',
+    textEn: 'We use {cookies} to make the website more convenient for you.',
+    linkText: 'cookie-файлы', linkTextEn: 'cookies',
+    buttonText: 'Согласен', buttonTextEn: 'I agree',
+  },
   sidebar: {
     officeText: 'Мы располагаемся на Васильевском острове и будем рады видеть вас в нашем офисе',
     officeTextEn: 'We are located on Vasilyevsky Island and will be happy to welcome you to our office',
@@ -61,6 +67,14 @@ function list(value, overrides = false) {
 export function validateSiteChrome(section, input) {
   if (!SITE_CHROME_SECTIONS.includes(section)) invalid('Неизвестный раздел')
   if (!input || typeof input !== 'object' || Array.isArray(input)) invalid('Некорректные данные раздела')
+  if (section === 'cookie') {
+    const result = { ...bilingual(input, 'text', 2000), ...bilingual(input, 'linkText', 120), ...bilingual(input, 'buttonText', 120) }
+    if (!result.linkText || !result.buttonText) invalid('Заполните текст ссылки и кнопки')
+    for (const field of ['text', 'textEn']) {
+      if ((field === 'text' || result[field]) && result[field].split('{cookies}').length !== 2) invalid('Текст баннера должен содержать ровно одну метку {cookies}')
+    }
+    return result
+  }
   if (section === 'header') return { links: list(input.links) }
   if (section === 'sidebar') {
     const phone = text(input.phone, 'Телефон', 80)
@@ -73,4 +87,10 @@ export function validateSiteChrome(section, input) {
   const madeHref = text(input.madeHref, 'Ссылка подписи', 2048)
   if (!isSafeChromeLink(madeHref, true)) invalid('Некорректная ссылка подписи')
   return { ...bilingual(input, 'copyright', 500), ...bilingual(input, 'made', 500), madeHref, links: list(input.links) }
+}
+
+export function cookieBannerParts(content, locale = 'ru') {
+  const text = localizedChromeText(content.text, content.textEn, locale)
+  const [before, after = ''] = text.split('{cookies}')
+  return { before, after, linkText: localizedChromeText(content.linkText, content.linkTextEn, locale), buttonText: localizedChromeText(content.buttonText, content.buttonTextEn, locale) }
 }

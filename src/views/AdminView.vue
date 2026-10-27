@@ -51,6 +51,7 @@ const directorText = useAdminDirectorText()
 const homePanels = useAdminHomePanels()
 const hystoryCompany = useAdminHystoryCompany()
 const missionValues = useAdminMissionValues()
+const cookieDocument = useAdminPrivacy('cookie-consent')
 const privacy = useAdminPrivacy()
 const userAgreement = useAdminPrivacy('user-agreement')
 const policy = useAdminPrivacy('policy')
@@ -62,7 +63,7 @@ async function loadContent() {
   await Promise.all([
     homePanels.loadPanels(), aboutUs.loadContent(), clients.loadItems(),
     description.loadContent(), directorText.loadContent(), hystoryCompany.loadItems(),
-    missionValues.loadContent(), privacy.loadBlocks(), userAgreement.loadBlocks(),
+    missionValues.loadContent(), cookieDocument.loadBlocks(), privacy.loadBlocks(), userAgreement.loadBlocks(),
     policy.loadBlocks(), projectRequests.loadRequests(), seo.loadEntries(), stats.loadItems(),
   ])
 }
@@ -81,6 +82,7 @@ function logout() {
   directorText.clearContent()
   hystoryCompany.clearItems()
   missionValues.clearContent()
+  cookieDocument.clearBlocks()
   privacy.clearBlocks()
   userAgreement.clearBlocks()
   policy.clearBlocks()
@@ -124,7 +126,7 @@ async function resetProjectRequestFilters() {
         </header>
         <AdminOverview v-if="activeSection === 'dashboard'" :requests-count="projectRequests.newCount.value" @navigate="navigate" />
         <p v-if="auth.error.value" class="admin-session-error admin-message admin-message--error" role="alert">{{ auth.error.value }} <button type="button" class="button-secondary" @click="restoreSession">Повторить</button></p>
-        <SiteChromeAdminSection v-if="['site-sidebar', 'site-header', 'site-footer'].includes(activeSection)" :section="chromeSection" />
+        <SiteChromeAdminSection v-if="['site-sidebar', 'site-header', 'site-footer', 'site-cookie'].includes(activeSection)" :section="chromeSection" />
       <HomePanelsAdminSection
         v-if="activeSection === 'home-panels'"
         :error="homePanels.error.value"
@@ -289,6 +291,24 @@ async function resetProjectRequestFilters() {
         @reset-filters="resetProjectRequestFilters"
         @update-status="projectRequests.updateStatus"
         @delete="projectRequests.deleteRequest"
+      />
+
+      <PrivacyAdminSection
+        v-if="activeSection === 'cookie-consent'"
+        document-title="Согласие на использование cookie-файлов"
+        :error="cookieDocument.error.value"
+        :form="cookieDocument.form"
+        :form-title="cookieDocument.formTitle.value"
+        :blocks="cookieDocument.blocks.value"
+        :is-loading="cookieDocument.isLoading.value"
+        :is-saving="cookieDocument.isSaving.value"
+        @new-block="cookieDocument.resetForm"
+        @save="cookieDocument.saveBlock"
+        @reset="cookieDocument.resetForm"
+        @edit="cookieDocument.editBlock"
+        @delete="cookieDocument.deleteBlock"
+        @add-table-row="cookieDocument.addTableRow"
+        @remove-table-row="cookieDocument.removeTableRow"
       />
 
       <PrivacyAdminSection
