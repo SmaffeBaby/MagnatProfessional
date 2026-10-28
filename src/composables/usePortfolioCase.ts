@@ -1,7 +1,7 @@
 import { computed, watch, type Ref } from 'vue'
 import type { HomePanel, PortfolioCard } from './useHomePanels'
-import { useApiQuery, prefetchApiQuery } from './useApiQuery'
-import { collectPanelMediaUrls, collectPortfolioCardMediaUrls, warmMediaUrls } from './useMediaPreload'
+import { useApiQuery } from './useApiQuery'
+import { collectPanelMediaUrls, collectPanelPreviewMediaUrls, warmMediaUrls } from './useMediaPreload'
 
 export type PortfolioCasePayload = {
   panel: HomePanel | null
@@ -30,22 +30,12 @@ export function usePortfolioCase(panelSlug: Ref<string>, cardSlug: Ref<string>) 
 
     warmMediaUrls([
       ...collectPanelMediaUrls(currentPanel),
-      ...collectPortfolioCardMediaUrls(currentCard),
-      ...collectPortfolioCardMediaUrls(currentPreviousCard),
-      ...collectPortfolioCardMediaUrls(currentNextCard),
-      ...currentRelatedCards.flatMap(collectPortfolioCardMediaUrls),
+      ...collectPanelPreviewMediaUrls(currentCard),
+      currentCard.caseHeroUrl || '',
+      ...collectPanelPreviewMediaUrls(currentPreviousCard),
+      ...collectPanelPreviewMediaUrls(currentNextCard),
+      ...currentRelatedCards.flatMap(collectPanelPreviewMediaUrls),
     ])
-
-    for (const relatedCard of currentRelatedCards.slice(0, 4)) {
-      if (!relatedCard?.slug) {
-        continue
-      }
-
-      prefetchApiQuery<PortfolioCasePayload>(
-        ['portfolio-case', panelSlug.value, relatedCard.slug],
-        `/api/portfolio/${encodeURIComponent(panelSlug.value)}/${encodeURIComponent(relatedCard.slug)}`,
-      )
-    }
   }, { immediate: true })
 
   return {

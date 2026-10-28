@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { prefetchPortfolioLink } from '../../composables/prefetchPortfolioLink'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { RouterLink } from 'vue-router'
@@ -210,6 +211,8 @@ watch(shouldUseVideo, (useVideo) => {
       :target="isExternalLink(panel.linkPath) ? '_blank' : undefined"
       :rel="isExternalLink(panel.linkPath) ? 'noopener noreferrer' : undefined"
       :style="panelGradient(panel)"
+      @mouseenter="prefetchPortfolioLink(panel.linkPath)"
+      @focus="prefetchPortfolioLink(panel.linkPath)"
     >
       <video
         v-if="shouldUseVideo && panel.videoUrl"

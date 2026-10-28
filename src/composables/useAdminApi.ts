@@ -1,3 +1,5 @@
+import { invalidatePublicContent } from './invalidatePublicContent'
+
 const ADMIN_TOKEN_KEY = 'magnat-admin-access-token'
 const ADMIN_SESSION_KEY = 'magnat-admin-session'
 const SESSION_EVENT = 'magnat-admin-session-change'
@@ -69,8 +71,9 @@ export async function adminRequest(path: string, options: RequestInit = {}) {
     if (authenticated && response.status === 401 && getAdminToken() === token) clearAdminToken()
     throw new AdminApiError(payload.error || `Request failed with status ${response.status}`, response.status)
   }
-  if (response.status === 204) return null
-  return response.json()
+  const payload = response.status === 204 ? null : await response.json()
+  invalidatePublicContent(path, options.method)
+  return payload
 }
 export async function uploadAdminFile(file: File, bucket = 'home-panels') {
   const body = new FormData()

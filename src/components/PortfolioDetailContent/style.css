@@ -99,6 +99,7 @@
 }
 
 .portfolio-detail__card {
+  cursor: pointer;
   position: relative;
   display: block;
   width: 100%;

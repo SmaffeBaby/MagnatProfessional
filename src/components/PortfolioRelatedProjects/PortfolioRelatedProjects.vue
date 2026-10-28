@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { prefetchPortfolioLink } from '../../composables/prefetchPortfolioLink'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useLanguageStore } from '../../composables/useLanguageStore'
@@ -171,6 +172,8 @@ watch(
         class="portfolio-related-projects__card"
         :to="card.linkPath"
         :style="cardGradient(card)"
+        @mouseenter="prefetchPortfolioLink(card.linkPath)"
+        @focus="prefetchPortfolioLink(card.linkPath)"
       >
         <img
           v-if="cardMedia(card)"

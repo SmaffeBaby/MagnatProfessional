@@ -1,6 +1,5 @@
 import { onUnmounted, reactive, ref, watch, type Ref } from 'vue'
 import { adminRequest } from '../useAdminApi'
-import { queryClient } from '../../queryClient'
 import { defaultSiteChrome } from '../../../backend/src/content/siteChromeConfig.js'
 import type { ChromeSection, SiteChromeContent } from '../../types/siteChrome'
 import type { HomePanel } from '../useHomePanels'
@@ -53,13 +52,6 @@ export function useAdminSiteChrome(section: Ref<ChromeSection>) {
     notice.value = ''
     try {
       const payload = await adminRequest(`/api/admin/site-chrome/${current}`, { method: 'PUT', body: JSON.stringify(form[current]) })
-      queryClient.setQueryData<{ content: SiteChromeContent }>(['site-chrome'], cached => ({ content: {
-        cookie: cached?.content.cookie || defaultSiteChrome('cookie'),
-        header: cached?.content.header || defaultSiteChrome('header'),
-        sidebar: cached?.content.sidebar || defaultSiteChrome('sidebar'),
-        footer: cached?.content.footer || defaultSiteChrome('footer'),
-        [current]: payload.content,
-      } }))
       if (id !== requestId) return
       Object.assign(form[current], payload.content)
       snapshot = JSON.stringify(form[current])

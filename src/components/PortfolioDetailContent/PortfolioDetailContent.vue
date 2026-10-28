@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { prefetchPortfolioLink } from '../../composables/prefetchPortfolioLink'
 import { computed, inject, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
@@ -143,6 +144,8 @@ function clamp(value: number, min: number, max: number) {
         :class="`portfolio-detail__card--${card.tileType}`"
         :to="card.linkPath"
         :style="cardGradient(card)"
+        @mouseenter="prefetchPortfolioLink(card.linkPath)"
+        @focus="prefetchPortfolioLink(card.linkPath)"
       >
         <img
           v-if="card.posterUrl || card.imageUrl"
