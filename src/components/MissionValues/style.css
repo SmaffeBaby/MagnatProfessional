@@ -52,7 +52,8 @@
   line-height: 1.06;
   letter-spacing: 0;
   text-align: left;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .mission-values__intro :where(div, p) {
@@ -122,7 +123,7 @@
 
   .mission-values__cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 120px 240px;
+    gap: 100px clamp(32px, 8vw, 120px);
     margin: 120px 55px 0;
   }
 
@@ -154,31 +155,41 @@
 
 @media (min-width: 1200px) {
   .mission-values {
+    --mission-cat-size: min(600px, calc(50% + 55px));
     margin-top: 100px;
   }
 
   .mission-values__intro {
-    max-width: min(760px, calc(100% - 650px));
-  }
-
-  .mission-values__intro-wrap {
-    position: static;
+    max-width: min(760px, 64%);
+    font-size: clamp(28px, calc(2vw + 8px), 40px);
   }
 
   .mission-values__cat {
     position: absolute;
     z-index: 1;
-    top: 0;
-    right: -230px;
+    /* Follow the intro when the heading wraps; retain the right-edge crop. */
+    top: -60px;
+    right: calc(var(--mission-cat-size) * -0.293 - 55px);
     display: block;
-    width: 786px;
-    height: 786px;
+    width: var(--mission-cat-size);
+    height: auto;
+    aspect-ratio: 1;
     object-fit: contain;
     pointer-events: none;
   }
 
   .mission-values__cards {
-    grid-template-columns: repeat(2, minmax(320px, 360px));
+    grid-template-columns: repeat(2, minmax(0, 360px));
     justify-content: start;
+  }
+}
+
+@media (min-width: 1800px) {
+  .mission-values {
+    --mission-cat-size: 786px;
+  }
+
+  .mission-values__intro {
+    max-width: min(760px, calc(100% - 560px));
   }
 }
