@@ -193,8 +193,16 @@
     margin-top: 40px;
     overflow-x: auto;
     overflow-y: hidden;
-    scroll-snap-type: x mandatory;
+    scroll-behavior: auto;
+    scroll-snap-type: none;
+    user-select: none;
+    cursor: grab;
     overscroll-behavior-inline: contain;
+  }
+
+  .portfolio-related-projects__slider--dragging,
+  .portfolio-related-projects__slider--dragging .portfolio-related-projects__card {
+    cursor: grabbing;
   }
 
   .portfolio-related-projects__card {

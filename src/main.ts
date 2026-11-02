@@ -17,4 +17,18 @@ app.use(pinia)
 const languageStore = useLanguageStore()
 languageStore.initLocale()
 
-app.use(VueQueryPlugin, { queryClient }).use(i18n).use(router).mount('#app')
+app.use(VueQueryPlugin, { queryClient }).use(i18n).use(router)
+
+async function mountApp() {
+  try {
+    // The variable font covers every weight used by the site. Preload starts
+    // the request in index.html; wait here to avoid rendering fallback metrics.
+    await document.fonts?.load('400 16px "Unbounded"', 'Magnat Привет')
+  } catch (error) {
+    // A failed font request must not leave the entire site inaccessible.
+    console.warn('Unable to load the site font', error)
+  }
+  app.mount('#app')
+}
+
+void mountApp()
