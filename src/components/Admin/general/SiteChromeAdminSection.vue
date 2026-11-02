@@ -5,12 +5,16 @@ import { renderCopyright, cookieBannerParts } from '../../../../backend/src/cont
 import type { ChromeSection } from '../../../types/siteChrome'
 import AdminBilingualField from './AdminBilingualField.vue'
 import AdminLinksEditor from './AdminLinksEditor.vue'
+import RichTextColorEditor from '../shared/RichTextColorEditor.vue'
+import { inlineTextToHtml, inlineTextFromHtml } from '../../../composables/inlineTextEditor'
 const props = defineProps<{ section: ChromeSection }>()
 const sectionRef = toRef(props, 'section')
 const { form, panels, isLoading, isSaving, loaded, error, notice, load, save, discard } = useAdminSiteChrome(sectionRef)
 const previewRu = computed(() => cookieBannerParts(form.cookie, 'ru'))
 const previewEn = computed(() => cookieBannerParts(form.cookie, 'en'))
-const title = computed(() => ({ sidebar: 'Сайдбар', header: 'Хедер и меню', footer: 'Футер', cookie: 'Cookie-баннер' })[props.section])
+const agreementRu = computed({ get: () => inlineTextToHtml(form.forms.agreement), set: html => { form.forms.agreement = inlineTextFromHtml(html) } })
+const agreementEn = computed({ get: () => inlineTextToHtml(form.forms.agreementEn), set: html => { form.forms.agreementEn = inlineTextFromHtml(html) } })
+const title = computed(() => ({ sidebar: 'Сайдбар', header: 'Хедер и меню', footer: 'Футер', cookie: 'Cookie-баннер', forms: 'Формы' })[props.section])
 function insertYear(field: 'copyright' | 'copyrightEn') {
   if (!form.footer[field].includes('{year}')) form.footer[field] = form.footer[field].replace(/©\s*(?:\d{4}\s*)?/, '© {year} ')
   if (!form.footer[field].includes('{year}')) form.footer[field] = `{year} ${form.footer[field]}`
@@ -47,6 +51,13 @@ function insertYear(field: 'copyright' | 'copyrightEn') {
           <p class="admin-message"><RouterLink :to="{ path: '/admin', query: { section: 'cookie-consent', page: 'legal' } }">Редактировать документ «Согласие на использование cookie-файлов» →</RouterLink></p>
           <div class="admin-chrome-preview"><span>Предпросмотр · Русский</span><p>{{ previewRu.before }}<RouterLink to="/cookie-consent">{{ previewRu.linkText }}</RouterLink>{{ previewRu.after }}</p><strong>{{ previewRu.buttonText }}</strong></div>
           <div class="admin-chrome-preview"><span>Предпросмотр · English</span><p>{{ previewEn.before }}<RouterLink to="/cookie-consent">{{ previewEn.linkText }}</RouterLink>{{ previewEn.after }}</p><strong>{{ previewEn.buttonText }}</strong></div>
+        </template>
+        <template v-else-if="section === 'forms'">
+          <h2>Согласие на обработку персональных данных</h2>
+          <p class="admin-message">Текст используется во всех формах, включая «Обсудить проект». Выделите слова, нажмите «Ссылка», укажите адрес и примените ссылку. Затем сохраните изменения.</p>
+          <RichTextColorEditor v-model="agreementRu" label="Текст согласия · Русский" links-only />
+          <RichTextColorEditor v-model="agreementEn" label="Текст согласия · English" links-only />
+          <p class="admin-message"><RouterLink to="/privacy">Открыть политику обработки персональных данных →</RouterLink></p>
         </template>
         <template v-else>
           <h2>Копирайт</h2><p class="admin-message">Вставьте {year} в любом месте текста — сайт автоматически покажет текущий год.</p>

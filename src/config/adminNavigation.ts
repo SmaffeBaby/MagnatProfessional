@@ -4,6 +4,7 @@ export const adminNavigation = [
     { id: 'site-header', label: 'Хедер и меню' },
     { id: 'site-footer', label: 'Футер' },
     { id: 'site-cookie', label: 'Cookie-баннер' },
+    { id: 'site-forms', label: 'Формы' },
   ] },
   { id: 'home', label: 'Главная страница', path: '/', icon: 'home', items: [
     { id: 'home-panels', label: 'Панели на главной' },

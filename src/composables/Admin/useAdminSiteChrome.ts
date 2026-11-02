@@ -5,7 +5,7 @@ import type { ChromeSection, SiteChromeContent } from '../../types/siteChrome'
 import type { HomePanel } from '../useHomePanels'
 
 export function useAdminSiteChrome(section: Ref<ChromeSection>) {
-  const form = reactive<SiteChromeContent>({ header: defaultSiteChrome('header'), sidebar: defaultSiteChrome('sidebar'), footer: defaultSiteChrome('footer'), cookie: defaultSiteChrome('cookie') })
+  const form = reactive<SiteChromeContent>({ header: defaultSiteChrome('header'), sidebar: defaultSiteChrome('sidebar'), footer: defaultSiteChrome('footer'), cookie: defaultSiteChrome('cookie'), forms: defaultSiteChrome('forms') })
   const panels = ref<HomePanel[]>([])
   const isLoading = ref(false)
   const isSaving = ref(false)

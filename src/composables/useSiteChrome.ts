@@ -14,11 +14,14 @@ export function useSiteChrome() {
   const cookie = computed(() => query.data.value?.content.cookie || defaultSiteChrome('cookie') as SiteChromeContent['cookie'])
   const banner = computed(() => cookieBannerParts(cookie.value, language.locale))
   const footer = computed(() => query.data.value?.content.footer || defaultSiteChrome('footer') as SiteChromeContent['footer'])
+  const forms = computed(() => query.data.value?.content.forms || defaultSiteChrome('forms') as SiteChromeContent['forms'])
+  const formAgreement = computed(() => language.locale === 'en' && forms.value.agreementEn.some(part => part.text.trim())
+    ? forms.value.agreementEn : forms.value.agreement)
   const localize = (text: string, textEn?: string) => localizedChromeText(text, textEn, language.locale)
   const headerLinks = computed(() => header.value.links.map(link => ({ ...link, label: localize(link.label, link.labelEn) })))
   const footerLinks = computed(() => footer.value.links.map(link => ({ ...link, label: localize(link.label, link.labelEn) })))
   const copyright = computed(() => renderCopyright(localize(footer.value.copyright, footer.value.copyrightEn)))
-  return { header, sidebar, footer, cookie, banner, headerLinks, footerLinks, copyright, localize }
+  return { header, sidebar, footer, cookie, forms, formAgreement, banner, headerLinks, footerLinks, copyright, localize }
 }
 export function useSidebarContent() {
   const chrome = useSiteChrome()

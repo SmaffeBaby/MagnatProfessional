@@ -147,6 +147,22 @@
   line-height: 1.12;
 }
 
+.questions-form__agreement a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.questions-form__agreement a:hover {
+  text-decoration-thickness: 2px;
+}
+
+.questions-form__agreement a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
 .questions-form__input {
   height: 29px;
   padding: 0 0 8px;
@@ -189,6 +205,8 @@
 .questions-form__agreement {
   max-width: 100%;
   margin-top: 10px;
+  white-space: pre-line;
+  overflow-wrap: break-word;
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
   font-weight: 400;

@@ -126,7 +126,7 @@ async function resetProjectRequestFilters() {
         </header>
         <AdminOverview v-if="activeSection === 'dashboard'" :requests-count="projectRequests.newCount.value" @navigate="navigate" />
         <p v-if="auth.error.value" class="admin-session-error admin-message admin-message--error" role="alert">{{ auth.error.value }} <button type="button" class="button-secondary" @click="restoreSession">Повторить</button></p>
-        <SiteChromeAdminSection v-if="['site-sidebar', 'site-header', 'site-footer', 'site-cookie'].includes(activeSection)" :section="chromeSection" />
+        <SiteChromeAdminSection v-if="['site-sidebar', 'site-header', 'site-footer', 'site-cookie', 'site-forms'].includes(activeSection)" :section="chromeSection" />
       <HomePanelsAdminSection
         v-if="activeSection === 'home-panels'"
         :error="homePanels.error.value"

@@ -21,8 +21,20 @@ const defaults = {
   footer: {
     copyright: '© {year} MAGNAT PROFESSIONAL | Все права защищены',
     copyrightEn: '© {year} MAGNAT PROFESSIONAL | All rights reserved',
-    links: [{ id: 'privacy', label: 'Политика конфиденциальности', labelEn: 'Privacy Policy', href: '/privacy' }],
+    links: [{ id: 'privacy', label: 'Политика в отношении обработки персональных данных пользователей сайта', labelEn: 'Privacy Policy', href: '/privacy' }],
     made: 'Сделано в MAGNAT PROFESSIONAL', madeEn: 'Made by MAGNAT PROFESSIONAL', madeHref: '',
+  },
+  forms: {
+    agreement: [
+      { text: 'Я ознакомился и даю согласие на обработку персональных данных в соответствии с ' },
+      { text: 'Политикой в отношении обработки персональных данных', href: '/privacy' },
+      { text: '.' },
+    ],
+    agreementEn: [
+      { text: 'I have read and consent to the processing of personal data in accordance with the ' },
+      { text: 'Personal Data Processing Policy', href: '/privacy' },
+      { text: '.' },
+    ],
   },
 }
 export const SITE_CHROME_SECTIONS = Object.keys(defaults)
@@ -64,9 +76,23 @@ function list(value, overrides = false) {
     return { id, ...labels, href }
   })
 }
+function inlineText(value, optional = false) {
+  if (!Array.isArray(value) || value.length > 100) invalid('Некорректный текст согласия')
+  let length = 0
+  const parts = value.map(part => {
+    if (!part || typeof part.text !== 'string') invalid('Некорректный фрагмент согласия')
+    length += part.text.length
+    if (!part.href) return { text: part.text }
+    if (!isSafeChromeLink(part.href)) invalid('Некорректная ссылка в тексте согласия')
+    return { text: part.text, href: part.href }
+  })
+  if (length > 4000 || (!optional && !parts.some(part => part.text.trim()))) invalid('Заполните текст согласия (до 4000 символов)')
+  return parts
+}
 export function validateSiteChrome(section, input) {
   if (!SITE_CHROME_SECTIONS.includes(section)) invalid('Неизвестный раздел')
   if (!input || typeof input !== 'object' || Array.isArray(input)) invalid('Некорректные данные раздела')
+  if (section === 'forms') return { agreement: inlineText(input.agreement), agreementEn: inlineText(input.agreementEn, true) }
   if (section === 'cookie') {
     const result = { ...bilingual(input, 'text', 2000), ...bilingual(input, 'linkText', 120), ...bilingual(input, 'buttonText', 120) }
     if (!result.linkText || !result.buttonText) invalid('Заполните текст ссылки и кнопки')

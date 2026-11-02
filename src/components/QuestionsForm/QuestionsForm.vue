@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import SharedLink from '../SharedLink.vue'
+import { useSiteChrome } from '../../composables/useSiteChrome'
 import './style.css'
 
 const props = defineProps({
@@ -19,6 +21,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { formAgreement } = useSiteChrome()
 const isProjectVariant = computed(() => props.variant === 'project')
 const title = computed(() => t(isProjectVariant.value ? 'questionsForm.project.title' : 'questionsForm.title'))
 const form = reactive({
@@ -158,7 +161,7 @@ async function submitForm() {
       </div>
 
       <p class="questions-form__agreement">
-        {{ t('questionsForm.agreement') }}
+        <template v-for="(part, index) in formAgreement" :key="index"><SharedLink v-if="part.href" :href="part.href" target="_blank" rel="noopener noreferrer">{{ part.text }}</SharedLink><template v-else>{{ part.text }}</template></template>
       </p>
 
       <p
