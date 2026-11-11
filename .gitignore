@@ -41,3 +41,7 @@ supabase/.env.*
 /.deploy-backup/postgres.sql
 /.deploy-backup/storage-data.tgz
 /backend/node_modules/
+
+/deploy/local/
+/docker-compose.https.yml
+/docker-compose.override.yml
