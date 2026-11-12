@@ -147,16 +147,17 @@ function clamp(value: number, min: number, max: number) {
         @mouseenter="prefetchPortfolioLink(card.linkPath)"
         @focus="prefetchPortfolioLink(card.linkPath)"
       >
-        <img
-          v-if="card.posterUrl || card.imageUrl"
-          class="portfolio-detail__media"
-          :src="card.posterUrl || card.imageUrl || ''"
-          :alt="cardTitle(card)"
-          loading="lazy"
-        >
-        <span v-else class="portfolio-detail__empty" aria-hidden="true" />
-
-        <span class="portfolio-detail__shade" aria-hidden="true" />
+        <span class="portfolio-detail__visual">
+          <img
+            v-if="card.posterUrl || card.imageUrl"
+            class="portfolio-detail__media"
+            :src="card.posterUrl || card.imageUrl || ''"
+            :alt="cardTitle(card)"
+            loading="lazy"
+          >
+          <span v-else class="portfolio-detail__empty" aria-hidden="true" />
+          <span class="portfolio-detail__shade" aria-hidden="true" />
+        </span>
         <span class="portfolio-detail__card-title">{{ cardTitle(card) }}</span>
       </RouterLink>
     </section>
