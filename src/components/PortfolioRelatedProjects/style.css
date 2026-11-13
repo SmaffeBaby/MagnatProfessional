@@ -89,6 +89,8 @@
   --portfolio-related-mobile-gap: 20px;
 
   display: grid;
+  grid-auto-rows: max-content;
+  align-items: start;
   max-height: calc((var(--portfolio-related-mobile-card-height) * 3) + (var(--portfolio-related-mobile-gap) * 2));
   gap: var(--portfolio-related-mobile-gap);
   margin-top: 28px;
@@ -109,13 +111,20 @@
   position: relative;
   display: block;
   width: 100%;
+  min-width: 0;
+  color: inherit;
+  scroll-snap-align: start;
+  text-decoration: none;
+}
+
+.portfolio-related-projects__visual {
+  position: relative;
+  display: block;
+  width: 100%;
   aspect-ratio: 335 / 235;
   min-height: var(--portfolio-related-mobile-card-height);
   overflow: hidden;
   border-radius: 30px;
-  color: #ffffff;
-  scroll-snap-align: start;
-  text-decoration: none;
   background: rgba(0, 0, 0, 0.08);
   transform: translateZ(0);
 }
@@ -145,21 +154,15 @@
 }
 
 .portfolio-related-projects__card-title {
-  position: absolute;
-  top: 26px;
-  right: 28px;
-  left: 28px;
-  display: -webkit-box;
-  overflow: hidden;
-  color: #ffffff;
+  display: block;
+  margin-top: 20px;
+  color: inherit;
   font-size: 20px;
   font-weight: 500;
-  line-height: 1.05;
+  line-height: 1.2;
   letter-spacing: 0;
-  overflow-wrap: normal;
-  word-break: normal;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
 }
 
 .portfolio-related-projects__card:hover .portfolio-related-projects__media,
@@ -208,14 +211,14 @@
   .portfolio-related-projects__card {
     flex: 0 0 calc((100% - 20px) / 3);
     min-width: 0;
+  }
+
+  .portfolio-related-projects__visual {
     min-height: 0;
     aspect-ratio: 440 / 586;
   }
 
   .portfolio-related-projects__card-title {
-    top: clamp(18px, 2.5vw, 26px);
-    right: clamp(18px, 2.7vw, 28px);
-    left: clamp(18px, 2.7vw, 28px);
     font-size: clamp(16px, 2.2vw, 20px);
   }
 }

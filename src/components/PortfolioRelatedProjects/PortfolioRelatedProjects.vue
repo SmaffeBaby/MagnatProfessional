@@ -160,15 +160,17 @@ watch(
         @mouseenter="prefetchPortfolioLink(card.linkPath)"
         @focus="prefetchPortfolioLink(card.linkPath)"
       >
-        <img
-          v-if="cardMedia(card)"
-          class="portfolio-related-projects__media"
-          :src="cardMedia(card)"
-          :alt="cardTitle(card)"
-          loading="lazy"
-        >
-        <span v-else class="portfolio-related-projects__empty" aria-hidden="true" />
-        <span class="portfolio-related-projects__shade" aria-hidden="true" />
+        <span class="portfolio-related-projects__visual">
+          <img
+            v-if="cardMedia(card)"
+            class="portfolio-related-projects__media"
+            :src="cardMedia(card)"
+            :alt="cardTitle(card)"
+            loading="lazy"
+          >
+          <span v-else class="portfolio-related-projects__empty" aria-hidden="true" />
+          <span class="portfolio-related-projects__shade" aria-hidden="true" />
+        </span>
         <span class="portfolio-related-projects__card-title">{{ cardTitle(card) }}</span>
       </RouterLink>
     </div>
